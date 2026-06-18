@@ -1,0 +1,2 @@
+DEFAULT_SAVE_DIR="."
+DEFAULT_SAVE_NAME="results.txt"
