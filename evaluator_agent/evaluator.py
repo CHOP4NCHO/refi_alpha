@@ -21,6 +21,9 @@ from langchain.agents import create_agent
 from langchain.agents.structured_output import ToolStrategy
 
 import uuid
+from pathlib import Path
+from langchain_core.documents import Document
+from langchain_core.vectorstores import InMemoryVectorStore
 
 @dataclass
 class CodeFileContext:
@@ -38,6 +41,7 @@ class Evaluator:
     _codebase: CodeBase | None
     _tools: list
     _req_evaluations: list[SingleRequirementEval]
+    _vector_store: InMemoryVectorStore | None
     # token usage stats
     total_input_tokens: int
     total_output_tokens: int
@@ -50,6 +54,7 @@ class Evaluator:
         self._working_tree = None
         self._codebase = None
         self._req_evaluations = []
+        self._vector_store = None
 
         self.total_input_tokens = 0
         self.total_output_tokens = 0
@@ -69,6 +74,60 @@ class Evaluator:
     def set_working_tree(self, tree):
         """ Sets the current working treee """
         self._target_codebase = tree
+
+    def build_vector_store(self, codebase_reader: CodeBaseReader, embeddings_model) -> None:
+        """
+        Creates an in-memory vector store populated with chunked code snippets
+        from the provided codebase reader. Splits files into overlapping chunks of lines.
+        """
+        print("[Evaluator] Building in-memory RAG vector store...")
+        documents = []
+        for code_file in codebase_reader.codebase.files:
+            try:
+                content = code_file.get_raw_content()
+                if not content.strip():
+                    continue
+                
+                # Split content into line-based chunks for precise code windows
+                lines = content.splitlines()
+                chunk_size = 50  # Number of lines per chunk
+                chunk_overlap = 10  # Number of overlapping lines between consecutive chunks
+                
+                for i in range(0, len(lines), chunk_size - chunk_overlap):
+                    chunk_lines = lines[i : i + chunk_size]
+                    chunk_content = "\n".join(chunk_lines)
+                    
+                    if chunk_content.strip():
+                        # Store relative path in source metadata for easy retrieval by agent tools
+                        rel_path = Path(code_file.path).relative_to(codebase_reader.codebase.path)
+                        documents.append(
+                            Document(
+                                page_content=chunk_content,
+                                metadata={
+                                    "source": str(rel_path),
+                                    "start_line": i + 1,
+                                    "end_line": i + len(chunk_lines)
+                                }
+                            )
+                        )
+            except Exception as e:
+                print(f"[Evaluator] Error processing file {code_file.path} for RAG: {e}")
+
+        if documents:
+            print(f"[Evaluator] Generated {len(documents)} document chunks. Embedding via model...")
+            self._vector_store = InMemoryVectorStore.from_documents(documents, embeddings_model)
+            print("[Evaluator] In-memory RAG vector store built successfully.")
+        else:
+            print("[Evaluator] Warning: No readable documents found to populate the RAG vector store.")
+            self._vector_store = None
+
+    def clear_vector_store(self) -> None:
+        """
+        Clears the in-memory vector store to release associated RAM resources immediately.
+        """
+        if self._vector_store is not None:
+            self._vector_store = None
+            print("[Evaluator] In-memory RAG vector store cleared and memory released.")
 
     def get_model_name(self) -> str:
         if hasattr(self._llm_ref, 'model'):
@@ -123,17 +182,36 @@ class Evaluator:
         req: Requirement,
         files_content: list[CodeFile]
     ) -> None:
-
+        """
+        Executes an agentic evaluation loop over a requirement.
+        Integrates RAG if an active vector store is present.
+        """
         llm = self._llm_ref
 
-        files_index_map = "\n".join(
-            f"- {f.path}"
-            for f in files_content
-        )
-        prompt = self._get_review_prompt_template_s(
-            req_description=req.description,
-            file_index_map=files_index_map
-        )
+        # Baseline file map summary to feed initial context
+        files_index_map = "\n".join(f"- {f.path}" for f in files_content)
+
+        # Decide prompts and tools based on vector store presence (RAG vs Standard)
+        if self._vector_store is not None:
+            print("[Evaluator] Active RAG vector store detected. Running with RAG capabilities.")
+            prompt = self._get_rag_agent_prompt_template(
+                req_description=req.description,
+                file_index_map=files_index_map
+            )
+            used_tools = create_evaluator_toolbelt(
+                codebase_reader,
+                vector_store=self._vector_store
+            )
+        else:
+            print("[Evaluator] No vector store detected. Running standard agent evaluation.")
+            prompt = self._get_review_prompt_template_s(
+                req_description=req.description,
+                file_index_map=files_index_map
+            )
+            used_tools = create_evaluator_toolbelt(
+                codebase_reader,
+                vector_store=None
+            )
 
         config = {
             "configurable": {
@@ -142,143 +220,8 @@ class Evaluator:
             "callbacks": [
                 TokenTrackerHandler(self)
             ],
-            "recursion_limit": 15
+            "recursion_limit": 25  # High limit to prevent "Recursion limit reached" errors
         }
-
-        used_tools = create_evaluator_toolbelt(
-            codebase_reader
-        )
-
-        eval_agent = create_agent(
-            model=llm,
-            tools=used_tools,
-            context_schema=CodeFileContext,
-            system_prompt=EVALUATOR_SYSTEM_PROMPT,
-            response_format=SingleRequirementEval
-        )
-
-        try:
-            response = eval_agent.invoke(
-                {
-                    "messages": [
-                        {
-                            "role": "user",
-                            "content": prompt
-                        }
-                    ]
-                },
-                config=config # type: ignore
-            )
-
-            pprint(response)
-
-            # ==================================================
-            # 1) Structured response (preferido)
-            # ==================================================
-            structured = response.get("structured_response")
-
-            if structured is not None:
-                if isinstance(structured, SingleRequirementEval):
-                    self._req_evaluations.append(structured)
-                    return
-
-                self._req_evaluations.append(
-                    SingleRequirementEval.model_validate(structured)
-                )
-                return
-
-            # ==================================================
-            # 2) Buscar JSON en mensajes
-            # ==================================================
-            messages = response.get("messages", [])
-
-            for msg in reversed(messages):
-                if msg.__class__.__name__ != "AIMessage":
-                    continue
-
-                content = getattr(msg, "content", "")
-                if not isinstance(content, str):
-                    continue
-
-                content = content.strip()
-                if not content:
-                    continue
-
-                # Eliminar markdown fences redundantes
-                if content.startswith("```"):
-                    lines = content.splitlines()
-                    if len(lines) >= 2:
-                        lines = lines[1:]
-                    if lines and lines[-1].strip() == "```":
-                        lines = lines[:-1]
-                    content = "\n".join(lines).strip()
-
-                try:
-                    parsed = json.loads(content)
-                    evaluation = SingleRequirementEval.model_validate(parsed)
-                    self._req_evaluations.append(evaluation)
-                    return
-                except Exception:
-                    continue
-
-            # ==================================================
-            # 3) Diagnóstico útil
-            # ==================================================
-            last_ai = None
-            for msg in reversed(messages):
-                if msg.__class__.__name__ == "AIMessage":
-                    last_ai = msg
-                    break
-
-            raise RuntimeError(
-                f"No se encontró JSON válido.\n"
-                f"Último AIMessage:\n{last_ai}"
-            )
-
-        except Exception as e:
-            self._req_evaluations.append(
-                SingleRequirementEval(
-                    initial_description=req.description,
-                    reasoning=f"Agent execution error: {str(e)}",
-                    is_fulfilled=False
-                )
-            )
-
-    def eval_requirement_agent_rag(
-        self,
-        codebase_reader: CodeBaseReader,
-        req: Requirement,
-        files_content: list[CodeFile],
-        vector_store = None  # <-- Injected vector storage for RAG capabilities
-    ) -> None:
-        """
-        Executes an agentic evaluation loop over a requirement using RAG and code inspection tools.
-        Enforces a strict deterministic exit strategy if data cannot be retrieved.
-        """
-        llm = self._llm_ref
-
-        # Baseline file map summary to feed initial context
-        files_index_map = "\n".join(f"- {f.path}" for f in files_content)
-
-        # Force the usage of the optimized semantic template
-        prompt = self._get_rag_agent_prompt_template(
-            req_description=req.description,
-            file_index_map=files_index_map
-        )
-
-        config = {
-            "configurable": {
-                "thread_id": str(uuid.uuid4())
-            },
-            "callbacks": [TokenTrackerHandler(self)],
-            "recursion_limit": 10  # Reduced loop limit; RAG cuts down redundant trajectories
-        }
-
-        # Bind the vector store into the tool belt factory
-        used_tools = create_evaluator_toolbelt(
-            codebase_reader, 
-            vector_store=vector_store
-        )
 
         eval_agent = create_agent(
             model=llm,
@@ -301,33 +244,68 @@ class Evaluator:
                 config=config  # type: ignore
             )
 
-            # Structured extraction layer (Preferred)
+            # ==================================================
+            # 1) Structured response (Preferred)
+            # ==================================================
             structured = response.get("structured_response")
+
             if structured is not None:
                 if isinstance(structured, SingleRequirementEval):
                     self._req_evaluations.append(structured)
                     return
-                self._req_evaluations.append(SingleRequirementEval.model_validate(structured))
+
+                self._req_evaluations.append(
+                    SingleRequirementEval.model_validate(structured)
+                )
                 return
 
-            # Fallback JSON parsing layer over conversation history
+            # ==================================================
+            # 2) Fallback JSON parsing layer over conversation history
+            # ==================================================
             messages = response.get("messages", [])
+
             for msg in reversed(messages):
-                if msg.__class__.__name__ != "AIMessage" or not getattr(msg, "content", ""):
+                if msg.__class__.__name__ != "AIMessage":
                     continue
-                
-                content = msg.content.strip()
+
+                content = getattr(msg, "content", "")
+                if not isinstance(content, str):
+                    continue
+
+                content = content.strip()
+                if not content:
+                    continue
+
+                # Remove redundant markdown fences
                 if content.startswith("```"):
-                    content = "\n".join(content.splitlines()[1:-1]).strip()
-                
+                    lines = content.splitlines()
+                    if len(lines) >= 2:
+                        lines = lines[1:]
+                    if lines and lines[-1].strip() == "```":
+                        lines = lines[:-1]
+                    content = "\n".join(lines).strip()
+
                 try:
                     parsed = json.loads(content)
-                    self._req_evaluations.append(SingleRequirementEval.model_validate(parsed))
+                    evaluation = SingleRequirementEval.model_validate(parsed)
+                    self._req_evaluations.append(evaluation)
                     return
                 except Exception:
                     continue
 
-            raise RuntimeError("Failed to isolate a valid SingleRequirementEval structure from agent state.")
+            # ==================================================
+            # 3) Useful diagnosis
+            # ==================================================
+            last_ai = None
+            for msg in reversed(messages):
+                if msg.__class__.__name__ == "AIMessage":
+                    last_ai = msg
+                    break
+
+            raise RuntimeError(
+                f"Failed to isolate a valid SingleRequirementEval structure from agent state.\n"
+                f"Last AIMessage:\n{last_ai}"
+            )
 
         except Exception as e:
             # Resilient safety net fallback

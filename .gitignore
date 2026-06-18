@@ -1,3 +1,6 @@
 __pycache__/
 .continue/
 .vscode/
+pdfs/
+results.txt
+tools.log.txt

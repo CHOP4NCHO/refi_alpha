@@ -1,6 +1,5 @@
 import functools
 import time
-import traceback
 import re
 import ast
 from pathlib import Path
@@ -26,13 +25,8 @@ def refi_tool_wrapper(tool_func):
             char_count = len(result_str)
             line_count = len(result_str.splitlines())
             
-            if char_count > 300:
-                preview = f"{result_str[:297].strip()}... [TRUNCATED]"
-            else:
-                preview = result_str.strip() if result_str.strip() else "[Empty String]"
-            
             print(f"[TOOL_SUCCESS] Payload stats: {line_count} lines, {char_count} chars.")
-            print(f"[TOOL_PREVIEW]\n{preview}")
+            #print(f"[TOOL_PREVIEW]\n{preview}")
             return result_raw
         except Exception as e:
             error_msg = f"[TOOL_ERROR] Failed during {tool_func.__name__}.\n{type(e).__name__}: {str(e)}"
@@ -48,6 +42,30 @@ def create_evaluator_toolbelt(reader: CodeBaseReader, vector_store=None) -> list
     Integrates a Vector Store to enable RAG capabilities within the agent's loop.
     """
     workspace_root = reader.codebase.path
+
+    def resolve_file_path(file_path: str) -> Path:
+        """
+        Intelligently resolves absolute, relative, partial, or filename paths to their correct local Path.
+        """
+        # 1. Try direct absolute path
+        p = Path(file_path)
+        if p.is_file():
+            return p
+        
+        # 2. Try relative path from workspace root
+        p = workspace_root / file_path
+        if p.is_file():
+            return p
+            
+        # 3. Try fallback search within the codebase files
+        norm_path = file_path.replace("\\", "/").strip("/")
+        for code_file in reader.codebase.files:
+            abs_str = str(code_file.path).replace("\\", "/")
+            if abs_str.endswith(norm_path) or code_file.path.name == norm_path:
+                return Path(code_file.path)
+                
+        # Return default fallback
+        return workspace_root / file_path
 
     @tool
     @refi_tool_wrapper
@@ -82,11 +100,11 @@ def create_evaluator_toolbelt(reader: CodeBaseReader, vector_store=None) -> list
         Reads the absolute content of a specific file within a defined line range.
         Use this after query_codebase_rag points you to a target candidate file.
         Args:
-            file_path: Relative path of the file from the workspace root.
+            file_path: Relative or absolute path of the file.
             start_line: The line number to start reading from (1-indexed).
             end_line: The line number to stop reading at.
         """
-        target_path = workspace_root / file_path
+        target_path = resolve_file_path(file_path)
         if not target_path.is_file():
             return f"Error: Target file '{file_path}' does not exist in workspace."
         
@@ -109,31 +127,67 @@ def create_evaluator_toolbelt(reader: CodeBaseReader, vector_store=None) -> list
     @refi_tool_wrapper
     def get_file_structure_summary(file_path: str) -> str:
         """
-        Analyzes a file using the Abstract Syntax Tree (AST) to extract classes, methods, and functions.
+        Analyzes a file (Python, Kotlin, TypeScript, Java, etc.) to extract classes, methods, and functions.
         Provides a high-level architectural view of the file without polluting the context window.
         Args:
-            file_path: Relative path from project root.
+            file_path: Relative or absolute path of the file.
         """
-        target_path = workspace_root / file_path
+        target_path = resolve_file_path(file_path)
         if not target_path.is_file():
             return f"Error: File '{file_path}' not found."
             
         try:
             with open(target_path, "r", encoding="utf-8") as f:
-                tree = ast.parse(f.read())
-            
+                content = f.read()
+
+            # If it's a Python file, try using the standard library AST parser first
+            if target_path.suffix == ".py":
+                try:
+                    tree = ast.parse(content)
+                    summary = [f"Structure of {file_path}:"]
+                    for node in tree.body:
+                        if isinstance(node, ast.ClassDef):
+                            summary.append(f"Class: {node.name}")
+                            for item in node.body:
+                                if isinstance(item, ast.FunctionDef):
+                                    summary.append(f"  - Method: {item.name}")
+                        elif isinstance(node, ast.FunctionDef):
+                            summary.append(f"Function: {node.name}")
+                    return "\n".join(summary)
+                except Exception:
+                    pass # Fallback to regex-based parsing if AST fails
+
+            # Language-agnostic structural parser (Kotlin, TS, Java, etc.)
             summary = [f"Structure of {file_path}:"]
-            for node in tree.body:
-                if isinstance(node, ast.ClassDef):
-                    summary.append(f"Class: {node.name}")
-                    for item in node.body:
-                        if isinstance(item, ast.FunctionDef):
-                            summary.append(f"  - Method: {item.name}")
-                elif isinstance(node, ast.FunctionDef):
-                    summary.append(f"Function: {node.name}")
+            lines = content.splitlines()
+            for line in lines:
+                line_stripped = line.strip()
+                # Skip comments and empty lines
+                if not line_stripped or line_stripped.startswith("//") or line_stripped.startswith("/*") or line_stripped.startswith("*"):
+                    continue
+                
+                # Check for class, interface, or object definitions
+                class_match = re.search(r"\b(class|interface|object|struct)\s+(\w+)", line_stripped)
+                if class_match:
+                    summary.append(f"{class_match.group(1).capitalize()}: {class_match.group(2)}")
+                    continue
+                
+                # Check for functions/methods (e.g., fun name, function name, public void name, const name = async...)
+                fun_match = re.search(r"\b(fun|function)\s+(\w+)", line_stripped)
+                if fun_match:
+                    summary.append(f"  - Method/Function: {fun_match.group(2)}")
+                    continue
+                
+                # Java/C# style methods: e.g. public void myMethod( or private String getSomething(
+                java_method_match = re.search(r"\b(public|private|protected|internal)\s+(?:static\s+)?([\w<>\d]+)\s+(\w+)\s*\(", line_stripped)
+                if java_method_match:
+                    method_name = java_method_match.group(3)
+                    if method_name not in ("class", "interface", "fun", "function", "if", "for", "while", "switch"):
+                        summary.append(f"  - Method: {method_name}")
+                        
             return "\n".join(summary)
         except Exception as e:
-            return f"Could not parse file structure (might not be a valid Python file): {str(e)}"
+            return f"Could not parse file structure: {str(e)}"
 
     @tool
     @refi_tool_wrapper
@@ -141,9 +195,10 @@ def create_evaluator_toolbelt(reader: CodeBaseReader, vector_store=None) -> list
         """
         Scans the workspace for matching test suites or specification files related to the source file.
         Args:
-            source_file_path: Relative path of the source file under evaluation.
+            source_file_path: Relative or absolute path of the source file under evaluation.
         """
-        path_obj = Path(source_file_path)
+        resolved_path = resolve_file_path(source_file_path)
+        path_obj = Path(resolved_path)
         search_pattern = f"*{path_obj.stem}*{path_obj.suffix}"
         matches = list(workspace_root.rglob(search_pattern))
         test_matches = [m for m in matches if 'test' in str(m).lower() or 'spec' in str(m).lower()]

@@ -38,7 +38,8 @@ if __name__ == "__main__":
         #############################################
         debug_mode=True,
         current_evaluation_mode=EvaluationMode.AGENT_AI,
-        real_batch_evaluation_type=RealEvaluation.FULFILLED
+        real_batch_evaluation_type=RealEvaluation.FULFILLED,
+        model_provider=model_provider
     )
     
     root.mainloop()
