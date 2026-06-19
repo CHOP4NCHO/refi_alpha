@@ -36,7 +36,7 @@ def refi_tool_wrapper(tool_func):
             print(f"[TOOL_TIME] Completed in {time.time() - start_time:.4f} seconds.")
     return exec
 
-def create_evaluator_toolbelt(reader: CodeBaseReader, vector_store=None) -> list:
+def create_evaluator_toolbelt(reader: CodeBaseReader, vector_store=None, allowed_files: list = None) -> list:
     """
     Returns a suite of tools optimized for semantic, structural, and proximity analysis.
     Integrates a Vector Store to enable RAG capabilities within the agent's loop.
@@ -59,7 +59,8 @@ def create_evaluator_toolbelt(reader: CodeBaseReader, vector_store=None) -> list
             
         # 3. Try fallback search within the codebase files
         norm_path = file_path.replace("\\", "/").strip("/")
-        for code_file in reader.codebase.files:
+        search_pool = allowed_files if allowed_files else reader.codebase.files
+        for code_file in search_pool:
             abs_str = str(code_file.path).replace("\\", "/")
             if abs_str.endswith(norm_path) or code_file.path.name == norm_path:
                 return Path(code_file.path)
@@ -200,7 +201,12 @@ def create_evaluator_toolbelt(reader: CodeBaseReader, vector_store=None) -> list
         resolved_path = resolve_file_path(source_file_path)
         path_obj = Path(resolved_path)
         search_pattern = f"*{path_obj.stem}*{path_obj.suffix}"
-        matches = list(workspace_root.rglob(search_pattern))
+        if allowed_files:
+            allowed_paths = {str(f.path) for f in allowed_files}
+            all_matches = list(workspace_root.rglob(search_pattern))
+            matches = [m for m in all_matches if str(m) in allowed_paths]
+        else:
+            matches = list(workspace_root.rglob(search_pattern))
         test_matches = [m for m in matches if 'test' in str(m).lower() or 'spec' in str(m).lower()]
         
         if not test_matches:

@@ -1,6 +1,5 @@
 import json
 from typing import Iterable
-from pprint import pprint
 from pydantic import BaseModel
 from dataclasses import dataclass
 
@@ -75,14 +74,16 @@ class Evaluator:
         """ Sets the current working treee """
         self._target_codebase = tree
 
-    def build_vector_store(self, codebase_reader: CodeBaseReader, embeddings_model) -> None:
+    def build_vector_store(self, codebase_reader: CodeBaseReader, embeddings_model, files_content: list[CodeFile] | None = None) -> None:
         """
         Creates an in-memory vector store populated with chunked code snippets
         from the provided codebase reader. Splits files into overlapping chunks of lines.
+        If files_content is provided, only those files are processed (subset mode).
         """
         print("[Evaluator] Building in-memory RAG vector store...")
         documents = []
-        for code_file in codebase_reader.codebase.files:
+        files_to_process = files_content if files_content else codebase_reader.codebase.files
+        for code_file in files_to_process:
             try:
                 content = code_file.get_raw_content()
                 if not content.strip():
@@ -90,8 +91,8 @@ class Evaluator:
                 
                 # Split content into line-based chunks for precise code windows
                 lines = content.splitlines()
-                chunk_size = 50  # Number of lines per chunk
-                chunk_overlap = 10  # Number of overlapping lines between consecutive chunks
+                chunk_size = 300  # Number of lines per chunk
+                chunk_overlap = 30  # Number of overlapping lines between consecutive chunks
                 
                 for i in range(0, len(lines), chunk_size - chunk_overlap):
                     chunk_lines = lines[i : i + chunk_size]
@@ -200,7 +201,8 @@ class Evaluator:
             )
             used_tools = create_evaluator_toolbelt(
                 codebase_reader,
-                vector_store=self._vector_store
+                vector_store=self._vector_store,
+                allowed_files=files_content
             )
         else:
             print("[Evaluator] No vector store detected. Running standard agent evaluation.")
@@ -210,7 +212,8 @@ class Evaluator:
             )
             used_tools = create_evaluator_toolbelt(
                 codebase_reader,
-                vector_store=None
+                vector_store=None,
+                allowed_files=files_content
             )
 
         config = {

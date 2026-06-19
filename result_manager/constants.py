@@ -1,2 +1,2 @@
 DEFAULT_SAVE_DIR="."
-DEFAULT_SAVE_NAME="results.txt"
+DEFAULT_SAVE_NAME="iteracion_agente_gemini.txt"

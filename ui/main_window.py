@@ -125,7 +125,7 @@ class RefiApp:
                 self.log_message("Preparando base de datos vectorial (RAG) para el repositorio...")
                 try:
                     embeddings = self.model_provider.get_embeddings()
-                    self.evaluator.build_vector_store(self.codebase_reader, embeddings)
+                    self.evaluator.build_vector_store(self.codebase_reader, embeddings, files_content=self.file_context)
                     self.log_message("Base vectorial (RAG) construida con éxito.")
                 except Exception as e:
                     self.log_message(f"Advertencia: No se pudo construir la base vectorial (RAG): {str(e)}")
