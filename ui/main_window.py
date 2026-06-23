@@ -23,6 +23,7 @@ from result_manager.req_fidelity_review import (
 from .workingtree_tab import WorkingtreeTab
 from .requirements_tab import RequirementsTab
 from .evaluation_tab import EvaluationTab
+from .config_tab import ConfigTab
 from .log_console import LogConsole
 
 class RefiApp:
@@ -90,10 +91,12 @@ class RefiApp:
         self.tab_workspace = WorkingtreeTab(self.notebook, app=self)
         self.tab_requirements = RequirementsTab(self.notebook, app=self)
         self.tab_evaluation = EvaluationTab(self.notebook, app=self)
+        self.tab_config = ConfigTab(self.notebook, app=self)
 
         self.notebook.add(self.tab_workspace, text="1. Espacio de Trabajo")
         self.notebook.add(self.tab_requirements, text="2. Requerimientos")
         self.notebook.add(self.tab_evaluation, text="3. Evaluación y Resultados")
+        self.notebook.add(self.tab_config, text="4. Configuración")
 
         self.log_console = LogConsole(self.root)
         self.log_console.grid(row=1, column=0, sticky="ew", padx=10, pady=(0, 10))

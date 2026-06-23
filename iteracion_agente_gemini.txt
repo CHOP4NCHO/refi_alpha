@@ -1,0 +1,1981 @@
+REVIEWED ON 2026-06-19 11:33:29.948254
+==========================
+Reviewed Requirement: Reconocer color automáticamente
+==========================
+Status: Fulfilled
+Reason: El código fuente en /home/chopancho/dev/PRUEBAS_REFI_ALPHA/P1_2_2022/operaciones.py contiene la función 'Automatic()'. Esta función utiliza 'ev3dev2.sensor.lego.ColorSensor' para monitorear el valor de 'col.color'. La lógica implementada en las líneas 16 a 26 permite que el sistema detecte un color específico (en este caso, el valor 6 correspondiente al color blanco en la API de LEGO EV3) para detener el movimiento del robot automáticamente, cumpliendo así con el requerimiento de reconocimiento y reacción ante un color de forma automática.
+
+==========================
+Reviewed Requirement: Usar sensor ultrasonido de proximidad
+==========================
+Status: Fulfilled
+Reason: El archivo /home/chopancho/dev/PRUEBAS_REFI_ALPHA/P1_2_2022/operaciones.py importa correctamente 'UltrasonicSensor' desde 'ev3dev2.sensor.lego' (línea 4). Además, se instancia el sensor en la línea 12 ('prox = UltrasonicSensor(INPUT_1)') y se utiliza activamente en la función 'Automatic()' en la línea 18, donde se consulta 'prox.distance_centimeters_continuous' para tomar decisiones de movimiento basadas en la proximidad. Por tanto, el requerimiento está implementado y funcional.
+
+==========================
+Reviewed Requirement: Establecer conexión al servidor por el puerto 12345
+==========================
+Status: Fulfilled
+Reason: Tras analizar el archivo `/home/chopancho/dev/PRUEBAS_REFI_ALPHA/P1_2_2022/interfaz.py`, se identificó la función `conection(addr)` la cual utiliza el socket `client` para ejecutar `client.connect((addr, port))` utilizando explícitamente la variable `port = 12345`. Esta lógica es invocada a través de la interfaz gráfica al configurar la dirección IP del servidor, cumpliendo así con el requerimiento de establecer la conexión al puerto especificado.
+
+===============================
+Fulfilled Requirements: 3/3
+===============================
+
+===============================
+TOKEN USAGE STATS
+Input Tokens : 23411
+Output Tokens: 948
+Total Tokens : 24359
+===============================
+ESTADÍSTICAS DE EVALUACIÓN SUPERVISADA
+DEBUG MODE: True
+MODEL: ollama
+EVALUATION MODE: agent
+GROUND TRUTH VALUE: Fulfilled
+
+REVIEWED ON 2026-06-19 11:36:10.824295
+==========================
+Reviewed Requirement: Almacenar información de riegos efectuados
+==========================
+Status: Not fulfilled
+Reason: Aunque existe un modelo `RiegoPrueba` en Django destinado a almacenar la información de los riegos (con campos como fecha, hora y tipo de regado), el análisis del código en `manejoRiegos/views.py` y `manejoRiegos/modules.py` demuestra que la lógica de activación del riego (función `regadoHastaHumedo`) no realiza ninguna persistencia de datos en dicho modelo. La función `regadoManual` invoca el proceso físico, pero no crea ni guarda una instancia de `RiegoPrueba` después de efectuar el riego. Por lo tanto, no se cumple el requerimiento de almacenar la información.
+
+==========================
+Reviewed Requirement: Recopilar y desplegar estadísticas sobre las condiciones del suelo
+==========================
+Status: Fulfilled
+Reason: El sistema implementa la funcionalidad mediante una arquitectura de cliente-servidor. En el lado del hardware (rpi_botanidrip.py), se realiza la recopilación de datos de humedad a través del pin configurado en 'check_status'. Estos datos son expuestos a través de una API (según se infiere del uso de 'ApiService' en los archivos de la aplicación Android, específicamente en 'RiegoViewModel.kt'). En la aplicación Android, 'Estadisticas.kt' consume esta información a través de 'RiegoViewModel' y despliega visualmente el estado del suelo en la interfaz mediante las funciones 'SueloBueno', 'SueloMalo' y 'SueloDuda', basándose en el valor de 'regado' obtenido del backend. Esto satisface el requerimiento de recopilación (hardware) y despliegue (UI).
+
+==========================
+Reviewed Requirement: Visualizar listado de riegos efectuados
+==========================
+Status: Fulfilled
+Reason: El código fuente contiene la implementación necesaria para visualizar el historial de riegos. El archivo 'History.kt' define los componentes composables 'RiegoDisplay', que muestra los detalles de un riego individual (ID, fecha, hora y tipo de riego), y 'ShowRiegoHistory', que utiliza un 'LazyColumn' para renderizar una lista completa de objetos 'RiegoPrueba'. Esto confirma que existe la capacidad funcional para listar y visualizar los riegos efectuados.
+
+==========================
+Reviewed Requirement: Efectuar riegos remotamente por accionamiento manual y/o automático
+==========================
+Status: Fulfilled
+Reason: El código analizado presenta una arquitectura completa para el requerimiento solicitado:
+1. Accionamiento Manual: En `botanidrip/botanidrip/manejoRiegos/views.py`, la función `accionarRegado` permite disparar un hilo que ejecuta `regadoManual`, el cual a su vez llama a funciones de hardware (`rpi_botanidrip.py`) para activar la bomba.
+2. Accionamiento Automático: El archivo `caller_django.py` contiene la lógica `automatic()` que gestiona la ejecución en segundo plano del script `automatic_water.py`, el cual utiliza `rpi_botanidrip.automatization()` para realizar el riego basado en sensores.
+3. El hardware (GPIO de Raspberry Pi) está interconectado mediante el módulo `rpi_botanidrip.py`, permitiendo la interacción remota (vía Django views y las funciones de control) y la lógica automática.
+
+==========================
+Reviewed Requirement: Avisar al usuario cuando se haya realizado un riego
+==========================
+Status: Not fulfilled
+Reason: Tras analizar la arquitectura del sistema, especialmente los archivos 'caller_django.py', 'rpi_botanidrip.py' y 'manejoRiegos/views.py', se observa que aunque el sistema es capaz de realizar el riego tanto de forma manual como automática, no existe ningún mecanismo (notificaciones push, envío de correos, logs de eventos notificados, ni lógica de respuesta de API al cliente) que informe al usuario final de que el proceso de riego ha finalizado exitosamente. La vista 'accionarRegado' simplemente inicia un hilo para el riego y registra el evento en la base de datos, retornando una respuesta genérica al cliente ('1'), pero sin incluir una lógica de notificación o aviso post-riego.
+
+===============================
+Fulfilled Requirements: 3/5
+===============================
+
+===============================
+TOKEN USAGE STATS
+Input Tokens : 106183
+Output Tokens: 2350
+Total Tokens : 108533
+===============================
+ESTADÍSTICAS DE EVALUACIÓN SUPERVISADA
+DEBUG MODE: True
+MODEL: ollama
+EVALUATION MODE: agent
+GROUND TRUTH VALUE: Fulfilled
+
+REVIEWED ON 2026-06-19 11:41:15.057267
+==========================
+Reviewed Requirement: El sistema debe medir y registrar la cantidad de alimento dispensado y consumido
+==========================
+Status: Not fulfilled
+Reason: Agent execution error during structural evaluation: Recursion limit of 25 reached without hitting a stop condition. You can increase the limit by setting the `recursion_limit` config key.
+For troubleshooting, visit: https://docs.langchain.com/oss/python/langgraph/errors/GRAPH_RECURSION_LIMIT
+
+==========================
+Reviewed Requirement: El sistema debe permitir al usuario programar horarios de alimentación a través de una aplicación movil
+==========================
+Status: Fulfilled
+Reason: El código fuente contiene una aplicación móvil (app-iot) con componentes como 'nuevo-horario.tsx' que permiten definir horas, días y tipo de alimentación, realizando peticiones POST a una API para persistir estos horarios. Adicionalmente, 'horarios.tsx' permite consultar la lista de horarios programados.
+
+==========================
+Reviewed Requirement: El sistema debe notificar al usuario cuando los niveles de comida o agua en los depósitos estén bajos
+==========================
+Status: Not fulfilled
+Reason: El código fuente (CODIGO.py) implementa la lectura de sensores de nivel y los expone a través de una API REST (/estado, /niveles), pero no contiene ninguna lógica para generar notificaciones (enviar alertas, notificaciones push, emails o avisos) al usuario cuando dichos niveles son bajos. La funcionalidad se limita a informar el estado actual bajo demanda.
+
+==========================
+Reviewed Requirement: El sistema debe dispensar una cantidad de alimento predefinida por el usuario cuando cumpla el horario programado o se active manualmente
+==========================
+Status: Not fulfilled
+Reason: Agent execution error during structural evaluation: Recursion limit of 25 reached without hitting a stop condition. You can increase the limit by setting the `recursion_limit` config key.
+For troubleshooting, visit: https://docs.langchain.com/oss/python/langgraph/errors/GRAPH_RECURSION_LIMIT
+
+==========================
+Reviewed Requirement: La aplicación móvil debe mostrar en tiempo real el estado de los depósitos (nivel de comida y agua) y el historial de consumido
+==========================
+Status: Not fulfilled
+Reason: Agent execution error during structural evaluation: Recursion limit of 25 reached without hitting a stop condition. You can increase the limit by setting the `recursion_limit` config key.
+For troubleshooting, visit: https://docs.langchain.com/oss/python/langgraph/errors/GRAPH_RECURSION_LIMIT
+
+===============================
+Fulfilled Requirements: 1/5
+===============================
+
+===============================
+TOKEN USAGE STATS
+Input Tokens : 271526
+Output Tokens: 2951
+Total Tokens : 274477
+===============================
+ESTADÍSTICAS DE EVALUACIÓN SUPERVISADA
+DEBUG MODE: True
+MODEL: ollama
+EVALUATION MODE: agent
+GROUND TRUTH VALUE: Fulfilled
+
+REVIEWED ON 2026-06-19 11:57:15.472977
+==========================
+Reviewed Requirement: El sistema debe medir y registrar la cantidad de alimento dispensado y consumido
+==========================
+Status: Not fulfilled
+Reason: Agent execution error during structural evaluation: Recursion limit of 25 reached without hitting a stop condition. You can increase the limit by setting the `recursion_limit` config key.
+For troubleshooting, visit: https://docs.langchain.com/oss/python/langgraph/errors/GRAPH_RECURSION_LIMIT
+
+==========================
+Reviewed Requirement: El sistema debe permitir al usuario programar horarios de alimentación a través de una aplicación movil
+==========================
+Status: Fulfilled
+Reason: El archivo /home/chopancho/dev/PRUEBAS_REFI_ALPHA/smartfeed/app-iot/app/nuevo-horario.tsx contiene la lógica necesaria (interfaz y petición HTTP POST) para que el usuario programe horarios de alimentación (hora, días, duración y tipo), cumpliendo con el requerimiento.
+
+==========================
+Reviewed Requirement: La aplicación móvil debe mostrar en tiempo real el estado de los depósitos (nivel de comida y agua) y el historial de consumido
+==========================
+Status: Not fulfilled
+Reason: Agent execution error during structural evaluation: Recursion limit of 25 reached without hitting a stop condition. You can increase the limit by setting the `recursion_limit` config key.
+For troubleshooting, visit: https://docs.langchain.com/oss/python/langgraph/errors/GRAPH_RECURSION_LIMIT
+
+==========================
+Reviewed Requirement: El sistema debe dispensar una cantidad de alimento predefinida por el usuario cuando cumpla el horario programado o se active manualmente
+==========================
+Status: Not fulfilled
+Reason: Agent execution error during structural evaluation: Recursion limit of 25 reached without hitting a stop condition. You can increase the limit by setting the `recursion_limit` config key.
+For troubleshooting, visit: https://docs.langchain.com/oss/python/langgraph/errors/GRAPH_RECURSION_LIMIT
+
+==========================
+Reviewed Requirement: El sistema debe notificar al usuario cuando los niveles de comida o agua en los depósitos estén bajos
+==========================
+Status: Not fulfilled
+Reason: Agent execution error during structural evaluation: Recursion limit of 25 reached without hitting a stop condition. You can increase the limit by setting the `recursion_limit` config key.
+For troubleshooting, visit: https://docs.langchain.com/oss/python/langgraph/errors/GRAPH_RECURSION_LIMIT
+
+===============================
+Fulfilled Requirements: 1/5
+===============================
+
+===============================
+TOKEN USAGE STATS
+Input Tokens : 320227
+Output Tokens: 3254
+Total Tokens : 323481
+===============================
+ESTADÍSTICAS DE EVALUACIÓN SUPERVISADA
+DEBUG MODE: True
+MODEL: ollama
+EVALUATION MODE: agent
+GROUND TRUTH VALUE: Fulfilled
+
+REVIEWED ON 2026-06-19 12:01:55.844965
+==========================
+Reviewed Requirement: El sistema debe permitir al usuario programar horarios de alimentación a través de una aplicación movil
+==========================
+Status: Fulfilled
+Reason: El código analizado en '/home/chopancho/dev/PRUEBAS_REFI_ALPHA/smartfeed/app-iot/app/nuevo-horario.tsx' implementa la lógica necesaria para que el usuario programe horarios de alimentación (o agua). El componente 'NuevoHorario' permite definir la hora, el tipo (agua/comida), los días de la semana y la duración, enviando esta configuración al backend mediante un método POST a la ruta '/horarios'. Adicionalmente, 'horarios.tsx' permite visualizar estos horarios, confirmando que el flujo de programación está implementado y operativo.
+
+===============================
+Fulfilled Requirements: 1/2
+===============================
+
+===============================
+TOKEN USAGE STATS
+Input Tokens : 67383
+Output Tokens: 1267
+Total Tokens : 68650
+===============================
+ESTADÍSTICAS DE EVALUACIÓN SUPERVISADA
+DEBUG MODE: True
+MODEL: ollama
+EVALUATION MODE: agent
+GROUND TRUTH VALUE: Fulfilled
+
+REVIEWED ON 2026-06-19 16:04:06.212410
+==========================
+Reviewed Requirement: El sistema debe dispensar una cantidad de alimento predefinida por el usuario cuando cumpla el horario programado o se active manualmente
+==========================
+Status: Fulfilled
+Reason: El análisis del archivo `CODIGO.py` confirma que el sistema implementa ambas funcionalidades: 
+1. **Manual:** A través del endpoint `/dispensar` (método `dispensar_manual`), que recibe `tipo` y `tiempo` y llama a `activar_relay`. Esto se refleja en la UI en `app-iot/app/index.tsx` donde se puede configurar el tiempo y disparar la acción.
+2. **Programada:** A través de la función `scheduler` que se ejecuta en segundo plano. Esta función verifica la hora actual y los días configurados en el archivo de configuración y llama a `activar_relay` automáticamente al cumplirse la condición. El tiempo de dispensación (cantidad predefinida) es parte del objeto del horario y es respetado por el relay.
+
+==========================
+Reviewed Requirement: El sistema debe permitir al usuario programar horarios de alimentación a través de una aplicación movil
+==========================
+Status: Fulfilled
+Reason: Se ha verificado la existencia de un componente funcional 'NuevoHorario' dentro de la aplicación móvil (ubicado en `app-iot/app/nuevo-horario.tsx`), el cual permite al usuario configurar la hora, el tipo de dispensación (agua/comida), los días de la semana y el tiempo de duración. El componente incluye lógica para validar los datos y realizar una petición POST al endpoint `/horarios` del servidor, cumpliendo explícitamente con el requerimiento de programar horarios de alimentación desde la aplicación móvil.
+
+===============================
+Fulfilled Requirements: 2/2
+===============================
+
+===============================
+TOKEN USAGE STATS
+Input Tokens : 177211
+Output Tokens: 1678
+Total Tokens : 178889
+===============================
+ESTADÍSTICAS DE EVALUACIÓN SUPERVISADA
+DEBUG MODE: True
+MODEL: ollama
+EVALUATION MODE: agent
+GROUND TRUTH VALUE: Fulfilled
+
+REVIEWED ON 2026-06-19 16:09:55.108444
+==========================
+Reviewed Requirement: El sistema debe reconocer sonidos en niveles altos de decibeles
+==========================
+Status: Fulfilled
+Reason: El archivo `/home/chopancho/dev/PRUEBAS_REFI_ALPHA/hush/hush/hush_rp5.py` contiene la clase `NoiseMonitorCore`, la cual implementa la lógica para monitorear niveles de decibeles (`db = analog_to_db(raw)`), comparar estos valores contra un umbral configurable (`if db >= threshold:`) y activar notificaciones (`send_alert`) cuando el sonido supera dicho umbral, cumpliendo así con el requerimiento de reconocer niveles altos de decibeles.
+
+==========================
+Reviewed Requirement: El sistema debe emitir una notificación al usuario en tiempo real (alertas)
+==========================
+Status: Fulfilled
+Reason: El archivo 'hush/hush_rp5.py' contiene la lógica implementada para el monitoreo de ruido y la notificación en tiempo real. En el bloque de código dentro de la clase de monitoreo, se verifica el umbral (`threshold`) y, si se supera y no está silenciado, se invoca `send_telegram_notification` en un hilo separado ('threading.Thread(target=_notify, daemon=True).start()'), lo cual cumple con el requerimiento de emitir alertas en tiempo real al usuario. Adicionalmente, el sistema cuenta con mecanismos para gestionar estas alertas vía comandos (Telegram y Bluetooth).
+
+==========================
+Reviewed Requirement: El sistema debe establecer conexión bluetooth con dispositivos cercanos
+==========================
+Status: Fulfilled
+Reason: El análisis del código revela que el sistema implementa una arquitectura Bluetooth bidireccional completa. En el lado del servidor (hush/hush_rp5.py), se utiliza 'pybluez' para establecer un servidor Bluetooth SPP que escucha conexiones entrantes y procesa comandos JSON. En el lado de la aplicación Android (hush/Interfaz_Hush/app/src/main/java/com/example/interfaz_hush/GraphActivity.kt), se implementa la lógica de cliente Bluetooth que permite la búsqueda, el emparejamiento (a través de la lista de dispositivos enlazados) y la conexión directa al dispositivo objetivo mediante UUID/RFCOMM, gestionando los permisos modernos de Android (BLUETOOTH_CONNECT). El sistema cumple satisfactoriamente con la capacidad de establecer y mantener la conexión bluetooth.
+
+===============================
+Fulfilled Requirements: 3/3
+===============================
+
+===============================
+TOKEN USAGE STATS
+Input Tokens : 29642
+Output Tokens: 626
+Total Tokens : 30268
+===============================
+ESTADÍSTICAS DE EVALUACIÓN SUPERVISADA
+DEBUG MODE: True
+MODEL: ollama
+EVALUATION MODE: agent
+GROUND TRUTH VALUE: Fulfilled
+
+REVIEWED ON 2026-06-19 16:46:13.101261
+==========================
+Reviewed Requirement: Debe notificar a los operadores en caso de ocupación máxima o errores de asignación
+==========================
+Status: Fulfilled
+Reason: El código implementa mecanismos de notificación y registro de eventos para situaciones de ocupación máxima y errores en la asignación de calzos. Se utilizan `log_message` (en `Calzos.php` y `Home.php`) para registrar errores (ej. "No hay calzos disponibles en el Sector 3", "Error al asignar el calzo") y se emplea el sistema de `flashdata` de CodeIgniter (`$this->session->set_flashdata('error', ...)` en `Home.php`) para notificar visualmente a los operadores a través de la interfaz de usuario en caso de fallos en la asignación o falta de recursos. La lógica de negocio maneja explícitamente los casos en los que no hay calzos libres, notificando la situación tanto internamente mediante logs como externamente mediante mensajes de error en la sesión.
+
+==========================
+Reviewed Requirement: El sistema debe mostrar un mapa del estacionamiento destacando ubicaciones ocupadas y libres
+==========================
+Status: Fulfilled
+Reason: El archivo 'application/views/estados_calzos.php' implementa una representación visual (un "mapa") del estacionamiento, organizado por filas y números de calzos. El código utiliza clases CSS condicionales ('.disponible' con fondo verde y '.ocupado' con fondo rojo) para diferenciar visualmente los estados de cada ubicación, cumpliendo directamente con el requerimiento. La lógica en la vista itera sobre '$calzos_por_fila' y aplica la clase CSS basándose en el estado del calzo.
+
+==========================
+Reviewed Requirement: El sistema debe permitir a los operadores reubicar camiones; reservar espacios específicos y corregir asignaciones a través de la interfaz
+==========================
+Status: Fulfilled
+Reason: El sistema cumple con el requerimiento mediante las siguientes capacidades implementadas en los modelos `Calzos.php` y el controlador `home.php`:
+1. Reubicar camiones y corregir asignaciones: Se utiliza el método `modificar` en `Home.php` (líneas 141-190) que, mediante el uso de `liberarCalzo` (para el espacio actual) y `asignarCalzo` (para el nuevo espacio), permite la reasignación/reasignación de camiones.
+2. Reservar espacios específicos: El sistema permite la asignación directa de un camión a un calzo seleccionado a través de `asignarCalzo` (líneas 31-56 de `Calzos.php`).
+3. Interfaz: Existen vistas como `modificar_calzos.php` (cargada en `home/modificarCalzos`) que proporcionan el soporte de interfaz necesario para que los operadores gestionen estas acciones.
+
+==========================
+Reviewed Requirement: Debe permitir visualizar los calzos de camiones mostrando su estado
+==========================
+Status: Fulfilled
+Reason: El archivo 'application/views/estados_calzos.php' contiene la estructura de visualización necesaria. La vista implementa un bucle que recorre los calzos por fila y aplica clases CSS ('disponible' para 'libre', 'ocupado' en caso contrario) según el estado del calzo. Además, muestra información del camión asignado mediante un atributo 'title', cumpliendo así con el requerimiento de visualizar los calzos y su estado actual.
+
+===============================
+Fulfilled Requirements: 4/4
+===============================
+
+===============================
+TOKEN USAGE STATS
+Input Tokens : 226102
+Output Tokens: 2126
+Total Tokens : 228228
+===============================
+ESTADÍSTICAS DE EVALUACIÓN SUPERVISADA
+DEBUG MODE: True
+MODEL: ollama
+EVALUATION MODE: agent
+GROUND TRUTH VALUE: Fulfilled
+
+REVIEWED ON 2026-06-19 16:48:21.821812
+==========================
+Reviewed Requirement: Debe permitir marcar una alerta como resuelta
+==========================
+Status: Fulfilled
+Reason: La funcionalidad requerida está implementada y es operativa. En el archivo 'src/renderer/src/services/services_alarma.js', existe la función 'putResolve' que realiza una petición PUT al endpoint '/api/alerts/resolveAlert/:id'. Esta función es invocada dentro del componente 'src/renderer/src/components/AlarmaLista.jsx' en el evento 'onClick' de un botón etiquetado como "Resolver" dentro del 'ModalLista' (líneas 80-85 del componente), el cual actualiza el estado de la alerta en el backend y refresca la lista de alertas.
+
+==========================
+Reviewed Requirement: Debe permitir al usuario iniciar sesión con credenciales personales
+==========================
+Status: Fulfilled
+Reason: El componente 'Login.jsx' implementa explícitamente una lógica de autenticación (función 'authUser') que captura los valores de los inputs de usuario ('email') y contraseña ('password'). Compara estos valores contra datos almacenados en 'userDev.json' (importado como 'data'). Si las credenciales coinciden, utiliza 'useNavigate' de 'react-router-dom' para redirigir al usuario, validando así que la funcionalidad solicitada de inicio de sesión está presente y es operativa.
+
+==========================
+Reviewed Requirement: Debe permitir listar y visualizar alarmas indicando camion grupo locaclizacion estado razon periodo y accion
+==========================
+Status: Fulfilled
+Reason: El archivo /home/chopancho/dev/PRUEBAS_REFI_ALPHA/gtmfrontend/src/renderer/src/components/AlarmaLista.jsx implementa correctamente la funcionalidad de listar y visualizar alarmas. 
+1. La tabla en la línea 198 contiene los encabezados requeridos: 'Camión', 'Grupo', 'Localizacion', 'Estado', 'Razon', 'Periodo' y 'Acción'.
+2. La lógica de renderizado en las líneas 211-251 mapea los datos de las alarmas a estos campos (camion -> caex, grupo, localizacion, estado, razon, fecha -> periodo, accion -> botón info).
+3. La visualización de detalles se realiza mediante el componente 'ModalLista' (líneas 40-103), el cual se dispara al hacer clic en el botón de acción (línea 240).
+El cumplimiento es completo respecto al requerimiento solicitado.
+
+===============================
+Fulfilled Requirements: 3/3
+===============================
+
+===============================
+TOKEN USAGE STATS
+Input Tokens : 35712
+Output Tokens: 1125
+Total Tokens : 36837
+===============================
+ESTADÍSTICAS DE EVALUACIÓN SUPERVISADA
+DEBUG MODE: True
+MODEL: ollama
+EVALUATION MODE: agent
+GROUND TRUTH VALUE: Fulfilled
+
+REVIEWED ON 2026-06-19 16:53:14.380358
+==========================
+Reviewed Requirement: Debe permitir almacenar las alertas de manera persistente
+==========================
+Status: Fulfilled
+Reason: El código implementa la persistencia de alertas de manera efectiva. Se identificó el modelo Sequelize 'AnomalyAlert' en 'src/models/AnomalyAlert.js', el cual define una estructura de tabla en una base de datos relacional (MySQL configurado en 'src/config/db.js'). Además, los servicios en 'src/services/alerts.services.js' utilizan este modelo para realizar operaciones CRUD (como 'findAll' y 'findByPk' con 'save'), lo que confirma que el sistema interactúa con una base de datos para almacenar y modificar el estado de las alertas de forma persistente.
+
+==========================
+Reviewed Requirement: Debe permitir el acceso a una base de datos mediante un archivo de configuración
+==========================
+Status: Fulfilled
+Reason: El código cumple con el requerimiento. La arquitectura utiliza el archivo 'src/config/db.js', el cual emplea la librería 'dotenv' para cargar variables de entorno (almacenadas generalmente en un archivo '.env') que configuran la instancia de Sequelize. Esta instancia es importada y utilizada posteriormente en 'src/models/index.js' y 'src/app.js' para establecer y autenticar la conexión con la base de datos MySQL, permitiendo así el acceso a la misma mediante una configuración externa.
+
+==========================
+Reviewed Requirement: Debe permitir enviar notificaciones de alerta mediante Whatsapp
+==========================
+Status: Fulfilled
+Reason: El sistema cuenta con un servicio dedicado (/src/services/whatsapp.service.js) que utiliza la API de Twilio para enviar mensajes de WhatsApp. Esta funcionalidad es invocada correctamente desde el controlador de alertas (/src/controllers/alerts.controller.js) en los métodos de obtención, resolución y reapertura de alertas, formateando la información de la alerta como un mensaje de texto y enviándolo a través del servicio implementado. El requerimiento se cumple plenamente.
+
+===============================
+Fulfilled Requirements: 3/3
+===============================
+
+===============================
+TOKEN USAGE STATS
+Input Tokens : 45171
+Output Tokens: 852
+Total Tokens : 46023
+===============================
+ESTADÍSTICAS DE EVALUACIÓN SUPERVISADA
+DEBUG MODE: True
+MODEL: ollama
+EVALUATION MODE: agent
+GROUND TRUTH VALUE: Fulfilled
+
+REVIEWED ON 2026-06-19 16:55:21.767968
+==========================
+Reviewed Requirement: Debe recibir informaciones del servidor mediante websockets
+==========================
+Status: Fulfilled
+Reason: El repositorio contiene un servicio especializado 'WebsocketService' (ubicado en 'src/app/services/websocket.service.ts') que implementa la lógica necesaria para conectarse a un servidor mediante WebSockets utilizando el protocolo STOMP (vía '@stomp/stompjs' y 'sockjs-client'). El servicio permite suscribirse a tópicos específicos (ej. '/topic/event/{eventoId}/quota') y recibe actualizaciones en tiempo real, procesando los mensajes recibidos para extraer la información de cupos. Por lo tanto, el requerimiento está correctamente implementado.
+
+==========================
+Reviewed Requirement: Debe permitir visualizar un curso mostrando nombre descripcion fecha de inicio y termino categorías entre otras
+==========================
+Status: Fulfilled
+Reason: El componente `CursosComponent` y su correspondiente `template` (`cursos.component.html`) implementan la visualización de la información requerida de un curso. En el archivo `cursos.component.html` (líneas 111-150), se puede observar que el código renderiza: 
+1. El **nombre** del curso (`{{ curso.nombre }}`).
+2. La **descripción** (`{{ curso.descripcion }}`).
+3. La **categoría** (`{{ curso.categoria.nombre }}`).
+4. Las **fechas de inicio y término** (`{{ curso.fechaInicio | date:'dd/MM/yyyy' }} - {{ curso.fechaFin | date:'dd/MM/yyyy' }}`).
+5. Información adicional como **sesiones** y horarios.
+Por lo tanto, el requerimiento está cumplido.
+
+==========================
+Reviewed Requirement: Debe permitir visualizar eventos disponibles indicando quién es el encargado
+==========================
+Status: Fulfilled
+Reason: El código fuente implementa la visualización de eventos y muestra explícitamente al encargado del evento en la interfaz de usuario. 
+
+1. Se analizó `eventos-list.component.html` donde existe un contenedor (`eventoSeleccionado`) que muestra la información detallada del evento al ser seleccionado.
+2. Específicamente, en las líneas 382-393 del componente de visualización (HTML), se mapea el campo `encargado` del objeto `eventoSeleccionado` dentro de una estructura informativa:
+   `<p class="text-xs text-gray-500">Encargado</p>`
+   `<p class="text-sm font-semibold text-gray-900 truncate">{{ eventoSeleccionado.encargado }}</p>`
+3. El modelo de datos `Evento` (`evento.model.ts`) incluye la propiedad `encargado: string;`, lo que confirma que la aplicación maneja y persiste la información del responsable del evento.
+4. Por lo tanto, el requerimiento de visualizar eventos e indicar quién es el encargado está técnicamente implementado.
+
+===============================
+Fulfilled Requirements: 3/3
+===============================
+
+===============================
+TOKEN USAGE STATS
+Input Tokens : 169125
+Output Tokens: 1515
+Total Tokens : 170640
+===============================
+ESTADÍSTICAS DE EVALUACIÓN SUPERVISADA
+DEBUG MODE: True
+MODEL: ollama
+EVALUATION MODE: agent
+GROUND TRUTH VALUE: Fulfilled
+
+REVIEWED ON 2026-06-19 16:58:15.555437
+==========================
+Reviewed Requirement: Debe permitir guardar información de los usuarios indicando nombre apellido rol entre otros
+==========================
+Status: Fulfilled
+Reason: El sistema implementa correctamente el registro de usuarios a través de la clase `UsuarioController` y su DTO `RegistroUsuarioDTO`, que incluye los campos `nombre` y `apellido`. Adicionalmente, el modelo `Usuario` persiste los campos `nombre`, `apellido` y `rol` (además de otros como `telefono`, `fcmToken`, etc.). La lógica de negocio está soportada por el `ServicioUsuario` y los datos se guardan efectivamente en la base de datos (según se observa en `DataSeeder.java`).
+
+==========================
+Reviewed Requirement: Debe permitir crear; eliminar y editar nuevos recintos deportivos
+==========================
+Status: Fulfilled
+Reason: El archivo 'RecintoController.java' implementa los endpoints necesarios para la gestión de recintos deportivos: 'crearRecinto' (@PostMapping("/create")), 'editarRecinto' (@PutMapping("/edit/{id}")) y 'eliminarRecinto' (@DeleteMapping("/{id}")), cumpliendo efectivamente con el requerimiento de crear, editar y eliminar recintos.
+
+===============================
+Fulfilled Requirements: 2/2
+===============================
+
+===============================
+TOKEN USAGE STATS
+Input Tokens : 303862
+Output Tokens: 1680
+Total Tokens : 305542
+===============================
+ESTADÍSTICAS DE EVALUACIÓN SUPERVISADA
+DEBUG MODE: True
+MODEL: ollama
+EVALUATION MODE: agent
+GROUND TRUTH VALUE: Fulfilled
+
+REVIEWED ON 2026-06-19 17:00:20.676038
+==========================
+Reviewed Requirement: Debe manejar conexiones con Firebase para enviar notificaciones
+==========================
+Status: Fulfilled
+Reason: El código fuente contiene tanto la configuración necesaria para la conexión con Firebase mediante FirebaseAdmin SDK (en `FirebaseConfig.java`, que inicializa `FirebaseApp` con las credenciales apropiadas) como la lógica de negocio necesaria para el envío de notificaciones push a través de Firebase Messaging (implementado en `ServicioFirebaseImpl.java` mediante el método `enviarNotificacionPush`, que utiliza `FirebaseMessaging.getInstance().send(message)`). Se confirma la existencia y funcionalidad operativa para el cumplimiento del requerimiento.
+
+===============================
+Fulfilled Requirements: 1/1
+===============================
+
+===============================
+TOKEN USAGE STATS
+Input Tokens : 57842
+Output Tokens: 479
+Total Tokens : 58321
+===============================
+ESTADÍSTICAS DE EVALUACIÓN SUPERVISADA
+DEBUG MODE: True
+MODEL: ollama
+EVALUATION MODE: agent
+GROUND TRUTH VALUE: Fulfilled
+
+REVIEWED ON 2026-06-19 17:04:10.487338
+==========================
+Reviewed Requirement: Debe permitir al usuario ver su perfil
+==========================
+Status: Fulfilled
+Reason: Se ha analizado el archivo `ProfileScreen.kt` y se ha confirmado que la clase `ProfileScreen` y su composición `ProfileScreenContent` implementan una interfaz de usuario dedicada para visualizar el perfil del usuario. El código muestra la carga de datos del perfil (nombre, correo, acerca de) a través de un `ProfileViewModel` y los renderiza correctamente en una vista con diseño de perfil que incluye la información del usuario y opciones de configuración. La implementación es operativa y cumple con el requerimiento.
+
+==========================
+Reviewed Requirement: Debe permitir ver un historial de los cursos asistidos
+==========================
+Status: Fulfilled
+Reason: Tras analizar el código fuente, específicamente 'HistoryViewModel.kt', se confirma que existe una funcionalidad dedicada para cargar y mostrar el historial de cursos. El 'HistoryState' incluye una lista de 'CursoHistorial' ('val cursos: List<CursoHistorial> = emptyList()'), y el método 'loadHistory' invoca 'userRepository.getUserCourseHistory(currentUser.idUsuario)' para obtener los datos correspondientes. Además, la capa de presentación cuenta con una 'HistoryScreen' y el ViewModel está correctamente integrado, validando que el requerimiento de visualizar el historial de cursos asistidos está implementado y operativo.
+
+==========================
+Reviewed Requirement: Debe permitir al usuario inscribirse en alguna actividad o evento disponible
+==========================
+Status: Fulfilled
+Reason: El código analizado en 'EventDetailScreen.kt' implementa explícitamente la lógica y UI para inscribirse a un evento. Se verifica que existe un estado 'canEnroll' que, al ser verdadero, permite al usuario cargar información de participantes ('nombre', 'apellido', 'edad') mediante campos de entrada dinámicos y activar un botón 'Inscribirse al evento' (líneas 688-745), que invoca el evento 'EventDetailEvent.Enroll' procesado por el 'EventDetailViewModel' utilizando el 'EnrollUserUseCase'. Adicionalmente, el historial de usuario (verificado en 'HistoryScreen.kt') muestra eventos a los que ya se ha inscrito, confirmando la funcionalidad integral.
+
+===============================
+Fulfilled Requirements: 3/3
+===============================
+
+===============================
+TOKEN USAGE STATS
+Input Tokens : 272680
+Output Tokens: 1673
+Total Tokens : 274353
+===============================
+ESTADÍSTICAS DE EVALUACIÓN SUPERVISADA
+DEBUG MODE: True
+MODEL: ollama
+EVALUATION MODE: agent
+GROUND TRUTH VALUE: Fulfilled
+
+REVIEWED ON 2026-06-19 17:05:35.500855
+==========================
+Reviewed Requirement: Debe permitir la conexión al servidor mediante la ip del robot
+==========================
+Status: Fulfilled
+Reason: Se ha verificado el archivo /home/chopancho/dev/PRUEBAS_REFI_ALPHA/robotflo/interfaz.py. La función 'get_ip' crea una ventana de interfaz gráfica (Tkinter) para solicitar al usuario la dirección IP. Posteriormente, esta dirección es pasada a la función 'conectar(adress, port)', la cual utiliza el módulo 'socket' (clientSocket.connect((adress, port))) para establecer la comunicación con el servidor del robot, cumpliendo así con el requerimiento.
+
+==========================
+Reviewed Requirement: La interfaz gráfica tiene botones para que el robot pueda desplazarse; agarrar y soltar bola
+==========================
+Status: Fulfilled
+Reason: El archivo '/home/chopancho/dev/PRUEBAS_REFI_ALPHA/robotflo/interfaz.py' implementa la interfaz gráfica utilizando la librería Tkinter. Se ha verificado que existen botones definidos (utilizando la clase 'Button') asociados a funciones que envían comandos a través de un socket ('clientSocket') para el control del robot:
+
+- Desplazamiento: Se encuentran definidos los botones 'boton_adelante', 'boton_atras', 'boton_der' y 'boton_izq' vinculados a sus respectivas funciones que envían los comandos de movimiento.
+- Agarrar y soltar: Se encuentran definidos los botones 'boton_agarrar' y 'boton_soltar', vinculados a las funciones 'Agarrar()' y 'Soltar()', las cuales envían los bytes correspondientes ('k' para agarrar y 'l' para soltar) a través del socket.
+
+Por lo tanto, el requerimiento está completamente implementado.
+
+===============================
+Fulfilled Requirements: 2/2
+===============================
+
+===============================
+TOKEN USAGE STATS
+Input Tokens : 15191
+Output Tokens: 710
+Total Tokens : 15901
+===============================
+ESTADÍSTICAS DE EVALUACIÓN SUPERVISADA
+DEBUG MODE: True
+MODEL: ollama
+EVALUATION MODE: agent
+GROUND TRUTH VALUE: Fulfilled
+
+REVIEWED ON 2026-06-19 17:08:11.823953
+==========================
+Reviewed Requirement: El sistema deberá permitir cargar boletas
+==========================
+Status: Fulfilled
+Reason: El componente `PaymentComponent` (ubicado en `src/app/components/payment/payment.ts`) implementa explícitamente la funcionalidad de registro de pagos/boletas. El método `onFileSelected` valida que el archivo sea PDF y no exceda 5MB, y el método `savePayment` utiliza `FormData` para enviar el archivo al servicio `applicantService.addPayment`, el cual interactúa con el backend para persistir la información. La funcionalidad está operativa y validada.
+
+==========================
+Reviewed Requirement: El sistema debe permitir ver expedientes; seguimientos; evaluaciones; pagos entre otros
+==========================
+Status: Fulfilled
+Reason: Tras analizar el archivo 'src/app/app.routes.ts', se observa que el sistema está estructurado mediante un sistema de rutas (router) en Angular que implementa explícitamente las vistas solicitadas. 
+En la definición de la ruta 'expediente/:id', existen sub-rutas configuradas para:
+- Expediente principal ('FileApplicantComponent')
+- Evaluaciones ('EvaluationApplicantComponent')
+- Seguimiento ('TraicingApplicantComponent')
+- Pagos ('PaymentComponent')
+Además de otras funcionalidades como cronograma y documentos. La presencia de estos componentes y sus rutas, protegidas por guards de autenticación y roles, confirma que el requerimiento de visualización está implementado.
+
+==========================
+Reviewed Requirement: El sistema deberá mostrar la información por etapas del proceso
+==========================
+Status: Fulfilled
+Reason: El componente `TraicingApplicantComponent` (ubicado en `src/app/components/traicing-applicant/`) implementa visualmente una línea de tiempo (timeline) que representa las etapas del proceso (Recepción, Análisis Curricular, Evaluaciones, Resolución Final). Además, utiliza un sistema de navegación mediante `currentView` (analizado en el HTML y TS) para alternar entre la información específica de dichas etapas, mostrando el contenido correspondiente según la etapa seleccionada. La estructura de datos y la interfaz cumplen explícitamente con el requerimiento de mostrar la información por etapas.
+
+==========================
+Reviewed Requirement: El sistema deberá permitir registrar postulantes por medio de un formulario
+==========================
+Status: Fulfilled
+Reason: El sistema implementa de forma completa el requerimiento de registro de postulantes. Se ha verificado el componente 'ApplicantComponent' (archivo 'src/app/components/applicant/applicant.ts' y su template HTML asociado), el cual dispone de un formulario interactivo ('createApplicantModal') que permite capturar datos del postulante (nombres, apellidos, RUT, pasaporte, email, país, etc.) y gestionar su guardado mediante el servicio 'ApplicantService' ('src/app/services/applicant.ts'). La lógica incluye validaciones de datos y manejo de estado, cumpliendo así con lo solicitado.
+
+==========================
+Reviewed Requirement: El sistema debera permitir registrar observaciones a cada postulación
+==========================
+Status: Fulfilled
+Reason: Se ha verificado la existencia de un componente Angular (`ObservationComponent`) y un servicio (`ObservationService`) dedicados específicamente a gestionar observaciones. El componente permite capturar el texto de la observación a través de una propiedad de enlace de datos (`newObservationText`), validarlo, y enviarlo al servicio (`observationService.create`) para su persistencia en el backend, incluyendo la asociación con el `resultId` correspondiente a la postulación y la información del usuario autenticado. La lógica está implementada y es funcional.
+
+===============================
+Fulfilled Requirements: 5/5
+===============================
+
+===============================
+TOKEN USAGE STATS
+Input Tokens : 241120
+Output Tokens: 2316
+Total Tokens : 243436
+===============================
+ESTADÍSTICAS DE EVALUACIÓN SUPERVISADA
+DEBUG MODE: True
+MODEL: ollama
+EVALUATION MODE: agent
+GROUND TRUTH VALUE: Fulfilled
+
+REVIEWED ON 2026-06-19 17:12:34.494013
+==========================
+Reviewed Requirement: El sistema debe permitir revisar el historial de pagos del postulantes
+==========================
+Status: Fulfilled
+Reason: Se ha verificado en el archivo '/home/chopancho/dev/PRUEBAS_REFI_ALPHA/titulosbackend/src/applicants/applicants.controller.ts' que el sistema expone un endpoint GET en la ruta ':id/payments' (línea 160) el cual invoca al método 'this.applicantsService.getPayments(+id)' (línea 161). Esto confirma la existencia de la funcionalidad para consultar el historial de pagos de un postulante específico.
+
+==========================
+Reviewed Requirement: El sistema debe almacenar información sobre postulaciones en una base de datos
+==========================
+Status: Fulfilled
+Reason: Tras analizar el código fuente, se identificó el servicio 'ApplicantsService' (ubicado en 'applicants/applicants.service.ts'), el cual utiliza 'PrismaService' para interactuar con la base de datos. Se observa explícitamente en el método 'create' (líneas 15-46) que el sistema realiza consultas mediante 'this.prisma.applicant.findFirst' y persistencia de datos mediante 'this.prisma.applicant.update'. Esto confirma que existe una arquitectura implementada para el almacenamiento y gestión de la información de los postulantes.
+
+==========================
+Reviewed Requirement: El sistema debe permitir registrar distintos tipos de usuario
+==========================
+Status: Fulfilled
+Reason: El sistema implementa el registro de distintos tipos de usuario mediante el controlador `UsersController` y el DTO `CreateUserDto`. Se ha identificado una enumeración `UserRole` en `src/users/dto/create-user.dto.ts` que define explícitamente los tipos: 'ADMIN', 'SECRETARY' y 'EVALUATOR_TEACHER'. El método `create` en `UsersController` utiliza este DTO para persistir los usuarios con su rol correspondiente, cumpliendo así con el requerimiento.
+
+==========================
+Reviewed Requirement: El sistema debe permitir crear observaciones a cada postulación
+==========================
+Status: Fulfilled
+Reason: Se ha verificado la existencia del módulo 'ObservationModule' que implementa la lógica de negocio necesaria. El 'ObservationController' expone un endpoint POST en la ruta '/observations' (definido en el DTO 'CreateObservationDto'), y el 'ObservationService' implementa la lógica de persistencia utilizando Prisma ('this.prisma.observation.create'), validando además que el usuario actual tenga permisos sobre la evaluación/postulación antes de crear la observación. Por lo tanto, el requerimiento se encuentra plenamente cumplido.
+
+===============================
+Fulfilled Requirements: 4/4
+===============================
+
+===============================
+TOKEN USAGE STATS
+Input Tokens : 158621
+Output Tokens: 1674
+Total Tokens : 160295
+===============================
+ESTADÍSTICAS DE EVALUACIÓN SUPERVISADA
+DEBUG MODE: True
+MODEL: ollama
+EVALUATION MODE: agent
+GROUND TRUTH VALUE: Fulfilled
+
+REVIEWED ON 2026-06-19 17:24:47.381141
+==========================
+Reviewed Requirement: Usar sensor ultrasónico para estimar el tamaño de objetos cercanos
+==========================
+Status: Not fulfilled
+Reason: He analizado el código fuente en los archivos 'interfaz.py', 'receptor.py' y 'operaciones.py'. El archivo 'operaciones.py' efectivamente instancia un sensor ultrasónico (UltrasonicSensor) en la línea 12 (`prox = UltrasonicSensor(INPUT_1)`) y lo utiliza en la función `Automatic()` (línea 18) para verificar si la distancia (`prox.distance_centimeters_continuous`) es mayor a 5 cm. Sin embargo, esta lógica se utiliza únicamente para navegación básica (evitar obstáculos deteniéndose), no para 'estimar el tamaño de objetos cercanos'. No existe ninguna lógica en el código que calcule, procese o estime las dimensiones físicas o el tamaño de los objetos detectados.
+
+==========================
+Reviewed Requirement: Indicar con color la velocidad de desplazamiento detectada por el sensor
+==========================
+Status: Not fulfilled
+Reason: Tras analizar los archivos del proyecto, se observa que: 
+1. En 'interfaz.py' no existe ninguna lógica para capturar, procesar o mostrar gráficamente una velocidad de desplazamiento basada en sensores.
+2. En 'operaciones.py', aunque se importan sensores (`UltrasonicSensor`, `ColorSensor`), las funciones definidas (como `Automatic`, `Upward`, `Backwards`, etc.) controlan el movimiento mediante valores fijos (ej. `left_speed=90`) y no incluyen lógica para medir, calcular o retornar una velocidad detectada por sensores para ser visualizada.
+3. El sistema se limita a ejecutar comandos de movimiento predefinidos desde la interfaz. No existe funcionalidad para el requerimiento solicitado.
+
+==========================
+Reviewed Requirement: Establecer conexión al servidor por un puerto configurable definido por el usuario
+==========================
+Status: Not fulfilled
+Reason: Tras analizar el archivo 'interfaz.py', se observa que el puerto de conexión está definido como una constante fija 'port = 12345' tanto a nivel global como dentro de la función 'conection(addr)'. No existe ningún mecanismo en la interfaz de usuario ni en la lógica de conexión que permita al usuario ingresar o modificar el puerto deseado; solo se solicita la dirección IP. Por lo tanto, el requerimiento no está cumplido.
+
+===============================
+Fulfilled Requirements: 0/3
+===============================
+
+===============================
+TOKEN USAGE STATS
+Input Tokens : 46318
+Output Tokens: 1089
+Total Tokens : 47407
+===============================
+ESTADÍSTICAS DE EVALUACIÓN SUPERVISADA
+DEBUG MODE: True
+MODEL: gemini3.1-flash
+EVALUATION MODE: agent
+GROUND TRUTH VALUE: Not Fulfilled
+
+REVIEWED ON 2026-06-19 17:27:43.923131
+==========================
+Reviewed Requirement: Notificar al usuario cuando exista riesgo de sequía mediante una peticion http
+==========================
+Status: Not fulfilled
+Reason: He analizado la arquitectura del backend en 'manejoRiegos/views.py' y 'manejoRiegos/modules.py'. Aunque existe una función 'obtEstadoAgua' que devuelve el estado del sensor de humedad mediante una petición HTTP (devuelve el valor del pin GPIO), no existe ninguna lógica implementada que detecte un "riesgo de sequía" y envíe una notificación activa (alerta, mensaje o push) al usuario. El sistema simplemente reporta el valor crudo del sensor, delegando toda la responsabilidad de interpretación y notificación al cliente, lo cual no satisface el requerimiento de notificar al usuario sobre el riesgo detectado.
+
+==========================
+Reviewed Requirement: Almacenar configuraciones de riego futuras
+==========================
+Status: Not fulfilled
+Reason: Agent execution error during structural evaluation: Recursion limit of 25 reached without hitting a stop condition. You can increase the limit by setting the `recursion_limit` config key.
+For troubleshooting, visit: https://docs.langchain.com/oss/python/langgraph/errors/GRAPH_RECURSION_LIMIT
+
+==========================
+Reviewed Requirement: Visualizar predicciones de consumo hídrico
+==========================
+Status: Not fulfilled
+Reason: Tras analizar el código fuente en 'RiegoViewModel.kt', 'ApiService.kt' y 'Estadisticas.kt', se observa que la aplicación permite gestionar el riego (manual/automático), consultar el estado actual del agua ('obtenerEstadoAgua') y ver el historial de riegos pasados ('getRiegos', 'getRegadosProgramados'). No obstante, no existe ninguna funcionalidad, método en la API o lógica en el frontend (Compose) destinada a calcular o visualizar 'predicciones' de consumo hídrico. El sistema se limita a estados actuales y datos históricos.
+
+==========================
+Reviewed Requirement: Recopilar y desplegar estadísticas meteorológicas de la zona
+==========================
+Status: Not fulfilled
+Reason: Tras analizar el código fuente, se observa que el sistema se centra exclusivamente en el control de riego (humedad del suelo) y no en la recopilación o despliegue de estadísticas meteorológicas (como temperatura, precipitaciones, humedad ambiental, etc.). Los modelos de Django (manejoRiegos/models.py) y la lógica de la aplicación móvil (Estadisticas.kt) solo gestionan el estado del sensor de riego y el historial de acciones de riego. No hay módulos, servicios o componentes identificados que consuman APIs meteorológicas o procesen datos climáticos de la zona.
+
+==========================
+Reviewed Requirement: Permitir programar calendarios de riego sin ejecutar riegos automáticamente
+==========================
+Status: Not fulfilled
+Reason: El análisis del código revela que el modelo 'RiegoPrueba' almacena información de riego, incluyendo una bandera 'automatico', pero la lógica de ejecución en 'manejoRiegos/views.py' y 'manejoRiegos/modules.py' no implementa un mecanismo de calendario que permita programar riegos para el futuro ni distingue entre 'programar sin ejecutar' y 'ejecutar automáticamente'. Las funciones actuales (como 'accionarRegado') disparan la ejecución del riego de forma inmediata a través de hilos (threading), y no hay una lógica de 'scheduler' o cron que gestione calendarios diferidos sin disparar el riego en el momento de la configuración. Por lo tanto, no existe la funcionalidad para programar calendarios sin ejecución automática.
+
+===============================
+Fulfilled Requirements: 0/5
+===============================
+
+===============================
+TOKEN USAGE STATS
+Input Tokens : 163848
+Output Tokens: 3034
+Total Tokens : 166882
+===============================
+ESTADÍSTICAS DE EVALUACIÓN SUPERVISADA
+DEBUG MODE: True
+MODEL: gemini3.1-flash
+EVALUATION MODE: agent
+GROUND TRUTH VALUE: Not Fulfilled
+
+REVIEWED ON 2026-06-19 17:34:22.272637
+==========================
+Reviewed Requirement: Permitir al usuario registrar manualmente horarios históricos de alimentación
+==========================
+Status: Fulfilled
+Reason: El código en 'app-iot/app/nuevo-horario.tsx' implementa un formulario completo para registrar manualmente nuevos horarios de alimentación/dispensación, incluyendo la selección de hora, días de la semana, tipo (agua/comida) y duración. El endpoint POST /horarios es invocado con estos parámetros, lo que permite la persistencia de dicha configuración histórica. El requerimiento se considera cumplido.
+
+==========================
+Reviewed Requirement: La aplicación móvil debe mostrar tendencias semanales de consumo
+==========================
+Status: Not fulfilled
+Reason: Se ha analizado el código fuente tanto del backend (CODIGO.py) como de la aplicación móvil (Expo). El backend proporciona endpoints para el estado actual de los sensores (comida/agua), gestión de horarios y cámara, pero no implementa lógica ni endpoints para procesar o entregar datos históricos o tendencias semanales de consumo. La aplicación móvil (archivos en app-iot/app/) consiste únicamente en la plantilla estándar de un proyecto Expo (Home y Explore) sin ninguna interfaz o lógica implementada para visualizar estadísticas o tendencias de consumo. Por tanto, el requerimiento no está cumplido.
+
+==========================
+Reviewed Requirement: El sistema debe notificar cambios bruscos en los hábitos alimenticios
+==========================
+Status: Not fulfilled
+Reason: Tras analizar el código fuente en 'CODIGO.py' (servidor Flask) y la estructura del proyecto, se observa que el sistema gestiona los niveles de comida y agua mediante sensores ultrasónicos, permite programar horarios de alimentación y ofrece endpoints para monitorear el estado actual y obtener video/fotos. Sin embargo, no existe ninguna lógica, algoritmo o funcionalidad implementada para detectar patrones, analizar cambios bruscos en los hábitos alimenticios, ni un sistema de notificación (push/alertas) configurado para eventos de anomalías en el consumo de comida. La lógica se limita únicamente al control mecánico y la consulta de estado.
+
+==========================
+Reviewed Requirement: El sistema debe sugerir cantidades de alimento sin dispensarlas
+==========================
+Status: Not fulfilled
+Reason: Tras analizar el código fuente, se observa lo siguiente: 
+1. El backend (`CODIGO.py`) tiene un endpoint para la programación de horarios de dispensación automática (`/horarios` POST) y uno para la dispensación manual (`/dispensar` POST), los cuales ejecutan el relay directamente para dispensar alimento o agua.
+2. La interfaz de usuario (`app-iot/app/nuevo-horario.tsx`) permite programar el tiempo de dispensación (en segundos) sin ninguna funcionalidad de sugerencia inteligente. 
+3. No se encontró ninguna lógica, algoritmo o interfaz que calcule o sugiera cantidades de alimento basándose en datos del usuario, salud de la mascota, o niveles de los sensores antes de la dispensación. El sistema actual se limita a dispensar según la configuración manual establecida por el usuario.
+Por lo tanto, el requerimiento no está implementado.
+
+==========================
+Reviewed Requirement: El sistema debe medir la frecuencia de acceso de la mascota al comedero
+==========================
+Status: Not fulfilled
+Reason: Tras analizar el código fuente (`CODIGO.py`), se observa que el sistema cuenta con sensores de ultrasonido para medir el nivel de comida (`ULTRA_COMIDA`) y agua (`ULTRA_AGUA`). Sin embargo, la lógica implementada se limita únicamente a medir y reportar el nivel de llenado (distancia en cm) para gestionar la cantidad de alimento/agua restante. No existe ninguna funcionalidad, algoritmo, contador o registro de eventos que registre el momento o la frecuencia con la que la mascota se acerca al comedero. Las funciones relacionadas con la cámara tampoco incluyen detección de movimiento ni análisis de comportamiento para inferir accesos. Por lo tanto, el requerimiento no está implementado.
+
+===============================
+Fulfilled Requirements: 1/5
+===============================
+
+===============================
+TOKEN USAGE STATS
+Input Tokens : 133260
+Output Tokens: 1553
+Total Tokens : 134813
+===============================
+ESTADÍSTICAS DE EVALUACIÓN SUPERVISADA
+DEBUG MODE: True
+MODEL: gemini3.1-flash
+EVALUATION MODE: agent
+GROUND TRUTH VALUE: Not Fulfilled
+
+REVIEWED ON 2026-06-19 17:36:04.164449
+==========================
+Reviewed Requirement: Permitir al usuario registrar manualmente horarios históricos de alimentación mediante websockets
+==========================
+Status: Not fulfilled
+Reason: Tras analizar el archivo 'CODIGO.py' que contiene la lógica del backend (Flask) y los archivos de la aplicación React Native, se observa lo siguiente: 
+1. El backend utiliza una API REST (endpoints como /horarios (GET/POST)) y no implementa ninguna comunicación basada en WebSockets para el registro de horarios.
+2. El requerimiento solicita "registrar manualmente horarios históricos", lo cual no está implementado (el código actual permite programar horarios automáticos, pero no registrar eventos históricos pasados).
+3. No existe infraestructura de WebSockets en el proyecto (no hay librerías tipo socket.io o websocket instaladas ni configuradas en los archivos analizados).
+
+===============================
+Fulfilled Requirements: 0/1
+===============================
+
+===============================
+TOKEN USAGE STATS
+Input Tokens : 11141
+Output Tokens: 213
+Total Tokens : 11354
+===============================
+ESTADÍSTICAS DE EVALUACIÓN SUPERVISADA
+DEBUG MODE: True
+MODEL: gemini3.1-flash
+EVALUATION MODE: agent
+GROUND TRUTH VALUE: Not Fulfilled
+
+REVIEWED ON 2026-06-19 17:38:52.313712
+==========================
+Reviewed Requirement: El sistema debe generar resúmenes diarios de actividad sonora
+==========================
+Status: Not fulfilled
+Reason: Tras analizar el archivo 'hush_rp5.py', se observa que el sistema cuenta con funciones de monitoreo en tiempo real, gestión de umbrales, notificaciones de alertas vía Telegram y configuración de ventanas horarias de operación. Sin embargo, no existe ninguna lógica ni comando dentro del 'NoiseMonitorCore' o las utilidades asociadas que implemente la generación, almacenamiento o envío de "resúmenes diarios" (diaries/summaries) de actividad. El sistema solo expone el estado actual y el historial reciente ('get_history'), pero no realiza consolidaciones diarias.
+
+
+===============================
+Fulfilled Requirements: 0/2
+===============================
+
+===============================
+TOKEN USAGE STATS
+Input Tokens : 89976
+Output Tokens: 933
+Total Tokens : 90909
+===============================
+ESTADÍSTICAS DE EVALUACIÓN SUPERVISADA
+DEBUG MODE: True
+MODEL: gemini3.1-flash
+EVALUATION MODE: agent
+GROUND TRUTH VALUE: Not Fulfilled
+
+REVIEWED ON 2026-06-19 17:40:34.408771
+==========================
+Reviewed Requirement: El sistema debe permitir registrar; editar y eliminar dispositivos bluetooth
+==========================
+Status: Not fulfilled
+Reason: Tras analizar el código fuente en 'MainActivity.kt' y 'GraphActivity.kt', se observa que el sistema implementa la gestión de conexiones a dispositivos Bluetooth, permitiendo seleccionar dispositivos ya emparejados del sistema Android mediante 'showPairedDevicePicker' y conectarse a ellos. Sin embargo, no existe lógica para 'registrar' (agregar un nuevo dispositivo que no esté emparejado), 'editar' (modificar propiedades de un dispositivo ya registrado) o 'eliminar' dispositivos Bluetooth dentro de la aplicación. El sistema depende totalmente de la gestión de dispositivos Bluetooth del sistema operativo Android (emparejamiento previo fuera de la aplicación). Por tanto, el requerimiento no está cumplido.
+
+===============================
+Fulfilled Requirements: 0/1
+===============================
+
+===============================
+TOKEN USAGE STATS
+Input Tokens : 26249
+Output Tokens: 365
+Total Tokens : 26614
+===============================
+ESTADÍSTICAS DE EVALUACIÓN SUPERVISADA
+DEBUG MODE: True
+MODEL: gemini3.1-flash
+EVALUATION MODE: agent
+GROUND TRUTH VALUE: Not Fulfilled
+
+REVIEWED ON 2026-06-19 17:45:18.778833
+==========================
+Reviewed Requirement: El sistema debe mostrar rutas y tramos turísticas recomendadas según al distancia entre ellos
+==========================
+Status: Not fulfilled
+Reason: Tras analizar los ViewModels, los modelos de datos (AtractivoTuristicoUI) y la pantalla de Turismo, no existe ninguna funcionalidad ni lógica de negocio que calcule o muestre rutas o tramos turísticos basados en distancias entre atractivos. La aplicación se limita a listar atractivos turísticos y mostrar un itinerario de cruceros. No hay presencia de algoritmos de cálculo de distancias ni visualización de rutas recomendadas.
+
+==========================
+Reviewed Requirement: El sistema debe generar 5 tipos de recomendaciones preventivas para la navegacion y nivel del mar
+==========================
+Status: Not fulfilled
+Reason: Tras analizar el código fuente, específicamente el `BoyaScreenViewmodel` y las clases de modelo `Alertas.kt` y `MensajeUI`, se observa que el sistema implementa una lógica de alertas basada en el nivel de marea (normal, alerta, peligro), pero NO existe una funcionalidad, lista, ni motor de reglas que genere 5 tipos distintos de recomendaciones preventivas para la navegación. Los archivos examinados solo contienen definiciones de mensajes de estado simples (NORMAL, ADVERTENCIA, PELIGRO) y no cumplen con la especificación de 5 tipos de recomendaciones específicas.
+
+==========================
+Reviewed Requirement: El sistema debe exportar gráficos interactivos en formato .png
+==========================
+Status: Not fulfilled
+Reason: Tras analizar la arquitectura de la aplicación, si bien existe un `FileSaver` (en `com.epa.epamovil.domain.FileSaver`) y componentes para visualizar gráficos (`MareaPlot`, `GenericPlot`), no existe ninguna implementación o lógica de negocio que permita la exportación de dichos gráficos a un archivo de imagen .png. El sistema solo maneja la visualización interactiva (a través de `io.github.koalaplot`) y reportes genéricos (probablemente CSV/PDF según `Option.kt`), pero no la funcionalidad de renderizado a PNG solicitada.
+
+==========================
+Reviewed Requirement: El sistema debe permitir eliminar la reserva del Centro Turístico Integral
+==========================
+Status: Not fulfilled
+Reason: Tras analizar la capa de presentación (SolicitarEspacioViewmodel), el dominio (EspaciosRepository) y la implementación de red (KtorEspaciosRepository), se ha comprobado que solo existen funciones para ENVIAR solicitudes de CTI y CTP (postSolicitudCTI/enviarCTI). No existe ninguna funcionalidad, endpoint en la API ni método en el repositorio destinado a ELIMINAR, CANCELAR o ANULAR una reserva existente del Centro Turístico Integral (CTI).
+
+==========================
+Reviewed Requirement: El sistema debe recibir predicciones de variables de la boya segun datos históricos
+==========================
+Status: Not fulfilled
+Reason: Tras analizar la arquitectura y el código fuente, se ha confirmado que el sistema cuenta con funcionalidades para consultar datos históricos de la boya (métodos `getHistorico` y `graficoPorRango` en `BoyaRepository` y `RecibirEstadoMareaHistorico`) y generar reportes basados en dichos datos. Sin embargo, no existe lógica, campo, modelo o endpoint identificado que implemente específicamente la funcionalidad de 'predicciones' de variables de la boya; solo se manejan datos históricos reales (registros de marea y viento). El requerimiento de 'predicciones' no está implementado.
+
+===============================
+Fulfilled Requirements: 0/5
+===============================
+
+===============================
+TOKEN USAGE STATS
+Input Tokens : 514698
+Output Tokens: 3262
+Total Tokens : 517960
+===============================
+ESTADÍSTICAS DE EVALUACIÓN SUPERVISADA
+DEBUG MODE: True
+MODEL: gemini3.1-flash
+EVALUATION MODE: agent
+GROUND TRUTH VALUE: Not Fulfilled
+
+REVIEWED ON 2026-06-19 17:50:29.169603
+==========================
+Reviewed Requirement: El sistema debe verificar si el almacen de datos es estrella puro o copo de nieve
+==========================
+Status: Not fulfilled
+Reason: Tras analizar la arquitectura del sistema y el servicio `DWHMetricsService`, se observa que el código realiza consultas SQL directas contra un esquema llamado `dwh` (usando tablas como `fact_asistencia` y `dim_tiempo`). Si bien el diseño utiliza una estructura dimensional (hechos y dimensiones), no existe ninguna lógica, función, endpoint o configuración en el backend que tenga la responsabilidad de "verificar" o inspeccionar la estructura del almacén de datos para determinar si es un esquema en estrella (star schema) o en copo de nieve (snowflake). La aplicación consume el esquema existente, pero no incluye la funcionalidad de auditoría o validación del tipo de modelo de datos implementado en la base de datos.
+
+==========================
+Reviewed Requirement: El sistema debe mostrar indicadores avanzados del estado del servidor como trottle
+==========================
+Status: Not fulfilled
+Reason: Tras analizar la estructura del proyecto y los endpoints disponibles, no se encontró ninguna funcionalidad, métrica o indicador relacionado con el estado del servidor ni con mecanismos de 'throttle' o limitación de carga. Los servicios de métricas existentes en 'app/services/dwh_metrics_service.py' se centran exclusivamente en datos de negocio (asistencia, rotación, etc.) almacenados en el DWH y no en el monitoreo del estado de salud o performance del servidor API/backend. No existen componentes de middleware o monitoreo que expongan indicadores de estado tipo throttle.
+
+==========================
+Reviewed Requirement: El sistema debe revertir y visitar versiones a cargas pasadas
+==========================
+Status: Not fulfilled
+Reason: Tras analizar exhaustivamente el archivo `app/api/v1/endpoints/etl_routes.py` y revisar las rutas disponibles, se ha determinado que el sistema gestiona la ejecución, el historial y el seguimiento de estados de procesos ETL, pero no incluye ninguna funcionalidad para "revertir" cargas a versiones pasadas. El sistema es capaz de disparar procesos (`/trigger`), consultar el historial (`/history`) y obtener el estado o logs, pero no posee lógica de control de versiones o restauración de datos para revertir a estados previos.
+
+==========================
+Reviewed Requirement: El sistema debe permitir modificar auditorías en caso de error
+==========================
+Status: Not fulfilled
+Reason: Tras analizar los endpoints expuestos en 'app/api/v1/endpoints/audit.py' y los métodos definidos en 'app/services/audit_service.py', se concluye que el sistema solo permite consultar ('get_logs', 'get_stats', 'get_filters') y registrar ('log_event') eventos de auditoría. No existe ninguna funcionalidad, ruta (como PUT o PATCH) ni método de servicio implementado que permita modificar o editar registros de auditoría existentes.
+
+===============================
+Fulfilled Requirements: 0/4
+===============================
+
+===============================
+TOKEN USAGE STATS
+Input Tokens : 123186
+Output Tokens: 1503
+Total Tokens : 124689
+===============================
+ESTADÍSTICAS DE EVALUACIÓN SUPERVISADA
+DEBUG MODE: True
+MODEL: gemini3.1-flash
+EVALUATION MODE: agent
+GROUND TRUTH VALUE: Not Fulfilled
+
+REVIEWED ON 2026-06-19 17:53:04.827416
+==========================
+Reviewed Requirement: Debe generar reportes de incidentes operacionales
+==========================
+Status: Not fulfilled
+Reason: Tras analizar la estructura del código en el controlador 'Home' y los modelos 'Acc_parqueo' y 'Calzos', no se encontró ninguna funcionalidad, método o vista destinada a la generación, registro o gestión de 'reportes de incidentes operacionales'. El sistema se enfoca exclusivamente en la gestión de calzos, asignación de espacios de parqueo y control de ingresos/salidas de camiones. No existen rastros de lógica relacionada con el reporte de incidencias.
+
+==========================
+Reviewed Requirement: Debe permitir visualizar el historial de uso de los calzos
+==========================
+Status: Not fulfilled
+Reason: Tras analizar los controladores (home.php), modelos (Calzos.php, Acc_parqueo.php) y las vistas (estados_calzos.php, modificar_calzos.php), no se encontró ninguna funcionalidad ni interfaz destinada a visualizar el historial de uso o movimientos pasados de los calzos. El sistema actualmente solo gestiona el estado actual (ocupado/libre) y permite la asignación, reasignación o liberación de calzos, pero carece de un registro histórico persistente de estos eventos que sea accesible para su visualización.
+
+==========================
+Reviewed Requirement: El sistema debe mostrar estadísticas de ocupación histórica del estacionamiento
+==========================
+Status: Not fulfilled
+Reason: Tras analizar los controladores (específicamente 'home.php') y los modelos ('Acc_parqueo.php', 'Calzos.php'), se observa que el sistema gestiona la asignación y liberación de calzos en tiempo real. Sin embargo, no existe ninguna funcionalidad ni vista dedicada a reportar o mostrar estadísticas de ocupación histórica del estacionamiento. Todas las funciones existentes están orientadas a la operativa actual (contadores de calzos libres, estados de calzos por sector, etc.), mas no a la visualización de datos históricos.
+
+==========================
+Reviewed Requirement: El sistema debe permitir sugerir ubicaciones para camiones según patrones previos
+==========================
+Status: Not fulfilled
+Reason: El análisis del modelo 'Calzos.php' y sus métodos ('obtenerCalzoDisponibleMasCercano', 'asignarCalzo', etc.) muestra que el sistema gestiona la asignación de espacios basándose únicamente en la disponibilidad inmediata (estado='libre') y el sector. No existe evidencia de lógica de negocio, algoritmos o consultas que utilicen 'patrones previos' o históricos de comportamiento para realizar sugerencias inteligentes de ubicación. El sistema es puramente determinista basado en el estado actual del inventario de calzos.
+
+===============================
+Fulfilled Requirements: 0/4
+===============================
+
+===============================
+TOKEN USAGE STATS
+Input Tokens : 193458
+Output Tokens: 1805
+Total Tokens : 195263
+===============================
+ESTADÍSTICAS DE EVALUACIÓN SUPERVISADA
+DEBUG MODE: True
+MODEL: gemini3.1-flash
+EVALUATION MODE: agent
+GROUND TRUTH VALUE: Not Fulfilled
+
+REVIEWED ON 2026-06-19 17:55:25.310744
+==========================
+Reviewed Requirement: Debe permitir al usuario recuperar credenciales olvidadas
+==========================
+Status: Not fulfilled
+Reason: Tras analizar el componente 'Login.jsx', se observa que la interfaz solo contiene los campos de 'Usuario' y 'Contraseña', junto con un botón de 'Ingresar'. No existe ningún enlace, botón o funcionalidad de 'Recuperar contraseña' o 'Recuperar credenciales olvidadas'. La lógica de autenticación está hardcodeada contra un archivo JSON y carece de mecanismos de recuperación (como envío de correos o restablecimiento). Tampoco se encontraron rastros de esta funcionalidad en la estructura general del proyecto.
+
+==========================
+Reviewed Requirement: Debe permitir asignar una alerta a un operador responsable
+==========================
+Status: Not fulfilled
+Reason: Tras analizar los archivos críticos, específicamente `renderer/src/services/services_alarma.js` y `renderer/src/components/AlarmaLista.jsx`, se observa que el sistema permite gestionar estados de las alarmas mediante funciones como `putResolve` y `putReopen`. Sin embargo, no existe ninguna lógica, componente de interfaz, ni endpoint que permita asignar explícitamente una alerta a un operador responsable. Las funcionalidades actuales se limitan a cambiar el estado de la alarma (Resuelta/Reabrir) sin asociar un responsable. Por lo tanto, el requerimiento no está implementado.
+
+==========================
+Reviewed Requirement: Debe permitir visualizar tendencias de alarmas agrupadas por categoría
+==========================
+Status: Not fulfilled
+Reason: Tras analizar el código fuente, la aplicación se limita a la gestión básica de alarmas (lista, resolución y reapertura) mediante el archivo `src/renderer/src/components/AlarmaLista.jsx` y el servicio `src/renderer/src/services/services_alarma.js`. No existe lógica, componentes visuales, ni servicios de backend que implementen la visualización de tendencias, gráficos, series temporales o cualquier forma de agregación de alarmas por categorías, tal como requiere el objetivo.
+
+===============================
+Fulfilled Requirements: 0/3
+===============================
+
+===============================
+TOKEN USAGE STATS
+Input Tokens : 51647
+Output Tokens: 1204
+Total Tokens : 52851
+===============================
+ESTADÍSTICAS DE EVALUACIÓN SUPERVISADA
+DEBUG MODE: True
+MODEL: gemini3.1-flash
+EVALUATION MODE: agent
+GROUND TRUTH VALUE: Not Fulfilled
+
+REVIEWED ON 2026-06-19 17:56:50.215335
+==========================
+Reviewed Requirement: Debe permitir enviar reportes periódicos por correo electrónico
+==========================
+Status: Not fulfilled
+Reason: Tras analizar el código fuente, se observa que el sistema cuenta con funcionalidades para el envío de alertas y notificaciones mediante WhatsApp (`whatsapp.service.js` y `alerts.controller.js`), así como el procesamiento de datos GPS mediante colas (`Bull` en `worker.js` y `gpsdata.services.js`). Sin embargo, no existe ninguna implementación de servicios de correo electrónico (ej. nodemailer o similar), ni lógica programada para la generación y envío periódico de reportes por correo electrónico en los archivos analizados. La funcionalidad requerida está totalmente ausente.
+
+==========================
+Reviewed Requirement: Debe permitir archivar alertas antiguas automáticamente
+==========================
+Status: Not fulfilled
+Reason: Tras analizar el código fuente, se ha verificado que la gestión de alertas (en 'src/services/alerts.services.js' y 'src/models/AnomalyAlert.js') se limita a consultar, actualizar estados y crear nuevas alertas. No existe ninguna lógica en los controladores, servicios, modelos o workers (que se encargan de tareas en segundo plano mediante 'Bull') que implemente un proceso de archivo automático o limpieza periódica de alertas antiguas. La función del worker encontrada en 'src/workers/worker.js' gestiona únicamente la eliminación de archivos físicos tras su procesamiento, pero no está relacionada con la limpieza de registros en la base de datos de alertas.
+
+==========================
+Reviewed Requirement: Debe permitir configurar múltiples conexiones a bases de datos
+==========================
+Status: Not fulfilled
+Reason: Tras analizar el código fuente (`src/config/db.js` y `src/models/index.js`), se observa que la aplicación está diseñada para manejar una única conexión a base de datos mediante una instancia única de Sequelize importada desde `config/db.js`. No existe lógica, configuración ni estructura que soporte la conexión a múltiples bases de datos de forma dinámica o preconfigurada. La inicialización en `models/index.js` depende exclusivamente de esa única instancia (`sequelize`) centralizada.
+
+===============================
+Fulfilled Requirements: 0/3
+===============================
+
+===============================
+TOKEN USAGE STATS
+Input Tokens : 100000
+Output Tokens: 1292
+Total Tokens : 101292
+===============================
+ESTADÍSTICAS DE EVALUACIÓN SUPERVISADA
+DEBUG MODE: True
+MODEL: gemini3.1-flash
+EVALUATION MODE: agent
+GROUND TRUTH VALUE: Not Fulfilled
+
+REVIEWED ON 2026-06-19 18:02:27.510944
+==========================
+Reviewed Requirement: Debe permitir visualizar eventos destacados según popularidad y feedback de otros usuarios
+==========================
+Status: Not fulfilled
+Reason: Tras analizar el código fuente, específicamente `EventosListComponent` y `EventosService`, se observa que la aplicación permite listar, filtrar por estado, categoría y fecha, y paginar eventos. Sin embargo, no existe lógica ni campos en el modelo de datos (DTOs) para manejar "eventos destacados", ni mecanismos implementados para medir la "popularidad" (más allá del recuento de inscritos para filtrado básico) o para recoger y visualizar "feedback de otros usuarios" (valoraciones, comentarios o reseñas). El requerimiento de mostrar eventos destacados basados en estos criterios específicos no está presente.
+
+==========================
+Reviewed Requirement: Debe permitir visualizar estadísticas de uso de recintos deportivos a usuarios sin iniciar sesión
+==========================
+Status: Not fulfilled
+Reason: El requerimiento no se cumple. Tras auditar la configuración de rutas en 'app.routes.ts', se observa que la ruta '/estadisticas' está protegida explícitamente mediante el 'authGuard', el cual bloquea el acceso a cualquier usuario que no haya iniciado sesión (invocando 'authService.isLoggedIn()'). Por lo tanto, no es posible para un usuario no autenticado acceder a los componentes de visualización de estadísticas.
+
+===============================
+Fulfilled Requirements: 0/2
+===============================
+
+===============================
+TOKEN USAGE STATS
+Input Tokens : 115080
+Output Tokens: 1330
+Total Tokens : 116410
+===============================
+ESTADÍSTICAS DE EVALUACIÓN SUPERVISADA
+DEBUG MODE: True
+MODEL: gemini3.1-flash
+EVALUATION MODE: agent
+GROUND TRUTH VALUE: Not Fulfilled
+
+REVIEWED ON 2026-06-19 18:05:00.104182
+==========================
+Reviewed Requirement: Debe permitir almacenar métricas de l servidor como el trottle
+==========================
+Status: Not fulfilled
+Reason: Tras analizar el código fuente, incluyendo la configuración inicial (DataSeeder), los controladores, modelos y el servicio de estadísticas, no se encontró ninguna implementación, clase, atributo o lógica relacionada con la captura, almacenamiento o gestión de métricas del servidor, específicamente sobre "throttle" (estrangulamiento). La funcionalidad de estadísticas implementada en 'ServicioEstadisticaImpl' se limita a métricas de negocio (eventos, cursos, asistencia, inscripciones) y no a métricas de infraestructura o desempeño del servidor.
+
+==========================
+Reviewed Requirement: Debe permitir administrar categorías de recintos deportivos
+==========================
+Status: Fulfilled
+Reason: El código cuenta con un `CategoriaController` (en `/api/categoria`) que implementa operaciones CRUD completas (crear, editar, eliminar, listar y buscar) a través de los métodos expuestos. Estas operaciones son delegadas a `ServicioCategoria` y utilizan `CategoriaDTO` y la entidad `Categoria`, lo que confirma que la funcionalidad de administrar categorías está implementada y operativa.
+
+==========================
+Reviewed Requirement: Debe manejar integraciones con servicios externos de autenticación como Firebase
+==========================
+Status: Not fulfilled
+Reason: El código cuenta con una configuración (`FirebaseConfig`) y un servicio (`ServicioFirebaseImpl`) para interactuar con Firebase Cloud Messaging (FCM) para el envío de notificaciones push. Sin embargo, no existe lógica ni configuración que integre Firebase Authentication para el manejo de usuarios o la autenticación de las peticiones en la capa de seguridad (`SecurityConfig`), la cual utiliza una configuración personalizada basada en permitAll() para la mayoría de los endpoints. Por lo tanto, no se cumple el requerimiento de manejar autenticación mediante Firebase.
+
+===============================
+Fulfilled Requirements: 1/3
+===============================
+
+===============================
+TOKEN USAGE STATS
+Input Tokens : 257472
+Output Tokens: 1371
+Total Tokens : 258843
+===============================
+ESTADÍSTICAS DE EVALUACIÓN SUPERVISADA
+DEBUG MODE: True
+MODEL: gemini3.1-flash
+EVALUATION MODE: agent
+GROUND TRUTH VALUE: Not Fulfilled
+
+REVIEWED ON 2026-06-19 18:11:00.370493
+==========================
+Reviewed Requirement: Debe permitir ocultar o visibilizar la información que desee mostrar en su perfil de manera sistemática
+==========================
+Status: Not fulfilled
+Reason: He analizado las funcionalidades de configuración del perfil ('ProfileScreen', 'EditProfileScreen', 'SettingsScreen' y 'ProfileViewModel'). Aunque la aplicación permite editar los campos del perfil (nombre, apellido, email, teléfono, información) y configurar ajustes generales (notificaciones, modo oscuro, tamaño de letra, servidor), no existe ninguna funcionalidad ni lógica en la interfaz o en el modelo de datos que permita al usuario decidir qué campos de su perfil mostrar u ocultar de manera selectiva o sistemática ante otros usuarios. El requerimiento de privacidad/visibilidad de información específica no está implementado.
+
+==========================
+Reviewed Requirement: Debe permitir guardar actividades favoritas
+==========================
+Status: Not fulfilled
+Reason: Tras analizar el modelo de dominio (Evento.kt), las interfaces de repositorio (EventRepository.kt, UserRepository.kt) y el gestor de preferencias (PreferencesManager.kt), no se encontró ninguna lógica, campo o método relacionado con la funcionalidad de 'favoritos' para actividades o eventos. El sistema gestiona inscripciones (isEnrolled, enrollUser), pero no existe un mecanismo para marcar o persistir actividades como favoritas.
+
+===============================
+Fulfilled Requirements: 0/2
+===============================
+
+===============================
+TOKEN USAGE STATS
+Input Tokens : 412887
+Output Tokens: 2381
+Total Tokens : 415268
+===============================
+ESTADÍSTICAS DE EVALUACIÓN SUPERVISADA
+DEBUG MODE: True
+MODEL: gemini3.1-flash
+EVALUATION MODE: agent
+GROUND TRUTH VALUE: Not Fulfilled
+
+REVIEWED ON 2026-06-19 18:13:56.271070
+==========================
+Reviewed Requirement: Debe permitir consultar el estado del robot mediante su dirección IP
+==========================
+Status: Not fulfilled
+Reason: He analizado los archivos 'funciones.py' e 'interfaz.py'. El archivo 'interfaz.py' contiene funciones para la comunicación socket con el robot (funciones 'get_ip' y 'conectar'), las cuales permiten establecer una conexión IP (puerto y dirección) para enviar comandos de control (mover, agarrar, etc.). Sin embargo, no existe ninguna lógica ni función que implemente la consulta de estado del robot (ej. nivel de batería, telemetría o diagnóstico) a través de dicha dirección IP. El código se limita a enviar comandos de movimiento, pero no implementa la funcionalidad de petición y recepción de estado requerida.
+
+==========================
+Reviewed Requirement: La interfaz gráfica tiene botones para consultar sensores y visualizar diagnósticos
+==========================
+Status: Not fulfilled
+Reason: He analizado el archivo 'interfaz.py', el cual contiene la definición de la interfaz gráfica usando tkinter. El código implementa botones para controlar el movimiento del robot (adelante, atrás, izquierda, derecha, subir, bajar, agarrar, soltar) y una funcionalidad para establecer conexión, pero no existe ningún botón o lógica que permita consultar sensores o visualizar diagnósticos del robot. La funcionalidad requerida está ausente.
+
+===============================
+Fulfilled Requirements: 0/2
+===============================
+
+===============================
+TOKEN USAGE STATS
+Input Tokens : 16888
+Output Tokens: 613
+Total Tokens : 17501
+===============================
+ESTADÍSTICAS DE EVALUACIÓN SUPERVISADA
+DEBUG MODE: True
+MODEL: gemini3.1-flash
+EVALUATION MODE: agent
+GROUND TRUTH VALUE: Not Fulfilled
+
+REVIEWED ON 2026-06-19 18:16:05.720214
+==========================
+Reviewed Requirement: El sistema deberá permitir categorizar observaciones existentes
+==========================
+Status: Not fulfilled
+Reason: He analizado el servicio ObservationService y el componente ObservationComponent. El sistema actualmente permite listar, leer y crear observaciones asociadas a un resultado de evaluación (resultId). Sin embargo, el código no contiene ninguna lógica, modelo de datos, ni interfaz de usuario que permita 'categorizar' o asignar tipos, etiquetas o categorías a estas observaciones. La estructura actual solo maneja 'description', 'author' y 'createdAt'. Por lo tanto, no se cumple el requerimiento de categorización.
+
+==========================
+Reviewed Requirement: El sistema deberá permitir buscar postulantes mediante filtros avanzados
+==========================
+Status: Not fulfilled
+Reason: El sistema permite buscar postulantes únicamente mediante una barra de búsqueda de texto simple (`searchTerm`), que filtra en memoria los resultados por nombre, RUT o pasaporte. El requerimiento especifica 'filtros avanzados', los cuales no se encuentran implementados (no hay filtros por estado, por país, por rango de fechas, etc., ni una interfaz dedicada a filtros avanzados). El sistema solo cuenta con una búsqueda global básica.
+
+
+===============================
+Fulfilled Requirements: 0/2
+===============================
+
+===============================
+TOKEN USAGE STATS
+Input Tokens : 212845
+Output Tokens: 2214
+Total Tokens : 215059
+===============================
+ESTADÍSTICAS DE EVALUACIÓN SUPERVISADA
+DEBUG MODE: True
+MODEL: gemini3.1-flash
+EVALUATION MODE: agent
+GROUND TRUTH VALUE: Not Fulfilled
+
+REVIEWED ON 2026-06-19 18:21:32.278533
+==========================
+Reviewed Requirement: El sistema debe permitir subir boletas de cualquier tamaño
+==========================
+Status: Not fulfilled
+Reason: El análisis del archivo 'src/app/components/document/document.ts' revela que la funcionalidad de subida de archivos (implementada en el método 'addDocument' y 'onFileSelected') se basa en una implementación estándar de FormData en Angular/TypeScript. No existe ninguna lógica que gestione o valide activamente el tamaño del archivo, ni configuraciones en el servicio o el componente que aseguren explícitamente el soporte para 'cualquier tamaño' (lo cual, además, está sujeto a limitaciones físicas del servidor y el protocolo HTTP). Dado que el requisito especifica explícitamente 'cualquier tamaño' y el código no presenta mecanismos de segmentación, streaming, o manejo de archivos grandes que justifiquen esta capacidad, y que además limita los archivos exclusivamente a formato PDF, el requerimiento no está cumplido.
+
+==========================
+Reviewed Requirement: El sistema deberá permitir modificar métricas en caso de error
+==========================
+Status: Fulfilled
+Reason: Tras analizar el código fuente, se identificó que el componente 'EvaluationApplicantComponent' (archivo 'evaluation-applicant.ts') y el servicio 'ApplicantService' (archivo 'applicant.ts') proporcionan la infraestructura necesaria para la gestión y modificación de evaluaciones y resultados.
+
+Específicamente:
+1. 'ApplicantService' implementa el método 'updateEvaluation' (línea 82) el cual expone una petición HTTP PATCH para modificar evaluaciones existentes.
+2. 'ApplicantService' también implementa 'registerGrade' (línea 99) para registrar o actualizar calificaciones, lo cual es funcionalmente equivalente a modificar la métrica de resultado de una evaluación.
+3. El frontend dispone de lógica para eliminar resultados (método 'deleteEvaluation', línea 179) y gestionar observaciones, lo que permite corregir estados erróneos mediante la eliminación y re-asignación o actualización directa.
+
+La combinación de estas operaciones permite al sistema cumplir con el requerimiento de modificar métricas o resultados en caso de error.
+
+===============================
+Fulfilled Requirements: 1/2
+===============================
+
+===============================
+TOKEN USAGE STATS
+Input Tokens : 121987
+Output Tokens: 1217
+Total Tokens : 123204
+===============================
+ESTADÍSTICAS DE EVALUACIÓN SUPERVISADA
+DEBUG MODE: True
+MODEL: gemini3.1-flash
+EVALUATION MODE: agent
+GROUND TRUTH VALUE: Not Fulfilled
+
+REVIEWED ON 2026-06-19 18:24:29.546869
+==========================
+Reviewed Requirement: El sistema debe permitir a un postulante borrar su pago manualmente
+==========================
+Status: Fulfilled
+Reason: Tras revisar el archivo 'applicants.controller.ts', se encontró la definición del endpoint '@Delete('payments/:paymentId')' en la línea 162, el cual invoca al método 'deletePayment' del 'ApplicantsService'. En el archivo 'applicants.service.ts', se encuentra la implementación del método 'async deletePayment(paymentId: number) { return this.prisma.payment.delete({ where: { id: paymentId } }); }' en la línea 508. Este método permite efectivamente el borrado de registros de pago de manera directa, cumpliendo así con el requerimiento.
+
+==========================
+Reviewed Requirement: El sistema debe permitir administrar permisos asociados a los usuarios ÚNICAMENTE al administrador
+==========================
+Status: Not fulfilled
+Reason: Tras auditar los controladores clave (`UsersController` y `AuthController`), no se observa ninguna implementación de control de acceso basada en roles (RBAC) o guardias de autenticación (@UseGuards) que limite la administración de usuarios o permisos exclusivamente al perfil de administrador. Los endpoints de administración de usuarios en `UsersController` (creación, actualización, eliminación) están expuestos sin validación de roles, permitiendo potencialmente que cualquier usuario o petición no autorizada acceda a ellos. No hay evidencia de mecanismos que verifiquen el permiso 'administrador' para estas operaciones.
+
+==========================
+Reviewed Requirement: El sistema debe permitir clasificar observaciones según prioridad
+==========================
+Status: Not fulfilled
+Reason: He analizado el módulo 'observation' (`ObservationController`, `ObservationService`, `CreateObservationDto`, y `observation.entity.ts`). Aunque el sistema permite crear, listar y actualizar observaciones, no existe ningún mecanismo, campo (como 'priority'), DTO o lógica de negocio en el servicio que permita clasificar estas observaciones por prioridad. La estructura de datos y el flujo de trabajo actual se limitan a almacenar la descripción, la fecha y el autor asociado al resultado de una evaluación.
+
+===============================
+Fulfilled Requirements: 1/3
+===============================
+
+===============================
+TOKEN USAGE STATS
+Input Tokens : 220672
+Output Tokens: 2009
+Total Tokens : 222681
+===============================
+ESTADÍSTICAS DE EVALUACIÓN SUPERVISADA
+DEBUG MODE: True
+MODEL: gemini3.1-flash
+EVALUATION MODE: agent
+GROUND TRUTH VALUE: Not Fulfilled
+
+REVIEWED ON 2026-06-22 17:01:59.958601
+==========================
+Reviewed Requirement: El sistema debe contar con una plataforma para subir datos de distintas fuentes no relacionales transformándolos a un formato común y trabajable
+==========================
+Status: Fulfilled
+Reason: El sistema cumple con el requerimiento mediante el uso de una arquitectura de carga y procesamiento de datos. Se ha verificado en `app/services/file_service.py` que existe una funcionalidad para la subida de archivos (ej. `upload_rotacion_file`), la cual incluye validación de estructura (mediante `validate_rotacion_excel`) y el registro de metadatos en un repositorio. Posteriormente, el sistema dispara flujos de trabajo de ETL (procesos orquestados por Apache Airflow, como se observa en `app/api/v1/endpoints/etl_routes.py`), que son los encargados de transformar estos datos no relacionales a un formato común, permitiendo así su integración y trabajo posterior. La combinación de la subida, validación y orquestación de transformación confirma el cumplimiento.
+
+==========================
+Reviewed Requirement: El sistema debe mostrar métricas simples calculadas automáticamente con los datos disponibles
+==========================
+Status: Fulfilled
+Reason: El código contiene un módulo dedicado a la generación de métricas (app/services/dwh_metrics_service.py) que calcula automáticamente indicadores de asistencia, rotación, selección y capacitación a través de consultas SQL en un DWH. Estas métricas son expuestas a través de endpoints de la API (app/api/v1/endpoints/metrics.py), cumpliendo con el requerimiento.
+
+==========================
+Reviewed Requirement: El sistema debe acceder a una base de datos separada para almacenar temporalmente datos extraidos andtes de su carga final al almacén de datos
+==========================
+Status: Not fulfilled
+Reason: Agent execution error during structural evaluation: Recursion limit of 25 reached without hitting a stop condition. You can increase the limit by setting the `recursion_limit` config key.
+For troubleshooting, visit: https://docs.langchain.com/oss/python/langgraph/errors/GRAPH_RECURSION_LIMIT
+
+==========================
+Reviewed Requirement: El sistema debe acceder a un Almacen de Datos estructurado que permita almacenar los datos de manera histórica y optimizada para cada consulta
+==========================
+Status: Fulfilled
+Reason: El sistema implementa un Data Warehouse (DWH) estructurado y accesible a través de 'app/db/dwh_session.py', el cual gestiona conexiones a una base de datos PostgreSQL diseñada para fines analíticos. La capa de servicios ('app/services/dwh_metrics_service.py') demuestra el uso de consultas SQL optimizadas sobre esquemas de tipo estrella (fact_asistencia, dim_tiempo), diseñadas para la extracción eficiente de datos históricos, cumpliendo así con los requerimientos de estructuración, historicidad y optimización para consulta.
+
+===============================
+Fulfilled Requirements: 3/4
+===============================
+
+===============================
+TOKEN USAGE STATS
+Input Tokens : 148103
+Output Tokens: 1991
+Total Tokens : 150094
+===============================
+ESTADÍSTICAS DE EVALUACIÓN SUPERVISADA
+DEBUG MODE: True
+MODEL: gemini3.1-flash
+EVALUATION MODE: agent
+GROUND TRUTH VALUE: Fulfilled
+
+REVIEWED ON 2026-06-22 17:03:40.721395
+==========================
+Reviewed Requirement: La interfaz gráfica tiene botones para que el robot pueda desplazarse; agarrar y soltar bola
+==========================
+Status: Fulfilled
+Reason: El archivo 'interfaz.py' define una interfaz gráfica utilizando la librería tkinter. En este archivo se crean botones específicos para el desplazamiento ('boton_adelante', 'boton_atras', 'boton_der', 'boton_izq') y botones para la manipulación de objetos ('boton_agarrar' y 'boton_soltar'), los cuales envían comandos a través de un socket hacia el robot para ejecutar las acciones correspondientes definidas en 'funciones.py'.
+
+==========================
+Reviewed Requirement: Debe permitir la conexión al servidor mediante la ip del robot
+==========================
+Status: Fulfilled
+Reason: El archivo 'interfaz.py' contiene una interfaz gráfica que incluye la función 'get_ip()', la cual solicita al usuario ingresar una dirección IP. Posteriormente, esta IP es utilizada por la función 'conectar(adress, port)', que emplea el módulo 'socket' para establecer la conexión (`clientSocket.connect((adress,port))`) con el servidor en la IP especificada.
+
+===============================
+Fulfilled Requirements: 2/2
+===============================
+
+===============================
+TOKEN USAGE STATS
+Input Tokens : 4161
+Output Tokens: 267
+Total Tokens : 4428
+===============================
+ESTADÍSTICAS DE EVALUACIÓN SUPERVISADA
+DEBUG MODE: True
+MODEL: gemini3.1-flash
+EVALUATION MODE: llm_pipeline
+GROUND TRUTH VALUE: Fulfilled
+
+REVIEWED ON 2026-06-22 17:04:12.990065
+==========================
+Reviewed Requirement: Debe permitir consultar el estado del robot mediante su dirección IP
+==========================
+Status: Not fulfilled
+Reason: El código permite conectar a un robot mediante su dirección IP (función 'conectar' en 'interfaz.py'), pero no existe ninguna funcionalidad implementada para consultar el estado actual del robot (como sensores, carga de batería, o estado de los motores) una vez establecida la conexión.
+
+==========================
+Reviewed Requirement: La interfaz gráfica tiene botones para consultar sensores y visualizar diagnósticos
+==========================
+Status: Not fulfilled
+Reason: He revisado el archivo 'interfaz.py', el cual define la interfaz gráfica utilizando tkinter. El código contiene botones para controlar el movimiento del robot (Adelante, Atrás, Derecha, Izquierda) y acciones del actuador (Subir, Bajar, Agarrar, Soltar), además de un botón de conexión. No existe ningún botón ni funcionalidad en el código para consultar sensores ni para visualizar diagnósticos.
+
+===============================
+Fulfilled Requirements: 0/2
+===============================
+
+===============================
+TOKEN USAGE STATS
+Input Tokens : 4154
+Output Tokens: 229
+Total Tokens : 4383
+===============================
+ESTADÍSTICAS DE EVALUACIÓN SUPERVISADA
+DEBUG MODE: True
+MODEL: gemini3.1-flash
+EVALUATION MODE: llm_pipeline
+GROUND TRUTH VALUE: Fulfilled
+
+REVIEWED ON 2026-06-22 20:59:47.701076
+==========================
+Reviewed Requirement: Reconocer color automáticamente
+==========================
+Status: Fulfilled
+Reason: Tras analizar el archivo 'operaciones.py', se identifica la función 'Automatic()', la cual implementa lógica de control basada en un sensor de color ('ColorSensor' en 'INPUT_4'). La lógica del bucle 'while (col.color != 6)' confirma que el sistema realiza una acción automatizada que se detiene precisamente cuando se reconoce un color específico (asociado al valor 6 en la API de ev3dev2, correspondiente al color blanco). Por tanto, la capacidad de reconocer color automáticamente está implementada y funcional.
+
+==========================
+Reviewed Requirement: Usar sensor ultrasónico para estimar el tamaño de objetos cercanos
+==========================
+Status: Not fulfilled
+Reason: El código analizado en '/home/chopancho/dev/PRUEBAS_REFI_ALPHA/P1_2_2022/operaciones.py' utiliza efectivamente el sensor ultrasónico (`UltrasonicSensor` en la línea 12), pero solo para medir la distancia (`prox.distance_centimeters_continuous` en la línea 18) y tomar una decisión booleana de movimiento (evitar obstáculos). No existe ninguna lógica, cálculo o implementación destinada a 'estimar el tamaño' de los objetos detectados. El requerimiento no está implementado.
+
+==========================
+Reviewed Requirement: Establecer conexión al servidor por un puerto configurable definido por el usuario
+==========================
+Status: Not fulfilled
+Reason: Tras analizar el archivo 'interfaz.py', se observa que la variable 'port' está definida como una constante fija (port = 12345). Tanto en la función 'get_IP' como en la función 'conection', el puerto no se solicita al usuario, siendo el valor 12345 inmutable durante la ejecución. Por lo tanto, el requerimiento de que el puerto sea configurable por el usuario no se cumple.
+
+==========================
+Reviewed Requirement: Usar sensor ultrasonido de proximidad
+==========================
+Status: Fulfilled
+Reason: Se ha verificado el código fuente, específicamente en el archivo '/home/chopancho/dev/PRUEBAS_REFI_ALPHA/P1_2_2022/operaciones.py'. En las líneas 4, 12 y 18 se observa la importación, inicialización y uso del sensor de ultrasonido (`UltrasonicSensor` de `ev3dev2.sensor.lego`), el cual es empleado en la función `Automatic()` para medir la distancia y tomar decisiones de control del robot (`prox.distance_centimeters_continuous > 5`). El requerimiento está claramente implementado.
+
+==========================
+Reviewed Requirement: Indicar con color la velocidad de desplazamiento detectada por el sensor
+==========================
+Status: Not fulfilled
+Reason: He analizado los archivos 'interfaz.py', 'operaciones.py' y 'receptor.py'. Aunque la aplicación interactúa con sensores (ultrasonido y color) a través de 'operaciones.py', no existe ninguna implementación lógica ni en la interfaz gráfica (interfaz.py) ni en las funciones de operación que asocie o muestre visualmente la 'velocidad de desplazamiento' detectada por un sensor mediante un cambio de color. La interfaz actual solo gestiona botones de control (avanzar, retroceder, etc.) y estados de conexión, sin incluir indicadores dinámicos basados en telemetría de velocidad.
+
+==========================
+Reviewed Requirement: Establecer conexión al servidor por el puerto 12345
+==========================
+Status: Fulfilled
+Reason: Se ha verificado en el archivo 'interfaz.py' que la lógica de conexión implementa explícitamente el uso del puerto 12345. Específicamente, en la función 'conection(addr)', se define 'port = 12345' y se realiza la llamada 'client.connect((addr, port))', cumpliendo satisfactoriamente con el requerimiento.
+
+===============================
+Fulfilled Requirements: 3/6
+===============================
+
+===============================
+TOKEN USAGE STATS
+Input Tokens : 88239
+Output Tokens: 1945
+Total Tokens : 90184
+===============================
+ESTADÍSTICAS DE EVALUACIÓN SUPERVISADA
+DEBUG MODE: True
+MODEL: ollama
+EVALUATION MODE: agent
+GROUND TRUTH VALUE: Fulfilled
+
+REVIEWED ON 2026-06-22 21:04:31.858312
+==========================
+Reviewed Requirement: Recopilar y desplegar estadísticas sobre las condiciones del suelo
+==========================
+Status: Not fulfilled
+Reason: Tras analizar la arquitectura y el código fuente del proyecto, se determinó que no existe ninguna implementación dedicada a la recopilación ni al despliegue de estadísticas históricas o analíticas sobre las condiciones del suelo. El sistema actual solo expone vistas para: (1) listar registros de riegos ejecutados (`getRiegos`), (2) accionar un riego manualmente (`accionarRegado`), y (3) leer el estado instantáneo de un sensor de humedad (`obtEstadoAgua` a través de `GPIO.input`). Las funciones de `modules.py` se limitan al control físico de sensores y actuadores (GPIO), pero no realizan un registro ni procesamiento estadístico. Por lo tanto, el requerimiento no está implementado.
+
+==========================
+Reviewed Requirement: Permitir programar calendarios de riego sin ejecutar riegos automáticamente
+==========================
+Status: Not fulfilled
+Reason: Tras analizar el modelo 'RiegoPrueba' y las vistas en 'manejoRiegos/views.py', se observa que existe un campo booleano 'automatico' en el modelo, pero no existe ninguna lógica implementada para gestionar calendarios de riego o programaciones (schedulers). La función 'accionarRegado' dispara un proceso de riego de manera inmediata mediante un hilo y registra la acción en la base de datos, pero no ofrece una interfaz o lógica de backend para programar fechas y horas futuras sin ejecución, ni un servicio de fondo que procese dichos calendarios programados. El requerimiento de programar calendarios sin ejecución automática es inexistente en el código actual.
+
+==========================
+Reviewed Requirement: Recopilar y desplegar estadísticas meteorológicas de la zona
+==========================
+Status: Not fulfilled
+Reason: Tras analizar el código fuente en los módulos 'manejoRiegos/views.py' y 'manejoRiegos/modules.py', se observa que la aplicación está centrada exclusivamente en el control de riego (activación de relés y lectura de un sensor de humedad del suelo). No existe ningún componente, servicio, integración con API meteorológica externa ni lógica en los modelos de datos que permita recopilar o desplegar 'estadísticas meteorológicas' (como temperatura, precipitaciones, humedad ambiental, etc.) de la zona. El requerimiento no está implementado.
+
+==========================
+Reviewed Requirement: Notificar al usuario cuando exista riesgo de sequía mediante una petición http
+==========================
+Status: Not fulfilled
+Reason: Tras analizar el código en 'manejoRiegos/views.py' y 'manejoRiegos/modules.py', se observa que existen funciones para leer el estado de un sensor de humedad (obtEstadoAgua) y activar el riego (accionarRegado). Sin embargo, no existe ninguna lógica implementada que verifique el umbral de riesgo de sequía ni que genere una notificación (petición HTTP o mecanismo similar) hacia el usuario cuando dicha condición se cumpla. El sistema solo expone el estado bruto del sensor a través de un endpoint HTTP.
+
+==========================
+Reviewed Requirement: Avisar al usuario si su petición para regar fue exitosa
+==========================
+Status: Fulfilled
+Reason: Se analizó el archivo `/home/chopancho/dev/PRUEBAS_REFI_ALPHA/botanidrip/botanidrip/manejoRiegos/views.py`. La función `accionarRegado` (líneas 46-57) maneja la petición de riego. Si el proceso de iniciar el hilo de riego y guardar el registro es exitoso, la vista retorna `HttpResponse(1)` (línea 57), y en caso de error en el bloque `try-except` retorna `HttpResponse(-1)` (línea 55). Esto implementa el mecanismo de comunicación al usuario sobre el resultado de la petición.
+
+==========================
+Reviewed Requirement: Visualizar listado de riegos históricos efectuados
+==========================
+Status: Fulfilled
+Reason: Se ha verificado el archivo /home/chopancho/dev/PRUEBAS_REFI_ALPHA/botanidrip/botanidrip/manejoRiegos/views.py. La función `getRiegos(request)` consulta todos los objetos `RiegoPrueba` de la base de datos (usando `RiegoPrueba.objects.all()`) y construye una cadena con formato JSON que contiene el listado de riegos con sus atributos (riegoid, fecha, hora, automático). Esto cumple explícitamente con el requerimiento de visualizar el listado histórico de riegos.
+
+==========================
+Reviewed Requirement: Almacenar información de riegos efectuados
+==========================
+Status: Fulfilled
+Reason: Se verificó el archivo `/home/chopancho/dev/PRUEBAS_REFI_ALPHA/botanidrip/botanidrip/manejoRiegos/models.py`, el cual contiene la clase `RiegoPrueba`. Este modelo define explícitamente los campos necesarios para almacenar información de riegos: `riegoid` (identificador), `fecha`, `hora` y `automatico` (booleano para indicar el modo del riego). Dado que es un modelo de Django (hereda de `models.Model`), está diseñado para persistir esta información en la base de datos, cumpliendo así con el requerimiento.
+
+==========================
+Reviewed Requirement: Efectuar riegos remotamente por medio de la aplicación
+==========================
+Status: Fulfilled
+Reason: El código implementa la funcionalidad de riego remoto a través de la vista 'accionarRegado' (en 'manejoRiegos/views.py'), la cual inicia un hilo que ejecuta 'regadoManual'. Esta función llama a 'regadoHastaHumedo' (en 'manejoRiegos/modules.py'), que interactúa con el hardware a través de la librería 'RPi.GPIO' controlando un relay ('RELAY') y verificando un sensor ('SENSOR_AGUA'). La arquitectura permite disparar esta acción mediante una solicitud web, cumpliendo con el requerimiento de control remoto.
+
+==========================
+Reviewed Requirement: Almacenar configuraciones de riego futuras
+==========================
+Status: Fulfilled
+Reason: El modelo 'RiegoPrueba' definido en '/home/chopancho/dev/PRUEBAS_REFI_ALPHA/botanidrip/botanidrip/manejoRiegos/models.py' contiene los campos 'fecha', 'hora' y 'automatico', los cuales permiten persistir una configuración de riego programada para una fecha y hora específica. Esta estructura satisface el requerimiento de almacenar configuraciones de riego futuras.
+
+==========================
+Reviewed Requirement: Visualizar predicciones de consumo hídrico
+==========================
+Status: Not fulfilled
+Reason: Tras analizar los archivos del proyecto (específicamente 'manejoRiegos/views.py' y 'manejoRiegos/modules.py'), se observa que la lógica está enfocada en el control de hardware (sensores de agua y relés de riego) y en el registro de eventos de riego realizados (histórico en 'RiegoPrueba'). No existe ninguna funcionalidad, método o modelo que implemente lógica predictiva ni interfaces para visualizar predicciones de consumo hídrico. El sistema solo gestiona el estado actual y el historial de acciones, pero carece de capacidades de análisis predictivo.
+
+===============================
+Fulfilled Requirements: 5/10
+===============================
+
+===============================
+TOKEN USAGE STATS
+Input Tokens : 135003
+Output Tokens: 4167
+Total Tokens : 139170
+===============================
+ESTADÍSTICAS DE EVALUACIÓN SUPERVISADA
+DEBUG MODE: True
+MODEL: ollama
+EVALUATION MODE: agent
+GROUND TRUTH VALUE: Fulfilled
+
+REVIEWED ON 2026-06-22 21:08:34.749547
+==========================
+Reviewed Requirement: El sistema implementa sensores ultrasónicos para medir el nivel de llenado del dispensador
+==========================
+Status: Fulfilled
+Reason: El análisis del archivo `/home/chopancho/dev/PRUEBAS_REFI_ALPHA/smartfeed/CODIGO.py` confirma que el sistema utiliza la librería `grovepi` para interactuar con sensores ultrasónicos en los pines 4 (`ULTRA_COMIDA`) y 3 (`ULTRA_AGUA`). El código incluye una función `leer_sensores()` que se ejecuta en un hilo separado (hilo en segundo plano), la cual utiliza `grovepi.ultrasonicRead()` para obtener la distancia, y una función `calcular_nivel()` que procesa estas mediciones para determinar el nivel de llenado y el porcentaje, almacenando estos datos en un objeto global `estado` que se sirve a través de los endpoints `/estado` y `/niveles`. Por lo tanto, el requerimiento está cumplido.
+
+==========================
+Reviewed Requirement: El sistema debe sugerir cantidades de alimento sin dispensarlas
+==========================
+Status: Not fulfilled
+Reason: He analizado el código fuente (CODIGO.py) que gestiona los sensores, el programador de horarios (scheduler) y los endpoints del dispensador. El sistema es capaz de leer niveles de sensores de comida y agua, y dispone de una función 'activar_relay' que efectivamente dispensa alimento, pero no existe ninguna lógica, algoritmo o endpoint en el código que calcule o sugiera cantidades de alimento. El sistema solo automatiza el proceso de dispensación basado en horarios ya configurados, sin ofrecer una función de recomendación o sugerencia de cantidad.
+
+==========================
+Reviewed Requirement: El sistema debe dispensar una cantidad de alimento predefinida por el usuario cuando cumpla el horario programado o se active manualmente
+==========================
+Status: Fulfilled
+Reason: Se analizó el archivo `CODIGO.py` y se verificó que cuenta con:
+1. Función `scheduler()` que verifica los horarios programados cargados desde el archivo de configuración y ejecuta `activar_relay` cuando coinciden la hora y el día.
+2. Endpoint `/dispensar` (implementado en `dispensar_manual`) que recibe `tipo` y `tiempo` para activar el relay de forma manual.
+3. El `activar_relay` controla el hardware (`grovepi.digitalWrite`) durante el tiempo (cantidad de alimento/agua) definido por el usuario. 
+La lógica cubre ambos casos solicitados: programación automática y activación manual.
+
+==========================
+Reviewed Requirement: El sistema debe mostrar el estado actual bajo demanda del usuario.
+==========================
+Status: Fulfilled
+Reason: El código analizado en 'CODIGO.py' implementa un servidor Flask con endpoints específicos para consultar el estado del sistema bajo demanda. En particular, el endpoint '/estado' devuelve en tiempo real los valores procesados de los sensores de comida y agua ('estado["comida"]' y 'estado["agua"]'), junto con un timestamp. Adicionalmente, existen otros endpoints como '/niveles' que ofrecen una vista resumida, cumpliendo así con el requerimiento de disponibilidad de información bajo demanda.
+
+==========================
+Reviewed Requirement: La aplicación móvil debe mostrar tendencias semanales de consumo
+==========================
+Status: Not fulfilled
+Reason: Tras realizar una búsqueda semántica y analizar la estructura de los archivos de la aplicación móvil (dentro de la carpeta 'app-iot'), se ha confirmado que el proyecto actual consiste únicamente en una plantilla básica de Expo. No se encontró ninguna lógica, componente de interfaz o integración de datos que implemente la visualización de "tendencias semanales de consumo". El archivo 'CODIGO.py' contiene lógica de servidor para controlar dispositivos IoT (sensores de comida/agua y cámara), pero esta lógica no se refleja en la aplicación móvil de manera que proporcione el requerimiento solicitado.
+
+==========================
+Reviewed Requirement: Debe implementar la lógica necesaria para obtener los estados de los depósitos
+==========================
+Status: Fulfilled
+Reason: Se ha verificado el archivo /home/chopancho/dev/PRUEBAS_REFI_ALPHA/smartfeed/CODIGO.py. Este archivo contiene una implementación funcional en Python (Flask) que gestiona el estado de los depósitos de comida y agua.
+1. Existe una estructura global 'estado' que almacena la distancia, el nivel calculado y el porcentaje para 'comida' y 'agua'.
+2. La función 'leer_sensores' se ejecuta en un hilo separado ('threading.Thread') y actualiza continuamente estas variables leyendo desde los pines definidos ('ULTRA_COMIDA', 'ULTRA_AGUA') mediante la librería 'grovepi'.
+3. Existe la función 'calcular_nivel' que procesa la lógica de negocio para traducir distancias físicas (cm) a niveles lógicos (lleno, medio, poco, vacío) y porcentajes.
+4. Se exponen los endpoints '/estado' y '/niveles' (métodos GET) que permiten consultar estos datos desde la API.
+La lógica está correctamente implementada y operativa.
+
+==========================
+Reviewed Requirement: Permitir al usuario registrar manualmente horarios históricos de alimentación mediante websockets
+==========================
+Status: Not fulfilled
+Reason: Tras analizar el código fuente en 'CODIGO.py', se observa que la aplicación utiliza una arquitectura basada en Flask (HTTP REST API) para la gestión de horarios y el control del dispositivo. Específicamente, los endpoints '/horarios' (GET y POST) manejan la configuración de horarios de forma convencional mediante solicitudes HTTP, no mediante websockets. No se encontró ninguna implementación de servidores o clientes websocket (como 'flask-socketio' o 'socket.io') en el archivo, ni lógica que permita registrar 'horarios históricos' (que implica un registro de eventos pasados, mientras que el código actual gestiona una configuración de programación futura). El sistema opera bajo un paradigma request-response síncrono. Por lo tanto, el requerimiento no está implementado.
+
+==========================
+Reviewed Requirement: El sistema debe medir la frecuencia de acceso de la mascota al comedero
+==========================
+Status: Not fulfilled
+Reason: Tras analizar el código fuente en 'CODIGO.py', se observa que el sistema implementa sensores ultrasónicos para medir la distancia y, a partir de ella, calcula el nivel de llenado del comedero (función 'leer_sensores' y 'calcular_nivel'). Sin embargo, no existe ninguna lógica implementada para registrar eventos, marcas de tiempo, o contadores que permitan determinar la 'frecuencia de acceso' de la mascota. El sistema se limita a informar el estado actual (nivel de comida/agua), pero carece de un historial o métrica acumulativa de accesos. Por tanto, el requerimiento no está cumplido.
+
+==========================
+Reviewed Requirement: El sistema debe notificar cambios bruscos en los hábitos alimenticios
+==========================
+Status: Not fulfilled
+Reason: He analizado el archivo principal 'CODIGO.py' que contiene la lógica de negocio (sensores, programación de dispensación, estado del dispensador). El código implementa la lectura de sensores ultrasónicos para determinar niveles de comida y agua, y permite programar horarios de dispensación. Sin embargo, no existe ninguna lógica implementada para monitorear tendencias de consumo, realizar comparativas históricas ni generar notificaciones o alertas ante 'cambios bruscos en los hábitos alimenticios'. El estado se limita a mediciones puntuales actuales.
+
+==========================
+Reviewed Requirement: El sistema debe permitir al usuario programar horarios de alimentación a través de una aplicación movil
+==========================
+Status: Fulfilled
+Reason: El código fuente de la aplicación móvil (ubicado en `app-iot/app/`) implementa efectivamente la funcionalidad requerida. Específicamente, el archivo `app-iot/app/nuevo-horario.tsx` proporciona una interfaz de usuario que permite configurar la hora, el tipo de dispensación, los días de la semana y la duración. Además, el componente incluye la lógica para enviar esta configuración a un backend (`/horarios`) mediante una solicitud HTTP POST, cumpliendo con el requerimiento de programación de horarios a través de la aplicación móvil.
+
+===============================
+Fulfilled Requirements: 5/10
+===============================
+
+===============================
+TOKEN USAGE STATS
+Input Tokens : 171535
+Output Tokens: 2836
+Total Tokens : 174371
+===============================
+ESTADÍSTICAS DE EVALUACIÓN SUPERVISADA
+DEBUG MODE: True
+MODEL: ollama
+EVALUATION MODE: agent
+GROUND TRUTH VALUE: Fulfilled
+
+REVIEWED ON 2026-06-22 21:12:36.680278
+==========================
+Reviewed Requirement: El sistema debe clasificar sonidos según su tipo de origen
+==========================
+Status: Not fulfilled
+Reason: Tras analizar el archivo principal 'hush/hush_rp5.py', se observa que el sistema se encarga exclusivamente de la monitorización de niveles de ruido (en decibeles) mediante un sensor de sonido conectado, comparándolos contra un umbral (threshold) configurado para enviar notificaciones vía Telegram. No existe en el código ninguna lógica, clase, método o integración de aprendizaje automático, procesamiento de señales avanzado, ni ninguna estructura que permita la 'clasificación' de sonidos (ej. diferenciar entre gritos, golpes, música, etc.), sino únicamente la medición de la intensidad del volumen (dB). Por tanto, el requerimiento no está cumplido.
+
+==========================
+Reviewed Requirement: El sistema debe permitir registrar; editar y eliminar dispositivos bluetooth
+==========================
+Status: Not fulfilled
+Reason: Tras analizar el código, he determinado que NO cumple con el requerimiento de gestión de dispositivos Bluetooth.
+
+1. El archivo `hush/hush/Interfaz_Hush/app/src/main/java/com/example/interfaz_hush/GraphActivity.kt` muestra que la aplicación Android se conecta de forma estática o automática a un dispositivo previamente conocido (almacenado en `SharedPreferences` bajo la clave `last_bt_address`), pero no contiene lógica en la interfaz para listar, añadir (registrar), editar o eliminar dispositivos Bluetooth.
+2. El archivo `hush/hush/hush_rp5.py` implementa el lado del servidor (Raspberry Pi) usando Bluetooth SPP (`PyBluez`) para comunicación. Dicho servidor gestiona comandos de control del monitor de ruido (iniciar/detener, configuración), pero no ofrece ninguna funcionalidad para gestionar la lista de dispositivos clientes emparejados (registro/edición/eliminación).
+3. No existe ninguna clase o servicio en los archivos analizados dedicado a la gestión (CRUD) de la lista de dispositivos Bluetooth. La aplicación simplemente confía en las capacidades del sistema operativo (emparejamiento nativo de Android) para la conexión, sin ofrecer una interfaz o lógica de gestión propia para editar o eliminar dispositivos desde el sistema hush.
+
+==========================
+Reviewed Requirement: El sistema debe reconocer sonidos en niveles altos de decibeles
+==========================
+Status: Fulfilled
+Reason: El código fuente en /home/chopancho/dev/PRUEBAS_REFI_ALPHA/hush/hush/hush_rp5.py implementa la lógica necesaria para reconocer sonidos basándose en un umbral de decibeles. La clase `NoiseMonitorCore` monitorea continuamente el valor de decibeles (`db`), lo compara con un umbral configurable (`threshold_db`) y dispara alertas (telegram, cambios en pantalla Grove, etc.) cuando este umbral es superado, lo cual es la definición técnica de reconocer sonidos en niveles altos de decibeles. Además, permite configurar el umbral mediante comandos.
+
+==========================
+Reviewed Requirement: El sistema debe establecer conexión bluetooth con dispositivos cercanos
+==========================
+Status: Fulfilled
+Reason: El sistema implementa conectividad Bluetooth en ambos extremos:
+1. En el backend (Raspberry Pi, `hush_rp5.py`), se ejecuta `run_bluetooth_server_in_thread`, que utiliza `bluetooth.BluetoothSocket(bluetooth.RFCOMM)` para levantar un servidor SPP (Serial Port Profile) que escucha conexiones entrantes.
+2. En la aplicación Android (`GraphActivity.kt`), existe la lógica de cliente (`BtSppClient`) que busca dispositivos vinculados mediante `BluetoothAdapter` y gestiona la conexión (`btClient.connect`), incluyendo el manejo de permisos necesarios para versiones modernas de Android (BLUETOOTH_CONNECT).
+El requerimiento de establecer conexión está implementado y soportado por ambos componentes.
+
+==========================
+Reviewed Requirement: El sistema debe emitir una notificación al usuario en tiempo real (alertas)
+==========================
+Status: Fulfilled
+Reason: El archivo hush/hush_rp5.py contiene la implementación del sistema de monitoreo de ruido. Específicamente, el método `_loop` en la clase `NoiseMonitorCore` realiza la lectura del sensor, compara el nivel de ruido con un umbral configurable (`threshold_db`) y, en caso de superar dicho umbral, dispara una notificación en tiempo real a través de Telegram (`send_telegram_notification`) mediante un hilo dedicado (`threading.Thread`). Además, el sistema permite gestionar esta funcionalidad con controles de "cooldown" (enfriamiento entre alertas) y "mute" (silenciamiento temporal), cumpliendo con el requerimiento de notificaciones en tiempo real.
+
+==========================
+Reviewed Requirement: El sistema debe generar resúmenes diarios de actividad sonora
+==========================
+Status: Not fulfilled
+Reason: He analizado exhaustivamente el código en 'hush/hush_rp5.py', que es el núcleo central del sistema, así como la estructura del proyecto Android. El sistema cuenta con funcionalidades de monitoreo en tiempo real (umbral de decibeles, alertas por Telegram, servidor Bluetooth, historial de mediciones recientes en memoria y programación horaria de inicio/parada), pero no existe ninguna lógica, método, tarea programada (cron) o informe generado que realice el agrupamiento, análisis o envío de un 'resumen diario' (daily report) de la actividad sonora capturada. El historial se limita a una cola (deque) en memoria de tamaño limitado (definido por 'max_points') sin persistencia a largo plazo orientada a reportes diarios.
+
+===============================
+Fulfilled Requirements: 3/6
+===============================
+
+===============================
+TOKEN USAGE STATS
+Input Tokens : 92737
+Output Tokens: 1556
+Total Tokens : 94293
+===============================
+ESTADÍSTICAS DE EVALUACIÓN SUPERVISADA
+DEBUG MODE: True
+MODEL: ollama
+EVALUATION MODE: agent
+GROUND TRUTH VALUE: Fulfilled
+
+REVIEWED ON 2026-06-22 21:32:12.813581
+==========================
+Reviewed Requirement: Recopilar y desplegar estadísticas sobre las condiciones del suelo
+==========================
+Status: Fulfilled
+Reason: El sistema implementa el requerimiento de recopilación y despliegue de estadísticas sobre el suelo a través de una arquitectura cliente-servidor: 
+1. En el backend (Django), el archivo `botanidrip/manejoRiegos/views.py` proporciona funciones como `obtEstadoAgua` que interactúa con el hardware (`GPIO.input(SENSOR_AGUA)`) para obtener el estado actual del suelo.
+2. En el frontend (Android/Kotlin), el archivo `main/java/com/example/botanidrip/Estadisticas.kt` contiene la lógica de interfaz de usuario (`ShowStatsImage`, `SueloBueno`, `SueloMalo`, `SueloDuda`) que visualiza el estado obtenido, informando al usuario si el suelo está en condiciones óptimas o deficientes mediante indicadores visuales.
+Aunque la implementación es básica, cumple con los dos pilares del requerimiento: recopilación (vía sensor) y despliegue (vía UI).
+
+==========================
+Reviewed Requirement: Visualizar listado de riegos históricos efectuados
+==========================
+Status: Fulfilled
+Reason: El sistema implementa exitosamente la funcionalidad de visualizar el historial de riegos. 
+
+1. En el backend (Python/Django, archivo `botanidrip/manejoRiegos/views.py`), existe la función `getRiegos` que serializa y devuelve el listado de todos los objetos `RiegoPrueba` almacenados.
+2. En la aplicación Android (Kotlin), el archivo `main/java/com/example/botanidrip/History.kt` contiene componentes de UI (`ShowRiegoHistory` usando `LazyColumn` y `RiegoDisplay`) diseñados específicamente para renderizar una lista de objetos `RiegoPrueba`.
+3. La capa de presentación se conecta mediante `RiegoViewModel.kt`, el cual consume el servicio de API `getRiegos()` (`ApiService`) para poblar `riegoListResponse`, que es consumido por la vista de historial (`History.kt`).
+
+La arquitectura está completa y funcional para el requerimiento solicitado.
+
+==========================
+Reviewed Requirement: Almacenar configuraciones de riego futuras
+==========================
+Status: Not fulfilled
+Reason: Tras analizar los archivos, el sistema cuenta con un modelo `RiegoPrueba` que registra eventos de riego pasados (fecha y hora actuales en `views.py`). No existe ninguna lógica en el backend ni en los modelos que permita almacenar o gestionar programaciones de riego futuras (es decir, configurar una fecha u hora de riego que aún no ha ocurrido). Las estructuras de datos presentes solo capturan el momento en que se ejecuta o se solicita el riego, pero no proporcionan un mecanismo para persistir tareas de riego programadas para el futuro.
+
+==========================
+Reviewed Requirement: Permitir programar calendarios de riego sin ejecutar riegos automáticamente
+==========================
+Status: Not fulfilled
+Reason: El sistema cuenta con un modelo RiegoPrueba que incluye una propiedad 'automatico' (booleana), lo que sugiere la capacidad de distinguir entre tipos de riego. Sin embargo, no existe una implementación de lógica de negocio o gestión de tareas (scheduler) que permita programar calendarios de riego independientemente del proceso de automatización. El script 'automatic_water.py' ejecuta un bucle infinito que invoca 'automatization()' en 'rpi_botanidrip.py', el cual gestiona el riego basándose en el sensor y no en una programación temporal. No hay código que permita configurar un calendario para registrar eventos de riego futuros sin disparar la lógica de ejecución automática actual.
+
+==========================
+Reviewed Requirement: Almacenar información de riegos efectuados
+==========================
+Status: Fulfilled
+Reason: El sistema implementa el almacenamiento de información de riegos efectuados mediante un modelo de Django (RiegoPrueba) ubicado en 'botanidrip/manejoRiegos/models.py'. Este modelo captura el ID del riego, la fecha, la hora y si fue automático. La lógica de persistencia se observa en 'botanidrip/manejoRiegos/views.py', específicamente en la función 'accionarRegado', donde se crea una instancia de 'RiegoPrueba' con la información actual y se guarda en la base de datos (r.save()). Además, existe soporte para consultar estos datos a través de la función 'getRiegos' y visualizarlos en el frontend Android (Kotlin) mediante 'History.kt'.
+
+==========================
+Reviewed Requirement: Efectuar riegos remotamente por medio de la aplicación
+==========================
+Status: Fulfilled
+Reason: El código implementa la capacidad de efectuar riegos de forma remota. En el lado del cliente (Android/Kotlin), el archivo 'RiegoViewModel.kt' define funciones como 'regadoManual()' que consumen el endpoint definido en 'ApiService.kt' ('regarManual()'). Del lado del servidor (Django), el archivo 'manejoRiegos/views.py' contiene la vista 'accionarRegado', que al ser invocada dispara un hilo de ejecución ('regadoManual') que inicia el proceso físico de riego mediante componentes externos, cumpliendo con el requerimiento de control remoto.
+
+==========================
+Reviewed Requirement: Notificar al usuario cuando exista riesgo de sequía mediante una peticion http
+==========================
+Status: Not fulfilled
+Reason: Tras analizar el código fuente (`botanidrip/manejoRiegos/views.py`, `botanidrip/manejoRiegos/modules.py` y el frontend en `main/java/com/example/botanidrip/`), se observa que el sistema puede consultar el estado de la humedad mediante `/ws1/` (que ejecuta `obtEstadoAgua` en Django y `init_sensor` en `modules.py`), pero no existe una lógica implementada que identifique un 'riesgo de sequía' ni mucho menos un mecanismo (callback, webhook o petición activa desde el servidor) que notifique al usuario proactivamente sobre esta condición mediante una petición HTTP. El frontend solo consulta el estado bajo demanda, pero no hay lógica de notificación de alertas de sequía.
+
+==========================
+Reviewed Requirement: Recopilar y desplegar estadísticas meteorológicas de la zona
+==========================
+Status: Not fulfilled
+Reason: Tras analizar la arquitectura del código, se observa que el sistema gestiona el riego y el estado del suelo (a través de 'ApiService' y 'RiegoViewModel'), pero no existen módulos, funciones o llamadas a API para recopilar o desplegar datos meteorológicos de la zona (temperatura, humedad ambiental, presión, etc.). Las 'Estadisticas' mencionadas en el código (`Estadisticas.kt`) se refieren exclusivamente al estado del suelo (bueno/malo/duda) y no a información meteorológica. Por lo tanto, el requerimiento no está implementado.
+
+==========================
+Reviewed Requirement: Avisar al usuario si su petición para regar fue exitosa
+==========================
+Status: Fulfilled
+Reason: El código cuenta con componentes de UI en 'VistaGeneral.kt' (`DialogoExito`, `DialogoNoExitoso`, `DialogoError`) que gestionan la retroalimentación visual hacia el usuario tras una acción de riego. Estos diálogos son invocados a través de `DialogoSelector`, el cual utiliza el estado gestionado en `RiegoViewModel` para determinar y mostrar el mensaje correspondiente al usuario, cumpliendo así con el requerimiento de avisar sobre el éxito (o estado) de la petición de riego.
+
+==========================
+Reviewed Requirement: Visualizar predicciones de consumo hídrico
+==========================
+Status: Not fulfilled
+Reason: Tras analizar el código fuente, no se encontró ninguna implementación, algoritmo o interfaz de usuario diseñada para mostrar 'predicciones' de consumo hídrico. El sistema actual se limita a gestionar registros de eventos de riego pasados (en `RiegoPrueba` y `manejoRiegos/views.py`) y a visualizar el estado actual del suelo ('Bueno', 'Malo', 'Duda') en `Estadisticas.kt`. No hay lógica de modelado predictivo o proyección de consumo en el backend ni en el frontend.
+
+===============================
+Fulfilled Requirements: 5/10
+===============================
+
+===============================
+TOKEN USAGE STATS
+Input Tokens : 230030
+Output Tokens: 3816
+Total Tokens : 233846
+===============================
+ESTADÍSTICAS DE EVALUACIÓN SUPERVISADA
+DEBUG MODE: True
+MODEL: ollama
+EVALUATION MODE: agent
+GROUND TRUTH VALUE: Fulfilled
+
+REVIEWED ON 2026-06-22 21:34:05.647643
+==========================
+Reviewed Requirement: Almacenar configuraciones de riego futuras
+==========================
+Status: Not fulfilled
+Reason: He analizado los modelos Django (models.py) y el resto del código. Si bien existe un modelo 'RiegoPrueba' (File Index 26) para registrar riegos históricos, no se encuentra ningún modelo o funcionalidad implementada en la base de datos o en el código que permita definir, guardar o gestionar configuraciones de riego futuras (programaciones). En File Index 8 y 14 se hace mención a "regados programados" mediante una lista de prueba hardcodeada ('programadosDePrueba'), pero no existe una lógica backend para almacenar, recuperar o persistir dichas configuraciones de forma dinámica.
+
+==========================
+Reviewed Requirement: Visualizar listado de riegos históricos efectuados
+==========================
+Status: Fulfilled
+Reason: El código cumple con el requerimiento. La aplicación Android cuenta con la vista 'History.kt' que contiene 'ShowRiegoHistory' y 'RiegoDisplay', las cuales utilizan un 'LazyColumn' para mostrar los datos de los riegos. Además, 'MainActivity.kt' configura la navegación a esta vista y 'RiegoViewModel.kt' implementa la lógica para obtener la lista de riegos desde la API (implementada en el backend Django en 'views.py' y 'ApiService.kt').
+
+==========================
+Reviewed Requirement: Notificar al usuario cuando exista riesgo de sequía mediante una peticion http
+==========================
+Status: Not fulfilled
+Reason: El código implementa funcionalidades para verificar el estado de humedad del suelo mediante peticiones HTTP (por ejemplo, /ws1/), pero no existe ninguna lógica ni mecanismo para *notificar* activamente al usuario (ej. mediante una notificación push o una alerta) cuando se detecta un riesgo de sequía. La aplicación cliente simplemente consulta el estado (mediante RiegoViewModel.obtAgua()), pero no envía una notificación proactiva.
+
+==========================
+Reviewed Requirement: Avisar al usuario si su petición para regar fue exitosa
+==========================
+Status: Fulfilled
+Reason: En el archivo `VistaGeneral.kt`, se implementan `DialogoExito` y `DialogoSelector` que manejan la lógica de interfaz para mostrar al usuario si la acción de riego fue exitosa (basado en el código de retorno recibido de `RiegoViewModel().regadoManual()`). Cuando el usuario presiona el botón "REGAR", `BotonRegar` muestra un `DialogoSelector` que, a su vez, invoca `DialogoExito` si la condición de riego se cumplió correctamente (código 1 recibido en la vista). El flujo desde la interfaz, a través del ViewModel hasta el servidor (Django), permite informar al usuario sobre el resultado de su petición.
+
+==========================
+Reviewed Requirement: Recopilar y desplegar estadísticas meteorológicas de la zona
+==========================
+Status: Not fulfilled
+Reason: El código proporcionado recopila estadísticas sobre el estado de humedad del suelo (vía sensor de humedad conectado a una Raspberry Pi) y el historial de riegos realizados en el sistema, pero no contiene ninguna funcionalidad ni integración para recopilar, consultar o desplegar estadísticas meteorológicas (como temperatura, precipitación, pronóstico del tiempo, etc.) de la zona.
+
+==========================
+Reviewed Requirement: Almacenar información de riegos efectuados
+==========================
+Status: Fulfilled
+Reason: El requerimiento se cumple en el archivo 'manejoRiegos/views.py' mediante la función 'accionarRegado', la cual crea una instancia del modelo 'RiegoPrueba' con la fecha, hora y tipo de riego (automático/manual), y utiliza el método '.save()' para persistir dicha información en la base de datos definida en el proyecto Django. El modelo 'RiegoPrueba' está correctamente definido en 'manejoRiegos/models.py'.
+
+==========================
+Reviewed Requirement: Recopilar y desplegar estadísticas sobre las condiciones del suelo
+==========================
+Status: Fulfilled
+Reason: El sistema recopila el estado del suelo a través del sensor mediante la función `obtEstadoAgua` en 'views.py', la cual es consultada por la API (definida en 'ApiService.kt' como `/ws1/`). El frontend utiliza esta información en 'Estadisticas.kt' y 'RiegoViewModel.kt' ('obtAgua') para desplegar visualmente el estado del suelo ("óptimo", "no es bueno", o "error de conexión") mediante el componente `ShowStatsImage`.
+
+==========================
+Reviewed Requirement: Efectuar riegos remotamente por medio de la aplicación
+==========================
+Status: Fulfilled
+Reason: La aplicación móvil (Kotlin) consume una API (Django) para solicitar el riego. Específicamente, en 'ApiService.kt' existe el endpoint '/rm1/' que se invoca mediante 'regarManual()' en el 'RiegoViewModel.kt'. Del lado del servidor (Django), la vista 'accionarRegado' en 'views.py' recibe esta petición y ejecuta 'regadoManual', la cual llama a 'regadoHastaHumedo' (en 'modules.py') para activar el pin GPIO que controla la bomba de agua. Por lo tanto, el flujo está implementado.
+
+==========================
+Reviewed Requirement: Visualizar predicciones de consumo hídrico
+==========================
+Status: Not fulfilled
+Reason: Tras revisar el código proporcionado (tanto el backend en Django como la aplicación cliente en Kotlin), no existe ninguna funcionalidad ni lógica que realice o visualice "predicciones" de consumo hídrico. El código se limita a gestionar el riego manual, automático, mostrar el historial de riegos realizados y verificar el estado actual del sensor de humedad (bueno/malo). No hay algoritmos, modelos ni vistas dedicadas a predecir consumos futuros.
+
+==========================
+Reviewed Requirement: Permitir programar calendarios de riego sin ejecutar riegos automáticamente
+==========================
+Status: Not fulfilled
+Reason: El repositorio contiene una estructura para almacenar riegos programados (RegadoProgramado.kt, models.py), pero no existe lógica implementada ni en el backend (django) ni en el frontend (Kotlin/Compose) que permita configurar o agendar calendarios de riego, ni existe un mecanismo que distinga entre 'agendar' y 'ejecutar automáticamente'. El código actual es un prototipo básico donde el botón de agendar en la UI no tiene funcionalidad asociada ('BotonAgendar' en VistaGeneral.kt tiene el onClick vacío) y no se implementó ninguna lógica de planificación de tareas en el backend.
+
+===============================
+Fulfilled Requirements: 5/10
+===============================
+
+===============================
+TOKEN USAGE STATS
+Input Tokens : 118795
+Output Tokens: 1507
+Total Tokens : 120302
+===============================
+ESTADÍSTICAS DE EVALUACIÓN SUPERVISADA
+DEBUG MODE: True
+MODEL: ollama
+EVALUATION MODE: llm_pipeline
+GROUND TRUTH VALUE: Fulfilled
+
+REVIEWED ON 2026-06-22 21:37:03.313621
+==========================
+Reviewed Requirement: El sistema debe mostrar puntos de interés turísticos
+==========================
+Status: Fulfilled
+Reason: El código cuenta con la entidad 'AtractivoTuristico' (File Index 76), la UI 'AtractivoTuristicoUI' (File Index 14) y la pantalla 'TurismoScreen' (File Index 53), la cual consume el 'TurismoScreenViewmodel' (File Index 35) para listar y mostrar los puntos de interés turísticos (atractivos). La lógica de carga y visualización es operativa.
+
+==========================
+Reviewed Requirement: El sistema debe permitir reservas online del Centro Turístico Integral via correo electrónico
+==========================
+Status: Not fulfilled
+Reason: El sistema implementa formularios para solicitar espacios (incluyendo el Centro Turístico Integral, CTI) que se envían a través de una API (KtorEspaciosApiService) mediante una petición POST a un endpoint de backend (postSolicitudCTI), no mediante un cliente de correo electrónico del usuario. No hay funcionalidad para enviar correos electrónicos de reserva desde la aplicación.
+
+==========================
+Reviewed Requirement: El sistema debe mostrar tendencias históricas de variables de la boya
+==========================
+Status: Fulfilled
+Reason: El sistema cuenta con la funcionalidad para mostrar tendencias históricas. Esto se verifica en 'BoyaInfoScreen.kt' (UI) y 'BoyaPlotSection.kt' que integra 'MareaPlot.kt' y 'VientoPlot.kt'. Estas vistas utilizan 'BoyaScreenViewmodel.kt' para obtener datos históricos mediante el caso de uso 'RecibirEstadoMareaHistorico', el cual consume 'BoyaRepository.graficoPorRango' para obtener registros, los cuales se visualizan gráficamente empleando la librería KoalaPlot.
+
+==========================
+Reviewed Requirement: El sistema debe generar reportes estadísticos descargables en PDF y/o CSV
+==========================
+Status: Fulfilled
+Reason: El sistema implementa la funcionalidad a través de la clase `RecibirEstadoMareaHistorico` (File 68), la cual utiliza un `FileSaver` (File 11, 116) para manejar la descarga. En la interfaz `BoyaRepository` (File 61) se definen los métodos `reportePdf` y `reporteCsv`, implementados en `KtorBoyaRepository` (File 98), que consumen los endpoints correspondientes de la API para obtener los bytes y proceder a su descarga/apertura en la UI mediante `ReportesComponent` (File 30) y su integración en `BoyaInfo` (File 49).
+
+==========================
+Reviewed Requirement: El sistema debe permitir eliminar la reserva del Centro Turístico Integral
+==========================
+Status: Not fulfilled
+Reason: He revisado los repositorios (EspaciosRepository, KtorEspaciosRepository, FakeEspaciosRepository) y los ViewModels correspondientes (SolicitarEspacioViewmodel). El sistema únicamente cuenta con funcionalidades para enviar solicitudes de reserva (postSolicitudCTI), pero no existe ninguna función, endpoint o lógica en el código fuente que permita eliminar una reserva previamente realizada del Centro Turístico Integral (CTI).
+
+==========================
+Reviewed Requirement: El sistema debe generar recomendaciones preventivas para navegación
+==========================
+Status: Not fulfilled
+Reason: He analizado el código fuente, incluyendo los ViewModels, las entidades y la UI, y no he encontrado ninguna funcionalidad que genere "recomendaciones preventivas para navegación". El sistema maneja información de marea, datos de boyas, atractivos turísticos y solicitudes de espacio en el puerto, pero carece de lógica de negocio o componentes UI destinados a proporcionar recomendaciones de navegación.
+
+==========================
+Reviewed Requirement: El sistema debe mostrar rutas turísticas recomendadas
+==========================
+Status: Not fulfilled
+Reason: He analizado el código fuente (especialmente los ViewModels, los repositorios y la UI) y no encontré ninguna funcionalidad, pantalla o lógica relacionada con la visualización de "rutas turísticas recomendadas". La aplicación gestiona información turística (atractivos y cruceros), información de la boya, gestión de espacios y configuraciones, pero no implementa rutas.
+
+==========================
+Reviewed Requirement: EL sistema debe generar alertas automáticas cuando haya malas condiciones maritimas
+==========================
+Status: Fulfilled
+Reason: El sistema implementa la lógica de alertas en 'BoyaScreenViewmodel.kt' mediante la función 'determineMensajeUi', la cual clasifica el estado de la marea en NORMAL, ADVERTENCIA o PELIGRO según la altura máxima detectada. Esta lógica se utiliza para mostrar alertas visuales en la interfaz mediante 'AlertCard.kt' y 'MensajeUI' en 'Alertas.kt'. Además, el sistema de notificaciones está integrado a través de 'MainMenuScreenViewmodel.kt' usando 'NotifierManager' para suscribir al usuario a temas de alertas, permitiendo el envío de notificaciones automáticas basadas en estos estados.
+
+==========================
+Reviewed Requirement: El sistema debe exportar gráficos interactivos en formato imagen
+==========================
+Status: Not fulfilled
+Reason: El código permite exportar reportes de datos (PDF y CSV) a través de los casos de uso (`RecibirEstadoMareaHistorico`) y las clases `FileSaver` (`ios` y `android`). Sin embargo, no existe ninguna funcionalidad implementada para exportar los gráficos interactivos (como los generados en `MareaPlot` o `VientoPlot`) en formato imagen. La funcionalidad de reporte actual maneja archivos PDF/CSV de datos, no la exportación de los componentes de visualización gráfica.
+
+==========================
+Reviewed Requirement: El sistema debe mostrar un dashboard con las variables clave de la boya
+==========================
+Status: Fulfilled
+Reason: El sistema implementa el dashboard en la pantalla 'BoyaInfoScreen' (definida en BoyaInfo.kt). Este componente consume datos a través del 'BoyaScreenViewmodel', que interactúa con el dominio para obtener el estado actual de la boya y un histórico. La interfaz utiliza componentes específicos como 'RegistroMareaCard' para mostrar datos textuales (altura máxima, significativa, etc.) y 'BoyaPlotSection' con 'MareaPlot' y 'VientoPlot' (en BoyaPlotSection.kt, MareaPlot.kt, VientoPlot.kt) para visualizar las variables clave de forma gráfica, cumpliendo así con el requerimiento.
+
+===============================
+Fulfilled Requirements: 5/10
+===============================
+
+===============================
+TOKEN USAGE STATS
+Input Tokens : 871470
+Output Tokens: 1466
+Total Tokens : 872936
+===============================
+ESTADÍSTICAS DE EVALUACIÓN SUPERVISADA
+DEBUG MODE: True
+MODEL: ollama
+EVALUATION MODE: llm_pipeline
+GROUND TRUTH VALUE: Fulfilled
+
+REVIEWED ON 2026-06-22 21:40:49.003036
+==========================
+Reviewed Requirement: El sistema debe generar reportes estadísticos descargables en PDF y/o CSV
+==========================
+Status: Fulfilled
+Reason: El sistema implementa de forma completa el requerimiento de reportes estadísticos. A través del caso de uso 'RecibirEstadoMareaHistorico' (src/commonMain/kotlin/com/epa/epamovil/domain/usecases/boya/RecibirEstadoMareaHistorico.kt), se definen los métodos 'reportePDFPorRango' y 'reporteCSVPorRango'. Estos utilizan una interfaz 'FileSaver' (con implementaciones en iosMain y androidMain) para gestionar la persistencia y descarga del archivo en el dispositivo. Adicionalmente, el repositorio 'BoyaRepository' y la implementación 'KtorBoyaApiService' manejan la comunicación con la API para obtener los datos binarios del reporte, lo cual confirma la viabilidad y existencia de la funcionalidad.
+
+==========================
+Reviewed Requirement: El sistema debe mostrar un dashboard con las variables clave de la boya
+==========================
+Status: Fulfilled
+Reason: Tras analizar el código, se identificó la implementación del dashboard en `BoyaInfo.kt`. Este componente utiliza `BoyaScreenViewmodel` para obtener y mostrar datos clave, incluyendo una `RegistroMareaCard` para el estado actual de la marea y una `BoyaPlotSection` que presenta visualizaciones (gráficos) de las variables oceánicas (altura de marea y velocidad del viento) asociadas a la boya. La estructura del dashboard cumple funcionalmente con el requerimiento de mostrar variables clave.
+
+==========================
+Reviewed Requirement: El sistema debe mostrar puntos de interés turísticos
+==========================
+Status: Fulfilled
+Reason: El código fuente contiene la estructura necesaria para cumplir con el requerimiento. Se identificaron clases de dominio (AtractivoTuristico.kt), repositorios (AtractivoTuristicoRepository.kt), casos de uso (RecibirInformacionTuristica.kt) y componentes de UI (Turismo.kt) que utilizan estos datos para mostrarlos en la pantalla de turismo (función TurismoScreen y LugaresTuristicos). Se verificó que el repositorio tiene datos (aunque sean fakes actualmente) y que el ViewModel los expone a la vista, confirmando que la lógica para mostrar puntos de interés turísticos está implementada.
+
+==========================
+Reviewed Requirement: EL sistema debe generar alertas automáticas cuando haya malas condiciones maritimas
+==========================
+Status: Fulfilled
+Reason: El sistema implementa la lógica de alertas en 'BoyaScreenViewmodel.kt' a través de la función 'determineMensajeUi'. Esta función clasifica las condiciones marítimas basadas en la 'alturaMaxima' de la marea, asignando niveles 'NORMAL', 'ADVERTENCIA' (cuando la altura está entre 180 y 200) o 'PELIGRO' (cuando es mayor o igual a 200). Estos estados se utilizan en la UI mediante 'MensajeUI', cumpliendo con la generación automática de alertas ante condiciones desfavorables.
+
+==========================
+Reviewed Requirement: El sistema debe exportar gráficos interactivos en formato imagen
+==========================
+Status: Not fulfilled
+Reason: Tras analizar el código fuente, se observa que los gráficos (como `MareaPlot.kt` y `VientoPlot.kt`) utilizan la librería `koalaplot` y son interactivos (permiten tooltips y scrolls). Sin embargo, la lógica de exportación presente en el dominio (`RecibirEstadoMareaHistorico.kt` y `BoyaRepository.kt`) se limita a la exportación de reportes en formatos PDF y CSV, los cuales son gestionados mediante `FileSaver`. No existe ninguna función, método o lógica orientada a la captura o exportación del componente gráfico (Canvas/XYGraph) a un formato de imagen (ej. PNG o JPG). Por lo tanto, el requerimiento no está implementado.
+
+==========================
+Reviewed Requirement: El sistema debe generar recomendaciones preventivas para navegación
+==========================
+Status: Fulfilled
+Reason: El sistema implementa lógica de monitoreo de condiciones marítimas (mareas) que genera recomendaciones preventivas mediante una entidad 'Mensaje' y su representación 'MensajeUI'. En 'MainMenuScreenViewmodel.kt' y 'BoyaScreenViewmodel.kt', se evalúan los datos de la marea actual (`lastRegistroMarea.alturaMaxima`) para clasificar el estado de navegación en 'Normal', 'Advertencia' (cerca del límite) o 'Peligro' (sobre el límite), proporcionando mensajes descriptivos al usuario (ej. 'Altura de la marea cerca del límite seguro'). Estos estados se visualizan en la interfaz mediante el componente `AlertCard` en 'MainMenu.kt'.
+
+==========================
+Reviewed Requirement: El sistema debe permitir reservas online del Centro Turístico Integral via correo electrónico
+==========================
+Status: Not fulfilled
+Reason: Se ha analizado la arquitectura de la aplicación y el flujo de trabajo para las reservas del Centro Turístico Integral (CTI). Aunque el sistema posee un formulario en la interfaz de usuario (CTIForm en FormularioCTI.kt) que incluye un campo para 'email' y utiliza una clase 'EnviarSolicitudEspacios' para procesar la solicitud, el envío de esta reserva se realiza mediante una petición HTTP POST a un endpoint API (`/reserva-cti` en KtorEspaciosApiService.kt) utilizando JSON como formato de datos. No existe implementación de lógica (protocolo SMTP o servicio de envío de correos) para enviar dicha reserva a través de correo electrónico, sino que es una operación de API RESTful. Por lo tanto, el requerimiento específico de realizar reservas 'via correo electrónico' no se cumple.
+
+==========================
+Reviewed Requirement: El sistema debe permitir eliminar la reserva del Centro Turístico Integral
+==========================
+Status: Not fulfilled
+Reason: Tras analizar la arquitectura de repositorios (EspaciosRepository) y sus implementaciones (KtorEspaciosRepository), se observa que solo existen métodos para enviar solicitudes de reserva (postSolicitudCTI y postSolicitudCTP). No se encontró ninguna funcionalidad, endpoint, caso de uso o método en el repositorio que permita eliminar o cancelar una reserva del Centro Turístico Integral (CTI). El requerimiento no está implementado.
+
+==========================
+Reviewed Requirement: El sistema debe mostrar tendencias históricas de variables de la boya
+==========================
+Status: Fulfilled
+Reason: Se ha verificado la existencia de los componentes necesarios para mostrar tendencias históricas de variables de la boya: 1) Modelos de dominio (Boya.kt) que estructuran los datos históricos. 2) Un repositorio (BoyaRepository.kt y su implementación) que soporta consultas por rango (`graficoPorRango`). 3) Un ViewModel (BoyaScreenViewmodel.kt) que gestiona el estado y la lógica para solicitar datos históricos basados en un rango de fechas. 4) Componentes visuales (BoyaPlotSection.kt, MareaPlot.kt, VientoPlot.kt) que consumen estos datos para renderizar los gráficos de tendencia histórica. Todo el flujo, desde el modelo hasta la UI, está implementado.
+
+==========================
+Reviewed Requirement: El sistema debe mostrar rutas turísticas recomendadas
+==========================
+Status: Fulfilled
+Reason: El sistema implementa la funcionalidad requerida en el módulo de turismo. Analizando 'src/commonMain/kotlin/com/epa/epamovil/presentation/screens/composables/Turismo.kt' y 'src/commonMain/kotlin/com/epa/epamovil/presentation/viewmodel/TurismoScreenViewmodel.kt', se confirma que el sistema carga y muestra atractivos turísticos y el itinerario de cruceros (que actúa como las rutas/itinerarios turísticos recomendados). La arquitectura sigue el patrón MVVM y los datos se consumen a través de repositorios (ej. AtractivoTuristicoRepository, CrucerosRepository) en la UI de la pantalla 'Turismo'.
+
+===============================
+Fulfilled Requirements: 7/10
+===============================
+
+===============================
+TOKEN USAGE STATS
+Input Tokens : 632517
+Output Tokens: 4756
+Total Tokens : 637273
+===============================
+ESTADÍSTICAS DE EVALUACIÓN SUPERVISADA
+DEBUG MODE: True
+MODEL: ollama
+EVALUATION MODE: agent
+GROUND TRUTH VALUE: Fulfilled
+

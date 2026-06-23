@@ -14,6 +14,7 @@ class ModelProvider:
         self.ip = ip
         self.local_model = local_model
         self.fallback_model = fallback_model
+        self.local_embedding = "qwen3-embedding"
         # Intentamos conectar al puerto por defecto de Ollama (11434) para validar disponibilidad
         self.is_ollama_reachable = self._check_connection(self.ip)
 
@@ -68,7 +69,7 @@ class ModelProvider:
         if self.is_ollama_reachable:
             print(f"[ModelProvider] Local Ollama is reachable. Loading local embeddings: {self.local_model}")
             return init_embeddings(
-                f"ollama:{self.local_model}",
+                f"ollama:{self.local_embedding}",
                 base_url=f"http://{self.ip}:11434"
             )
         else:

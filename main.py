@@ -25,7 +25,7 @@ if __name__ == "__main__":
     root = ttk.Window(themename=CONFIG["themename"])
 
     model_provider = ModelProvider(
-        ip="120.113.20.117",
+        ip="10.113.20.117",
         local_model="gemma4:12b",
         fallback_model="google_genai:gemini-3.1-flash-lite"
     )
