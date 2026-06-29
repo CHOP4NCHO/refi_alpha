@@ -36,7 +36,7 @@ if __name__ == "__main__":
         geometry=CONFIG["geometry"],
         workdir=CONFIG["workdir"],
         codebase_name=CONFIG["codebase_name"],
-        evaluator_llm=model_provider.get_default_model(),
+        evaluator_llm=model_provider.get_multimodal_model(),
         #############################################
         debug_mode=True,
         current_evaluation_mode=EvaluationMode.AGENT_AI,

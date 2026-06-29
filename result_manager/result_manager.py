@@ -90,7 +90,8 @@ class ResultManager:
                 f"DEBUG MODE: {review.debug_mode}",
                 f"MODEL: {review.llm_provider.value}",
                 f"EVALUATION MODE: {review.evaluation_mode.value}",
-                f"GROUND TRUTH VALUE: {review.real_evaluation.value}"
+                f"GROUND TRUTH VALUE: {review.real_evaluation.value}",
+                f"RESPONSE TIME: {review.response_time:.2f}s"
             ]
         )
 

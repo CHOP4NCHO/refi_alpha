@@ -1,6 +1,7 @@
 
 from datetime import datetime
 import threading
+import time
 
 from tkinter import messagebox
 import ttkbootstrap as ttk
@@ -120,6 +121,7 @@ class RefiApp:
 
     def _run_evaluation_thread(self):
         self.log_message("INICIANDO EVALUACIÓN...")
+        start_time = time.time()
         self.evaluator.set_requirements(self.req_document)
 
         # Prepare RAG vector store once at the beginning of the evaluation run
@@ -159,6 +161,9 @@ class RefiApp:
                     self.log_message(f"Error evaluando {req.id}: {str(e)}")
 
             try:
+                # Calculate elapsed time
+                elapsed_time = time.time() - start_time
+
                 #creates review object
                 req_review = req_fidelity_review.ReqFidelityReview(
                     debug_mode=self.debug_mode,
@@ -168,7 +173,8 @@ class RefiApp:
                     output_tokens=self.evaluator.total_output_tokens,
                     llm_provider=self.current_llm,
                     evaluation_mode=self.current_evaluation_mode,
-                    real_evaluation=self.real_batch_evaluation_type
+                    real_evaluation=self.real_batch_evaluation_type,
+                    response_time=elapsed_time
                 )
                 #saves review
                 self.result_manager.add_review(req_review)

@@ -1,37 +1,52 @@
 import pandas as pd
 from scipy.stats import wilcoxon
 
-# 1. Cargar el dataset (reemplaza 'resultados_datasets.csv' con la ruta de tu archivo)
-df = pd.read_csv('resultados_datasetss.csv')
+# 1. Cargar el dataset nuevo
+df = pd.read_csv('resultados_contiempo.csv')
 
-# 2. Limpieza de datos
-# Como los costos vienen formateados con coma como decimal (ej. "0,006") y como texto,
-# los convertimos a números flotantes reemplazando la coma por punto.
-df['PIPELINE_COST_USD'] = df['PIPELINE_COST_USD'].str.replace(',', '.').astype(float)
-df['AGENT_COST_USD'] = df['AGENT_COST_USD'].str.replace(',', '.').astype(float)
+# 2. Función para limpiar el formato de texto con comas a float de Python
+def limpiar_columna(col):
+    return col.astype(str).str.replace(',', '.').astype(float)
 
-# 3. Aplicar el Test de Wilcoxon para muestras emparejadas
-# Usamos 'wilcoxon' directamente sobre ambas columnas
-stat, p_value = wilcoxon(df['PIPELINE_COST_USD'], df['AGENT_COST_USD'])
+# Limpieza de Costos
+df['PIPELINE_COST_USD'] = limpiar_columna(df['PIPELINE_COST_USD'])
+df['AGENT_COST_USD'] = limpiar_columna(df['AGENT_COST_USD'])
 
-# 4. Calcular estadísticas descriptivas básicas para complementar el análisis
-mediana_pipeline = df['PIPELINE_COST_USD'].median()
-mediana_agent = df['AGENT_COST_USD'].median()
+# Limpieza de Tiempos de Respuesta
+df['PIPELINE_TIME_P_REQ'] = limpiar_columna(df['PIPELINE_TIME_P_REQ'])
+df['AGENT_TIME_P_REQ'] = limpiar_columna(df['AGENT_TIME_P_REQ'])
 
-# 5. Desplegar los resultados
-print("=== RESULTADOS DEL TEST DE WILCOXON ===")
-print(f"Mediana Costo Pipeline: USD {mediana_pipeline:.4f}")
-print(f"Mediana Costo Agent:    USD {mediana_agent:.4f}")
-print("-" * 40)
-print(f"Estadístico del test:    {stat}")
-print(f"p-value:                 {p_value:.6f}")
-print("-" * 40)
 
-# Interpretación estadística (Nivel de significancia standard: alpha = 0.05)
-alpha = 0.05
-if p_value < alpha:
-    print("Resultado: ESTADÍSTICAMENTE SIGNIFICATIVO (p < 0.05).")
-    print("Existe una diferencia real y sistemática entre los costos de Pipeline y Agent.")
+# ==========================================
+# TEST 1: COSTO EN USD
+# ==========================================
+stat_cost, p_cost = wilcoxon(df['PIPELINE_COST_USD'], df['AGENT_COST_USD'])
+mediana_cost_pip = df['PIPELINE_COST_USD'].median()
+mediana_cost_age = df['AGENT_COST_USD'].median()
+
+print("=== TEST DE WILCOXON: COSTO EN USD ===")
+print(f"Mediana Costo Pipeline: USD {mediana_cost_pip:.4f}")
+print(f"Mediana Costo Agent:    USD {mediana_cost_age:.4f}")
+print(f"p-value (Costo):        {p_cost:.6f}")
+if p_cost < 0.05:
+    print("Resultado: SIGNIFICATIVO. Hay una diferencia real en los costos.")
 else:
-    print("Resultado: NO SIGNIFICATIVO (p >= 0.05).")
-    print("No se puede asegurar que uno sea consistentemente más caro que el otro; las variaciones podrían ser por azar.")
+    print("Resultado: NO SIGNIFICATIVO. Los costos son estadísticamente equivalentes.")
+
+print("\n" + "="*45 + "\n")
+
+# ==========================================
+# TEST 2: TIEMPO DE RESPUESTA
+# ==========================================
+stat_time, p_time = wilcoxon(df['PIPELINE_TIME_P_REQ'], df['AGENT_TIME_P_REQ'])
+mediana_time_pip = df['PIPELINE_TIME_P_REQ'].median()
+mediana_time_age = df['AGENT_TIME_P_REQ'].median()
+
+print("=== TEST DE WILCOXON: TIEMPO DE RESPUESTA por requerimiento ===")
+print(f"Mediana Tiempo Pipeline: {mediana_time_pip:.2f} seg")
+print(f"Mediana Tiempo Agent:    {mediana_time_age:.2f} seg")
+print(f"p-value (Tiempo):        {p_time:.6f}")
+if p_time < 0.05:
+    print("Resultado: SIGNIFICATIVO. Una arquitectura es más rápida que la otra de manera consistente.")
+else:
+    print("Resultado: NO SIGNIFICATIVO. La velocidad de respuesta es estadísticamente equivalente.")

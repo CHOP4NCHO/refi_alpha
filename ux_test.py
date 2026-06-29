@@ -11,6 +11,7 @@ import random
 import string
 
 from datetime import datetime
+import time
 
 import tkinter as tk
 from tkinter import filedialog
@@ -329,6 +330,7 @@ def evaluate_reqs():
     evaluator.set_requirements(req_document)
 
     print("\nIniciando evaluación...\n")
+    start_time = time.time()
 
     for req in evaluator._requirement_list:
 
@@ -355,12 +357,15 @@ def evaluate_reqs():
 
     separator()
 
+    elapsed_time = time.time() - start_time
+
     # creates review
     req_review = req_fidelity_review.ReqFidelityReview(
         review_date  = str(datetime.now()),
         reviewed_reqs= evaluator._req_evaluations,
         input_tokens = evaluator.total_input_tokens,
-        output_tokens= evaluator.total_output_tokens
+        output_tokens= evaluator.total_output_tokens,
+        response_time= elapsed_time
     )
     # delegates review to result_manager
     result_manager.add_review(req_review)

@@ -1,7 +1,7 @@
 
 
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from enum import Enum
 
 from evaluator_agent.evaluator import SingleRequirementEval
@@ -20,13 +20,14 @@ class RealEvaluation(Enum):
 
 @dataclass
 class ReqFidelityReview:
-    debug_mode: bool
-    review_date: str
-    reviewed_reqs: list[SingleRequirementEval]
-    input_tokens: int
-    output_tokens: int
-    llm_provider: LlmProvider
-    evaluation_mode: EvaluationMode
-    real_evaluation: RealEvaluation
+    debug_mode: bool = False
+    review_date: str = ""
+    reviewed_reqs: list[SingleRequirementEval] = field(default_factory=list)
+    input_tokens: int = 0
+    output_tokens: int = 0
+    llm_provider: LlmProvider = LlmProvider.GEMINI
+    evaluation_mode: EvaluationMode = EvaluationMode.LLM_PIPELINE
+    real_evaluation: RealEvaluation = RealEvaluation.FULFILLED
+    response_time: float = 0.0
 
     
