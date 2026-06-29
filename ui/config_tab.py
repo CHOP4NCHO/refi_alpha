@@ -1,12 +1,10 @@
 import ttkbootstrap as ttk
-from ttkbootstrap.constants import *
 
-from result_manager.req_fidelity_review import (
+from evaluator_agent.req_fidelity_review import (
     LlmProvider,
     EvaluationMode,
     RealEvaluation,
 )
-
 
 class ConfigTab(ttk.Frame):
     def __init__(self, master, app, **kwargs):

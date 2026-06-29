@@ -27,9 +27,9 @@ from docling.pipeline.vlm_pipeline import VlmPipeline
 
 logger = logging.getLogger(__name__)
 
-def create_vlm_options(model: str, prompt: str):
+def create_vlm_options(model: str, prompt: str, ip: str = "10.113.20.117"):
     return ApiVlmOptions(
-        url=AnyUrl("http://10.113.20.117:11434/v1/chat/completions"),
+        url=AnyUrl(f"http://{ip}:11434/v1/chat/completions"),
         params=dict(
             model=model,
         ),
@@ -53,7 +53,7 @@ class RequirementsExtractor:
     HUMAN_PROMPT_TEMPLATE = HUMAN_PROMPT_TEMPLATE
     _current_document = None
 
-    def __init__(self, llm_ref: str, embedding_ref: str):
+    def __init__(self, llm_ref: str, embedding_ref: str, ollama_ip: str = "10.113.20.117"):
         """Starts the models and objects."""
 
         logger.info("Initializing Requirements Extractor.")
@@ -67,6 +67,7 @@ class RequirementsExtractor:
                         vlm_options=create_vlm_options(
                             model="gemma4:12b",
                             prompt="OCR the full page to markdown",
+                            ip=ollama_ip,
                         ),
                     ),
                 )

@@ -1,7 +1,7 @@
 from pathlib import Path
 
 from result_manager.constants import DEFAULT_SAVE_DIR, DEFAULT_SAVE_NAME
-from result_manager.req_fidelity_review import ReqFidelityReview
+from evaluator_agent.req_fidelity_review import ReqFidelityReview
 
 
 class ResultManager:
@@ -47,7 +47,7 @@ class ResultManager:
         self._validate_index(index)
         return self.saved_reviews[index]
 
-    def get_code_review_str(self, index: int) -> str:
+    def format_review(self, index: int) -> str:
         self._validate_index(index)
 
         review = self.saved_reviews[index]
@@ -109,7 +109,7 @@ class ResultManager:
         output_path.parent.mkdir(parents=True, exist_ok=True)
 
         review      = self.get_code_review(index)
-        review_text = self.get_code_review_str(index)
+        review_text = self.format_review(index)
 
         with output_path.open("a", encoding="utf-8") as file:
             file.write(f"REVIEWED ON {review.review_date}\n")

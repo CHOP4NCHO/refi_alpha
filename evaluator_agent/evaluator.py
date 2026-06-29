@@ -1,4 +1,5 @@
 import json
+import logging
 from typing import Iterable
 from pydantic import BaseModel
 from dataclasses import dataclass
@@ -8,6 +9,8 @@ from codebase_reader.codebase_reader import CodeBaseReader
 from evaluator_agent.constants import EVALUATOR_SYSTEM_PROMPT
 from codebase_reader.codebase import CodeBase
 from evaluator_agent.token_tracker import TokenTrackerHandler
+
+logger = logging.getLogger(__name__)
 
 from evaluator_agent.tools import (
     create_evaluator_toolbelt
@@ -46,7 +49,7 @@ class Evaluator:
     total_output_tokens: int
 
     def __init__(self, llm_ref: BaseChatModel):
-        """ Inits auxiliar variables """
+        """Initializes auxiliary variables."""
         self._llm_ref = llm_ref
         self._requirement_list = []
         self._tools = []
@@ -60,19 +63,20 @@ class Evaluator:
 
         
     def set_tools(self, tools: Iterable):
-        """ Injects current toolset defined in ./tools.py """
+        """Injects the current toolset defined in ./tools.py."""
         self._tools = list(tools)
     
     def set_requirements(self, req_document: ReqDocument):
-        """ Sets new requirement list """
+        """Sets a new requirement list."""
         self._requirement_list = list(req_document.requirements)
     
     def set_codebase(self, codebase: CodeBase):
+        """Sets the current codebase."""
         self._codebase = codebase
 
     def set_working_tree(self, tree):
-        """ Sets the current working treee """
-        self._target_codebase = tree
+        """Sets the current working tree."""
+        self._working_tree = tree
 
     def build_vector_store(self, codebase_reader: CodeBaseReader, embeddings_model, files_content: list[CodeFile] | None = None) -> None:
         """
@@ -80,7 +84,7 @@ class Evaluator:
         from the provided codebase reader. Splits files into overlapping chunks of lines.
         If files_content is provided, only those files are processed (subset mode).
         """
-        print("[Evaluator] Building in-memory RAG vector store...")
+        logger.info("Building in-memory RAG vector store...")
         documents = []
         files_to_process = files_content if files_content else codebase_reader.codebase.files
         for code_file in files_to_process:
@@ -112,14 +116,14 @@ class Evaluator:
                             )
                         )
             except Exception as e:
-                print(f"[Evaluator] Error processing file {code_file.path} for RAG: {e}")
+                logger.error(f"Error processing file {code_file.path} for RAG: {e}")
 
         if documents:
-            print(f"[Evaluator] Generated {len(documents)} document chunks. Embedding via model...")
+            logger.info(f"Generated {len(documents)} document chunks. Embedding via model...")
             self._vector_store = InMemoryVectorStore.from_documents(documents, embeddings_model)
-            print("[Evaluator] In-memory RAG vector store built successfully.")
+            logger.info("In-memory RAG vector store built successfully.")
         else:
-            print("[Evaluator] Warning: No readable documents found to populate the RAG vector store.")
+            logger.warning("No readable documents found to populate the RAG vector store.")
             self._vector_store = None
 
     def clear_vector_store(self) -> None:
@@ -128,7 +132,7 @@ class Evaluator:
         """
         if self._vector_store is not None:
             self._vector_store = None
-            print("[Evaluator] In-memory RAG vector store cleared and memory released.")
+            logger.info("In-memory RAG vector store cleared and memory released.")
 
     def get_model_name(self) -> str:
         if hasattr(self._llm_ref, 'model'):
@@ -144,7 +148,7 @@ class Evaluator:
         files_index_map = "\n".join(
             [f"File Index {idx}: {f.path.name}\n{f.get_raw_content()}" for idx, f in enumerate(files_content)]
         )
-        prompt = self._get_review_prompt_template(
+        prompt = self._build_pipeline_prompt(
             req_description=req.description,
             file_index_map=files_index_map
         )
@@ -194,8 +198,8 @@ class Evaluator:
 
         # Decide prompts and tools based on vector store presence (RAG vs Standard)
         if self._vector_store is not None:
-            print("[Evaluator] Active RAG vector store detected. Running with RAG capabilities.")
-            prompt = self._get_rag_agent_prompt_template(
+            logger.info("Active RAG vector store detected. Running with RAG capabilities.")
+            prompt = self._build_rag_agent_prompt(
                 req_description=req.description,
                 file_index_map=files_index_map
             )
@@ -205,8 +209,8 @@ class Evaluator:
                 allowed_files=files_content
             )
         else:
-            print("[Evaluator] No vector store detected. Running standard agent evaluation.")
-            prompt = self._get_review_prompt_template_s(
+            logger.info("No vector store detected. Running standard agent evaluation.")
+            prompt = self._build_agent_prompt(
                 req_description=req.description,
                 file_index_map=files_index_map
             )
@@ -324,33 +328,32 @@ class Evaluator:
     # ----------------------
     #   TEMPLATES
     #
-    def _get_review_prompt_template(self, req_description: str, file_index_map: str) -> str:
+    def _build_pipeline_prompt(self, req_description: str, file_index_map: str) -> str:
         prompt = f"""
-        Target Requirement to Evaluate:
+        Requerimiento Objetivo a Evaluar:
         "{req_description}"
 
-        Available Source Map Registry:
+        Registro de Archivos de Código Fuente Disponibles:
         {file_index_map}
 
-        Instructions:
-        0. Responde en español aunque las instrucciones vengan en inglés
-        1. First, read the content of each available given codefile. You must evaluate if the target requirement is fulfilled or not. 
-        2. Do NOT submit your final response until you have completely read and analyzed the relevant files.
-        3. Once your review is complete, generate the final structured response:
-           - 'initial_description': Repeat the target requirement text exactly.
-           - 'reasoning': Provide a brief summary explaining EXACTLY how and where the codebase fulfills (or fails to fulfill) the requirement based on the files you read.
-           - 'is_fulfilled': Set to True if the code successfully meets the requirement, otherwise False.
-        4. Return ONLY a valid JSON object. considering the structured response:
+        Instrucciones:
+        1. Responde SIEMPRE en español.
+        2. Primero, lee el contenido de cada archivo de código provisto. Debes evaluar si el requerimiento objetivo se cumple o no en la base de código.
+        3. NO envíes tu respuesta final hasta haber analizado por completo los archivos relevantes.
+        4. Una vez completado tu análisis, genera la respuesta final estructurada en formato JSON:
+           - 'initial_description': Copia exactamente el texto del requerimiento objetivo.
+           - 'reasoning': Proporciona una explicación técnica concisa de cómo/dónde se implementa en el código, o indica que no se encontró evidencia suficiente. Todo el texto de este campo debe estar en español técnico detallado.
+           - 'is_fulfilled': Establécelo en true si el código cumple con éxito el requerimiento, de lo contrario false.
+        5. Devuelve ÚNICAMENTE un objeto JSON válido que cumpla con este formato exacto:
         {{
             "initial_description": "",
             "reasoning": "",
             "is_fulfilled": true | false
         }}
-
         """
         return prompt
 
-    def _get_review_prompt_template_s(
+    def _build_agent_prompt(
         self,
         req_description: str,
         file_index_map: str
@@ -379,7 +382,7 @@ class Evaluator:
         "is_fulfilled": true o false
     }}
     """
-    def _get_rag_agent_prompt_template(self, req_description: str, file_index_map: str) -> str:
+    def _build_rag_agent_prompt(self, req_description: str, file_index_map: str) -> str:
             """
             Returns a prompt tailored for semantic discovery (RAG) transition into analytical thinking.
             Explicitly requests the final answer to be formulated in Spanish.

@@ -1,12 +1,18 @@
+import logging
 from dotenv import load_dotenv
 import ttkbootstrap as ttk
 from model_provider import ModelProvider
-from result_manager.req_fidelity_review import EvaluationMode, RealEvaluation
+from evaluator_agent.req_fidelity_review import EvaluationMode, RealEvaluation
 from ui import RefiApp
 
 
 
 load_dotenv()
+
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+)
 
 if __name__ == "__main__":
     # === CENTRALIZACIÓN DE VARIABLES DE CONFIGURACIÓN ===
@@ -19,15 +25,16 @@ if __name__ == "__main__":
         "evaluator_llm": "google_genai:gemini-3.1-flash-lite",
         "ollama_model": "gemma4:12b",
         "ollama_temperature": 0.1,
+        "ollama_ip": "10.113.20.117",
         "debug_mode": True,
     }
     
     root = ttk.Window(themename=CONFIG["themename"])
 
     model_provider = ModelProvider(
-        ip="10.113.20.117",
-        local_model="gemma4:12b",
-        fallback_model="google_genai:gemini-3.1-flash-lite"
+        ip=CONFIG["ollama_ip"],
+        local_model=CONFIG["ollama_model"],
+        fallback_model=CONFIG["evaluator_llm"]
     )
   
     app = RefiApp(

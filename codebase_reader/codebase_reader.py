@@ -8,18 +8,9 @@ class CodeBaseReader:
     ignore: list[str] = []
 
     """Constructor for CodeBaseReader"""
-    def __init__(self, codebase: CodeBase, ignore: list[str] = []):
+    def __init__(self, codebase: CodeBase):
         self.codebase = codebase
-        self.ignore = ignore
-
-    """"Update Ingore List and trim codebase files accordingly"""
-    def set_ignore(self, paths: list[str]) -> None:
-        self.ignore = paths
-        self.codebase.files = [
-            file for file in self.codebase.files
-            if not any(ignore_path in str(file.path) for ignore_path in self.ignore)
-        ]
-
+    
     def get_directories(self) -> list[str]:
         dirs = set()
         for file in self.codebase.files:

@@ -15,6 +15,7 @@ class CodeFile:
         
 
     def get_raw_content(self) -> str:
+        """Reads and returns the complete raw text content of the code file."""
         with open(self.path, 'r') as f:
             return f.read()
         

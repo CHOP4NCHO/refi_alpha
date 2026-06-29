@@ -39,7 +39,7 @@ class EvaluationTab(ttk.Frame):
             self.text_results.insert(tk.END, f"[{index}] Fecha: {res.review_date}\n")
             
             try:
-                review_str = self.app.result_manager.get_code_review_str(index)
+                review_str = self.app.result_manager.format_review(index)
                 if review_str:
                     self.text_results.insert(tk.END, review_str + "\n")
             except Exception:

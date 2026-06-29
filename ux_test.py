@@ -16,7 +16,7 @@ import time
 import tkinter as tk
 from tkinter import filedialog
 
-from result_manager import req_fidelity_review
+from evaluator_agent import req_fidelity_review
 from result_manager.result_manager import ResultManager
 
 load_dotenv()
@@ -340,8 +340,7 @@ def evaluate_reqs():
 
         try:
 
-            evaluator.eval_requirement(
-                model=None,
+            evaluator.eval_requirement_llm(
                 req=req,
                 files_content=file_context
             )
@@ -387,7 +386,7 @@ def get_results():
     print("Revisando evaluaciones registradas: ")
     for index, res in enumerate(result_manager.saved_reviews):
         print(res.review_date)
-        result_manager.get_code_review_str(index)
+        print(result_manager.format_review(index))
 
 # ==========================================
 # Entry Point

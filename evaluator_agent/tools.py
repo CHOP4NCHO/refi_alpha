@@ -1,10 +1,13 @@
 import functools
+import logging
 import time
 import re
 import ast
 from pathlib import Path
 from langchain.tools import tool
 from codebase_reader.codebase_reader import CodeBaseReader
+
+logger = logging.getLogger(__name__)
 
 def refi_tool_wrapper(tool_func):
     """
@@ -18,22 +21,21 @@ def refi_tool_wrapper(tool_func):
         kwargs_list = [f"{k}={repr(v)}" for k, v in kwargs.items()]
         combined_args = ", ".join(args_list + kwargs_list)
         
-        print(f"\n[TOOL_START] Invoke: {tool_func.__name__}({combined_args})")
+        logger.info(f"[TOOL_START] Invoke: {tool_func.__name__}({combined_args})")
         try:
             result_raw = tool_func(*args, **kwargs)
             result_str = str(result_raw)
             char_count = len(result_str)
             line_count = len(result_str.splitlines())
             
-            print(f"[TOOL_SUCCESS] Payload stats: {line_count} lines, {char_count} chars.")
-            #print(f"[TOOL_PREVIEW]\n{preview}")
+            logger.info(f"[TOOL_SUCCESS] Payload stats: {line_count} lines, {char_count} chars.")
             return result_raw
         except Exception as e:
             error_msg = f"[TOOL_ERROR] Failed during {tool_func.__name__}.\n{type(e).__name__}: {str(e)}"
-            print(error_msg)
+            logger.error(error_msg)
             return error_msg
         finally:
-            print(f"[TOOL_TIME] Completed in {time.time() - start_time:.4f} seconds.")
+            logger.info(f"[TOOL_TIME] Completed in {time.time() - start_time:.4f} seconds.")
     return exec
 
 def create_evaluator_toolbelt(reader: CodeBaseReader, vector_store=None, allowed_files: list = None) -> list:
