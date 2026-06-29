@@ -1,12 +1,13 @@
 import time
 from datetime import datetime
 
-from codebase_reader.code_file import CodeFile
-from codebase_reader.codebase_reader import CodeBaseReader
-from evaluator_agent.evaluator import Evaluator
-from evaluator_agent.req_fidelity_review import EvaluationMode, ReqFidelityReview, LlmProvider, RealEvaluation
-from model_provider import ModelProvider
-from requirements_extractor.req_document import ReqDocument
+from ..codebase_reader.code_file import CodeFile
+from ..codebase_reader.codebase_reader import CodeBaseReader
+from .evaluator import Evaluator
+from .req_fidelity_review import ReqFidelityReview
+from ..enums import EvaluationMode, LlmProvider, RealEvaluation
+from ..model_provider import ModelProvider
+from ..requirements_extractor.req_document import ReqDocument
 
 def perform_agent_evaluation(
     evaluator: Evaluator,

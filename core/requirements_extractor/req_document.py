@@ -3,7 +3,7 @@ from pathlib import Path
 
 from pydantic import BaseModel, ConfigDict, field_validator
 
-from requirements_extractor.constants import REQUIREMENT_TYPES
+from .constants import REQUIREMENT_TYPES
 
 
 
@@ -29,13 +29,13 @@ class Requirement(BaseModel):
 class ReqDocument:
     path: Path
     name: str
-    requirements: set[Requirement]
+    requirements: list[Requirement]
 
     def __init__(self, path: str):
         self.path = Path(path)
         self.name = self.path.name
-        self.requirements = set()
+        self.requirements = []
 
     def add_requirement(self, *reqs: Requirement):
-        self.requirements.update(reqs)
+        self.requirements.append(*reqs)
 

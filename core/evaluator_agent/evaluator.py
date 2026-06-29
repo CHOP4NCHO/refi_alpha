@@ -4,19 +4,19 @@ from typing import Iterable
 from pydantic import BaseModel
 from dataclasses import dataclass
 
-from codebase_reader.code_file import CodeFile
-from codebase_reader.codebase_reader import CodeBaseReader
-from evaluator_agent.constants import EVALUATOR_SYSTEM_PROMPT
-from codebase_reader.codebase import CodeBase
-from evaluator_agent.token_tracker import TokenTrackerHandler
+from ..codebase_reader.code_file import CodeFile
+from ..codebase_reader.codebase_reader import CodeBaseReader
+from .constants import EVALUATOR_SYSTEM_PROMPT
+from ..codebase_reader.codebase import CodeBase
+from .token_tracker import TokenTrackerHandler
 
 logger = logging.getLogger(__name__)
 
-from evaluator_agent.tools import (
+from .tools import (
     create_evaluator_toolbelt
 )
 
-from requirements_extractor.req_document import ReqDocument, Requirement
+from ..requirements_extractor.req_document import ReqDocument, Requirement
 
 from langchain.chat_models import BaseChatModel
 from langchain.agents import create_agent

@@ -1,10 +1,11 @@
 import logging
-from dotenv import load_dotenv
+from dotenv import load_dotenv 
 import ttkbootstrap as ttk
-from model_provider import ModelProvider
-from evaluator_agent.req_fidelity_review import EvaluationMode, RealEvaluation
-from ui import RefiApp
 
+from ui import RefiApp
+from core import RefiService
+from core.enums import EvaluationMode, RealEvaluation
+from core.model_provider import ModelProvider
 
 
 load_dotenv()
@@ -28,7 +29,7 @@ if __name__ == "__main__":
         "ollama_ip": "10.113.20.117",
         "debug_mode": True,
     }
-    
+
     root = ttk.Window(themename=CONFIG["themename"])
 
     model_provider = ModelProvider(
@@ -36,19 +37,22 @@ if __name__ == "__main__":
         local_model=CONFIG["ollama_model"],
         fallback_model=CONFIG["evaluator_llm"]
     )
-  
+
+    service = RefiService(
+        workdir=CONFIG["workdir"],
+        codebase_name=CONFIG["codebase_name"],
+        evaluator_llm=model_provider.get_multimodal_model(),
+        model_provider=model_provider,
+        debug_mode=CONFIG["debug_mode"],
+        evaluation_mode=EvaluationMode.AGENT_AI,
+        real_evaluation=RealEvaluation.FULFILLED,
+    )
+
     app = RefiApp(
         root=root,
         title=CONFIG["title"],
         geometry=CONFIG["geometry"],
-        workdir=CONFIG["workdir"],
-        codebase_name=CONFIG["codebase_name"],
-        evaluator_llm=model_provider.get_multimodal_model(),
-        #############################################
-        debug_mode=True,
-        current_evaluation_mode=EvaluationMode.AGENT_AI,
-        real_batch_evaluation_type=RealEvaluation.FULFILLED,
-        model_provider=model_provider
+        service=service,
     )
-    
+
     root.mainloop()

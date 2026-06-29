@@ -1,10 +1,7 @@
 import ttkbootstrap as ttk
 
-from evaluator_agent.req_fidelity_review import (
-    LlmProvider,
-    EvaluationMode,
-    RealEvaluation,
-)
+from core.enums import LlmProvider, EvaluationMode, RealEvaluation
+
 
 class ConfigTab(ttk.Frame):
     def __init__(self, master, app, **kwargs):
@@ -23,7 +20,7 @@ class ConfigTab(ttk.Frame):
 
         # --- debug_mode ---
         row = 2
-        self.debug_var = ttk.BooleanVar(value=self.app.debug_mode)
+        self.debug_var = ttk.BooleanVar(value=self.app.service.debug_mode)
         chk_debug = ttk.Checkbutton(
             self,
             text="Modo Debug",
@@ -45,7 +42,7 @@ class ConfigTab(ttk.Frame):
         ttk.Label(self, text="Proveedor LLM:", font=("Helvetica", 10, "bold")).grid(
             row=row, column=0, sticky="w", padx=20, pady=(10, 2)
         )
-        self.llm_var = ttk.StringVar(value=self.app.current_llm.value)
+        self.llm_var = ttk.StringVar(value=self.app.service.current_llm.value)
         llm_values = [member.value for member in LlmProvider]
         combo_llm = ttk.Combobox(
             self,
@@ -62,7 +59,7 @@ class ConfigTab(ttk.Frame):
         ttk.Label(self, text="Modo de Evaluación:", font=("Helvetica", 10, "bold")).grid(
             row=row, column=0, sticky="w", padx=20, pady=(10, 2)
         )
-        self.eval_mode_var = ttk.StringVar(value=self.app.current_evaluation_mode.value)
+        self.eval_mode_var = ttk.StringVar(value=self.app.service.evaluation_mode.value)
         eval_mode_values = [member.value for member in EvaluationMode]
         combo_eval = ttk.Combobox(
             self,
@@ -79,7 +76,7 @@ class ConfigTab(ttk.Frame):
         ttk.Label(self, text="Tipo de Evaluación (Batch):", font=("Helvetica", 10, "bold")).grid(
             row=row, column=0, sticky="w", padx=20, pady=(10, 2)
         )
-        self.real_eval_var = ttk.StringVar(value=self.app.real_batch_evaluation_type.value)
+        self.real_eval_var = ttk.StringVar(value=self.app.service.real_evaluation.value)
         real_eval_values = [member.value for member in RealEvaluation]
         combo_real = ttk.Combobox(
             self,
@@ -94,20 +91,20 @@ class ConfigTab(ttk.Frame):
     # --- Callbacks ---
 
     def _on_debug_toggle(self):
-        self.app.debug_mode = self.debug_var.get()
-        self.app.log_message(f"debug_mode cambiado a {self.app.debug_mode}")
+        self.app.service.debug_mode = self.debug_var.get()
+        self.app.log_message(f"debug_mode cambiado a {self.app.service.debug_mode}")
 
     def _on_llm_change(self, event=None):
         new_value = self.llm_var.get()
-        self.app.current_llm = LlmProvider(new_value)
-        self.app.log_message(f"current_llm cambiado a {self.app.current_llm.value}")
+        self.app.service.current_llm = LlmProvider(new_value)
+        self.app.log_message(f"current_llm cambiado a {self.app.service.current_llm.value}")
 
     def _on_eval_mode_change(self, event=None):
         new_value = self.eval_mode_var.get()
-        self.app.current_evaluation_mode = EvaluationMode(new_value)
-        self.app.log_message(f"current_evaluation_mode cambiado a {self.app.current_evaluation_mode.value}")
+        self.app.service.evaluation_mode = EvaluationMode(new_value)
+        self.app.log_message(f"current_evaluation_mode cambiado a {self.app.service.evaluation_mode.value}")
 
     def _on_real_eval_change(self, event=None):
         new_value = self.real_eval_var.get()
-        self.app.real_batch_evaluation_type = RealEvaluation(new_value)
-        self.app.log_message(f"real_batch_evaluation_type cambiado a {self.app.real_batch_evaluation_type.value}")
+        self.app.service.real_evaluation = RealEvaluation(new_value)
+        self.app.log_message(f"real_batch_evaluation_type cambiado a {self.app.service.real_evaluation.value}")

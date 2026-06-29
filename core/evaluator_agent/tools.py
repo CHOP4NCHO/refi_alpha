@@ -5,7 +5,7 @@ import re
 import ast
 from pathlib import Path
 from langchain.tools import tool
-from codebase_reader.codebase_reader import CodeBaseReader
+from ..codebase_reader.codebase_reader import CodeBaseReader
 
 logger = logging.getLogger(__name__)
 

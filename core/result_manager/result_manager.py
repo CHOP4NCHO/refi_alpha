@@ -1,7 +1,7 @@
 from pathlib import Path
+from .constants import DEFAULT_SAVE_DIR, DEFAULT_SAVE_NAME
 
-from result_manager.constants import DEFAULT_SAVE_DIR, DEFAULT_SAVE_NAME
-from evaluator_agent.req_fidelity_review import ReqFidelityReview
+from ..evaluator_agent.req_fidelity_review import ReqFidelityReview
 
 
 class ResultManager:

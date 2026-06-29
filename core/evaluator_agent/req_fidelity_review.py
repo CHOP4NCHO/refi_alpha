@@ -1,22 +1,8 @@
-
-
-
 from dataclasses import dataclass, field
-from enum import Enum
 
-from evaluator_agent.evaluator import SingleRequirementEval
+from .evaluator import SingleRequirementEval
+from ..enums import LlmProvider, EvaluationMode, RealEvaluation
 
-class LlmProvider(Enum):
-    GEMINI = 'gemini3.1-flash'
-    OLLAMA = 'ollama'
-
-class EvaluationMode(Enum):
-    LLM_PIPELINE = "llm_pipeline"
-    AGENT_AI = "agent"
-
-class RealEvaluation(Enum):
-    FULFILLED = 'Fulfilled'
-    NOT_FULFILLED = 'Not Fulfilled'
 
 @dataclass
 class ReqFidelityReview:
@@ -29,5 +15,3 @@ class ReqFidelityReview:
     evaluation_mode: EvaluationMode = EvaluationMode.LLM_PIPELINE
     real_evaluation: RealEvaluation = RealEvaluation.FULFILLED
     response_time: float = 0.0
-
-    

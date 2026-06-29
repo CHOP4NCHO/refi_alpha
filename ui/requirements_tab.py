@@ -1,9 +1,7 @@
-import random
-import string
 import tkinter as tk
 from tkinter import messagebox
 import ttkbootstrap as ttk
-from requirements_extractor.req_document import Requirement
+
 
 class RequirementsTab(ttk.Frame):
     def __init__(self, master, app, **kwargs):
@@ -23,7 +21,7 @@ class RequirementsTab(ttk.Frame):
         self.entry_req_desc.grid(row=0, column=1, sticky="ew", padx=5, pady=5)
 
         ttk.Label(lbl_form, text="Tipo:").grid(row=1, column=0, sticky="w", padx=5, pady=5)
-        
+
         self.req_type_var = tk.StringVar(value="FUNCTIONAL")
         radio_frame = ttk.Frame(lbl_form)
         radio_frame.grid(row=1, column=1, sticky="w", padx=5, pady=5)
@@ -40,13 +38,9 @@ class RequirementsTab(ttk.Frame):
         self.listbox_reqs = tk.Listbox(lbl_reqs)
         self.listbox_reqs.pack(fill="both", expand=True, padx=5, pady=5)
 
-    def generate_requirement_id(self, length=3):
-        characters = string.ascii_uppercase + string.digits
-        return ''.join(random.choices(characters, k=length))
-
     def update_req_listbox(self):
         self.listbox_reqs.delete(0, tk.END)
-        for index, req in enumerate(self.app.req_document.requirements, start=1):
+        for index, req in enumerate(self.app.service.get_requirements(), start=1):
             self.listbox_reqs.insert(tk.END, f"[{req.id}] ({req.type}) - {req.description}")
 
     def add_requirement(self):
@@ -56,11 +50,8 @@ class RequirementsTab(ttk.Frame):
             return
 
         req_type = self.req_type_var.get()
-        req_id = self.generate_requirement_id()
+        requirement = self.app.service.add_requirement(description=description, req_type=req_type)
 
-        requirement = Requirement(id=req_id, description=description, type=req_type)
-        self.app.req_document.add_requirement(requirement)
-
-        self.app.log_message(f"Requerimiento agregado: [{req_id}] {description}")
+        self.app.log_message(f"Requerimiento agregado: [{requirement.id}] {description}")
         self.update_req_listbox()
         self.entry_req_desc.delete(0, tk.END)

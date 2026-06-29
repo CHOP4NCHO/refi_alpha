@@ -1,9 +1,16 @@
+import sys
 from pathlib import Path
+
+# Add project root and core/ to Python path
+_PROJECT_ROOT = Path(__file__).resolve().parent
+sys.path.insert(0, str(_PROJECT_ROOT))
+sys.path.insert(0, str(_PROJECT_ROOT / "core"))
+
 import logging
 
 from dotenv import load_dotenv
 
-from requirements_extractor.extractor import RequirementsExtractor
+from core.requirements_extractor.extractor import RequirementsExtractor
 
 logging.basicConfig(
     level=logging.INFO,
@@ -11,14 +18,11 @@ logging.basicConfig(
 )
 
 load_dotenv()
+
 def main():
-    # Ruta al PDF a procesar
     pdf_path = Path("/home/chopancho/dev/pruebas_langchain/refi_demo/pdfs/epa.pdf")
 
-    # Modelo LLM que utilizará LangChain
     llm_model = "google_genai:gemini-3.1-flash-lite"
-
-    # Referencia del modelo de embeddings (si tu clase lo requiere)
     embedding_model = "text-embedding-3-small"
 
     try:

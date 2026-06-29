@@ -8,9 +8,9 @@ from langchain.chat_models import init_chat_model
 from langchain.messages import SystemMessage, HumanMessage
 from docling.document_converter import DocumentConverter, PdfFormatOption
 from pydantic import BaseModel
+from .constants import EXTRACTOR_PROMPT_TEMPLATE, HUMAN_PROMPT_TEMPLATE
 
-from requirements_extractor.constants import EXTRACTOR_PROMPT_TEMPLATE, HUMAN_PROMPT_TEMPLATE
-from requirements_extractor.req_document import ReqDocument, Requirement
+from .req_document import ReqDocument, Requirement
 
 from pydantic import AnyUrl # Requerido para la URL del VLM
 
