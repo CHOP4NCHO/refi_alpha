@@ -33,6 +33,7 @@ model_provider = ModelProvider(
     ip=OLLAMA_IP,
     local_model=LOCAL_MODEL,
     fallback_model=FALLBACK_MODEL,
+    cloud_vlm_model="paligemma-3b",
 )
 
 service = RefiService(

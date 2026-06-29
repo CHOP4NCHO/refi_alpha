@@ -25,6 +25,7 @@ if __name__ == "__main__":
         "codebase_name": "REFI_SOURCE_CODE",
         "evaluator_llm": "google_genai:gemini-3.1-flash-lite",
         "ollama_model": "gemma4:12b",
+        "cloud_vlm_model": "gemini-2.5-flash-lite",
         "ollama_temperature": 0.1,
         "ollama_ip": "10.113.20.117",
         "debug_mode": True,
@@ -35,7 +36,8 @@ if __name__ == "__main__":
     model_provider = ModelProvider(
         ip=CONFIG["ollama_ip"],
         local_model=CONFIG["ollama_model"],
-        fallback_model=CONFIG["evaluator_llm"]
+        fallback_model=CONFIG["evaluator_llm"],
+        cloud_vlm_model=CONFIG["cloud_vlm_model"],
     )
 
     service = RefiService(

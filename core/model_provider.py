@@ -1,10 +1,19 @@
+import os
 import requests
 from langchain_ollama import ChatOllama
 from langchain.chat_models import BaseChatModel, init_chat_model
 from langchain.embeddings import init_embeddings
+from pydantic import AnyUrl
+from docling.datamodel.pipeline_options_vlm_model import ApiVlmOptions, ResponseFormat
 
 class ModelProvider:
-    def __init__(self, ip: str, local_model: str, fallback_model: str):
+    def __init__(
+        self,
+        ip: str,
+        local_model: str,
+        fallback_model: str,
+        cloud_vlm_model: str,
+    ):
         """
         Inicializa el proveedor de modelos.
         
@@ -14,6 +23,7 @@ class ModelProvider:
         self.ip = ip
         self.local_model = local_model
         self.fallback_model = fallback_model
+        self.cloud_vlm_model = cloud_vlm_model
         self.local_embedding = "qwen3-embedding"
         # Intentamos conectar al puerto por defecto de Ollama (11434) para validar disponibilidad
         self.is_ollama_reachable = self._check_connection(self.ip)
@@ -75,3 +85,26 @@ class ModelProvider:
         else:
             print("[ModelProvider] Local Ollama unreachable. Falling back to Google GenAI embeddings.")
             return init_embeddings("google_genai:models/gemini-embedding-2")
+
+    def get_vlm_options(self, prompt: str = "OCR the full page to markdown") -> ApiVlmOptions:
+        if self.is_ollama_reachable:
+            return ApiVlmOptions(
+                url=AnyUrl(f"http://{self.ip}:11434/v1/chat/completions"),
+                params=dict(model=self.local_model),
+                prompt=prompt,
+                timeout=90,
+                scale=1.0,
+                response_format=ResponseFormat.MARKDOWN,
+            )
+
+        api_key = os.environ.get("GOOGLE_API_KEY", "")
+        cloud_headers = {"Authorization": f"Bearer {api_key}"} if api_key else {}
+        return ApiVlmOptions(
+            url=AnyUrl("https://generativelanguage.googleapis.com/v1beta/openai/chat/completions"),
+            headers=cloud_headers,
+            params=dict(model=self.cloud_vlm_model),
+            prompt=prompt,
+            timeout=90,
+            scale=1.0,
+            response_format=ResponseFormat.MARKDOWN,
+        )

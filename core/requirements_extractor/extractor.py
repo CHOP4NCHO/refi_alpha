@@ -3,45 +3,30 @@ from pathlib import Path
 from typing import cast
 import logging
 
-
-from langchain.chat_models import init_chat_model
+import requests
+from langchain.chat_models import BaseChatModel, init_chat_model
 from langchain.messages import SystemMessage, HumanMessage
 from docling.document_converter import DocumentConverter, PdfFormatOption
 from pydantic import BaseModel
+
+from .ocr_errors import (
+    ExtractorConnectionError,
+    DocumentConversionError,
+    RequirementsModelError
+)
 from .constants import EXTRACTOR_PROMPT_TEMPLATE, HUMAN_PROMPT_TEMPLATE
-
 from .req_document import ReqDocument, Requirement
-
-from pydantic import AnyUrl # Requerido para la URL del VLM
-
+from .vlm_retry import VlmRetryWrapper
 from docling.datamodel.base_models import InputFormat
-from docling.datamodel.pipeline_options import (
-    VlmPipelineOptions,
-)
-from docling.datamodel.pipeline_options_vlm_model import (
-    ApiVlmOptions,
-    ResponseFormat,
-)
+from docling.datamodel.pipeline_options import VlmPipelineOptions
 from docling.pipeline.vlm_pipeline import VlmPipeline
 
 
 logger = logging.getLogger(__name__)
 
-def create_vlm_options(model: str, prompt: str, ip: str = "10.113.20.117"):
-    return ApiVlmOptions(
-        url=AnyUrl(f"http://{ip}:11434/v1/chat/completions"),
-        params=dict(
-            model=model,
-        ),
-        prompt=prompt,
-        timeout=90,
-        scale=1.0,
-        response_format=ResponseFormat.MARKDOWN
-    )
-
-
 class RequirementsResponse(BaseModel):
     items: list[Requirement]
+
 
 class RequirementsExtractor:
     """ Uses a defined LLM pipeline to extract Requirements from file. 
@@ -53,36 +38,72 @@ class RequirementsExtractor:
     HUMAN_PROMPT_TEMPLATE = HUMAN_PROMPT_TEMPLATE
     _current_document = None
 
-    def __init__(self, llm_ref: str, embedding_ref: str, ollama_ip: str = "10.113.20.117"):
+    def __init__(
+        self,
+        llm_ref: str | BaseChatModel,
+        embedding_ref: str,
+        vlm_options,
+        is_local: bool = True,
+    ):
         """Starts the models and objects."""
 
         logger.info("Initializing Requirements Extractor.")
 
-        self.extractor = DocumentConverter(
+        raw_converter = DocumentConverter(
             format_options={
                 InputFormat.PDF: PdfFormatOption(
                     pipeline_cls=VlmPipeline,
                     pipeline_options=VlmPipelineOptions(
                         enable_remote_services=True,
-                        vlm_options=create_vlm_options(
-                            model="gemma4:12b",
-                            prompt="OCR the full page to markdown",
-                            ip=ollama_ip,
-                        ),
+                        vlm_options=vlm_options,
                     ),
                 )
             }
         )
+        self.extractor = VlmRetryWrapper(raw_converter)
 
         self.llm = llm_ref
         self.embedding_ref = embedding_ref
+        self.vlm_options = vlm_options
+        self.is_local = is_local
+        self.ollama_ip = self.vlm_options.url.host or "localhost"
+
+    def _check_ocr_service(self) -> None:
+        """Fail fast with an actionable error when Ollama is unavailable."""
+        url = f"http://{self.ollama_ip}:11434/api/tags"
+        try:
+            response = requests.get(url, timeout=5)
+            response.raise_for_status()
+        except requests.RequestException as error:
+            raise ExtractorConnectionError(
+                "No hay conexión con Ollama, necesario para leer el PDF. "
+                f"Verifica que el servicio esté activo en {self.ollama_ip}:11434 "
+                "e inténtalo nuevamente."
+            ) from error
 
     def set_document(self, pdf_path: Path):
         """ Sets current pdf document. """
-        if not pdf_path.exists():
+        if not pdf_path.is_file():
             raise FileNotFoundError(f"PDF file not found: {pdf_path}")
-        
-        content = self.extractor.convert(pdf_path).document
+        if pdf_path.suffix.lower() != ".pdf":
+            raise ValueError("The selected document must be a PDF file.")
+
+        self._current_document = None
+        if self.is_local:
+            self._check_ocr_service()
+        try:
+            content = self.extractor.convert(pdf_path).document
+        except Exception as error:
+            logger.exception("Docling failed to convert PDF '%s'.", pdf_path)
+            model_label = self.vlm_options.params.get("model", "desconocido")
+            if self.is_local:
+                model_message = f"y que el modelo OCR de Ollama '{model_label}' esté instalado."
+            else:
+                model_message = f"y que el modelo VLM '{model_label}' esté disponible."
+            raise DocumentConversionError(
+                "No fue posible leer el PDF. Comprueba que el archivo no esté "
+                f"dañado {model_message}"
+            ) from error
         self._current_document = content
 
     def _get_content(self):
@@ -129,15 +150,16 @@ class RequirementsExtractor:
         4) generate and return ReqDocument object
         """
 
-        print("0. Generating markdown version...")
-        markdown_content = self._to_markdown()
+        logger.info("Generating markdown version of the requirements document.")
+        try:
+            markdown_content = self._to_markdown()
+        except Exception as error:
+            logger.exception("Failed to export the converted PDF to markdown.")
+            raise DocumentConversionError(
+                "El PDF fue procesado, pero no fue posible interpretar su contenido."
+            ) from error
 
-        print("1. Initializing LLM...")
-        model = init_chat_model(
-            model=self.llm,
-            temperature=0,
-        )
-
+        logger.info("Initializing requirements extraction LLM.")
         conversation = [
             SystemMessage(content=self.SYSTEM_PROMPT_TEMPLATE),
             HumanMessage(
@@ -145,18 +167,28 @@ class RequirementsExtractor:
             ),
         ]
 
-        print("2. Indicating structured output...")
-        structured_model = model.with_structured_output(
-            RequirementsResponse
-        )
+        try:
+            model = (
+                init_chat_model(model=self.llm, temperature=0)
+                if isinstance(self.llm, str)
+                else self.llm
+            )
+            logger.info("Configuring structured requirements output.")
+            structured_model = model.with_structured_output(RequirementsResponse)
 
-        print("3. Generating structured response...")
-        response = cast(
-            RequirementsResponse,
-            structured_model.invoke(conversation)
-        )
+            logger.info("Generating structured requirements response.")
+            response = cast(
+                RequirementsResponse,
+                structured_model.invoke(conversation)
+            )
+        except Exception as error:
+            logger.exception("The LLM failed to extract structured requirements.")
+            raise RequirementsModelError(
+                "El documento fue leído, pero el modelo no pudo extraer los "
+                "requerimientos. Verifica la conexión y configuración del LLM."
+            ) from error
 
-        print("4. Returning ReqDocument...")
+        logger.info("Building extracted requirements document.")
         name: str = self._get_content().name
 
         output = ReqDocument(name)
@@ -165,5 +197,3 @@ class RequirementsExtractor:
             output.add_requirement(requirement)
 
         return output
-            
-

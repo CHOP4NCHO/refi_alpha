@@ -37,6 +37,8 @@ class RefiService:
 
         # Core modules
         self._evaluator = Evaluator(llm_ref=evaluator_llm)
+        self._evaluator_llm = evaluator_llm
+        self._requirements_extractor = None
         self._req_document = ReqDocument(workdir)
         self._codebase = CodeBase(path=workdir, name=codebase_name)
         self._codebase_reader = CodeBaseReader(codebase=self._codebase)
@@ -132,6 +134,37 @@ class RefiService:
 
     def clear_requirements(self) -> None:
         self._req_document.requirements.clear()
+
+    def extract_requirements_from_pdf(self, pdf_path: str | Path) -> ReqDocument:
+        """Extract requirements from a PDF and make them the active document.
+
+        The current requirements are only replaced after the complete extraction
+        succeeds, so a converter or model error does not discard user data.
+        """
+        path = Path(pdf_path).expanduser()
+        if not path.is_file():
+            raise FileNotFoundError(f"No se encontró el archivo PDF: {path}")
+        if path.suffix.lower() != ".pdf":
+            raise ValueError("El archivo seleccionado debe tener extensión .pdf.")
+
+        extractor = self._get_requirements_extractor()
+        extractor.set_document(path)
+        extracted_document = extractor.get_requirements()
+        self._req_document = extracted_document
+        return extracted_document
+
+    def _get_requirements_extractor(self):
+        """Create the document extractor only when a PDF is first imported."""
+        if self._requirements_extractor is None:
+            from .requirements_extractor.extractor import RequirementsExtractor
+
+            self._requirements_extractor = RequirementsExtractor(
+                llm_ref=self._evaluator_llm,
+                embedding_ref="",
+                vlm_options=self._model_provider.get_vlm_options(),
+                is_local=self._model_provider.is_ollama_reachable,
+            )
+        return self._requirements_extractor
 
     # ------------------------------------------------------------------ #
     #  Evaluation
