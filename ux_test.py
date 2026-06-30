@@ -6,6 +6,8 @@ from dotenv import load_dotenv
 
 from core.refi_service import RefiService
 from core.model_provider import ModelProvider
+from core.model_config import ModelConfig
+from core.enums import LlmProvider
 
 import tkinter as tk
 from tkinter import filedialog
@@ -18,8 +20,12 @@ load_dotenv()
 
 CURRENT_WORKDIR = "."
 OLLAMA_IP = "10.113.20.117"
+CLOUD_IP = "generativelanguage.googleapis.com/v1beta/openai"
 LOCAL_LLM = "gemma4:12b"
-FALLBACK_LLM = "google_genai:gemini-3.1-flash-lite"
+CLOUD_LLM = "google_genai:gemini-3.1-flash-lite"
+CLOUD_VLM = "gemini-2.5-flash-lite"
+LOCAL_EMBEDDING = "qwen3-embedding"
+CLOUD_EMBEDDING = "google_genai:models/gemini-embedding-2"
 
 # ==========================================
 # Initialization
@@ -30,13 +36,13 @@ print("   INICIANDO EVALUADOR IA")
 print("==============================")
 
 model_provider = ModelProvider(
-    ip=OLLAMA_IP,
-    local_llm=LOCAL_LLM,
-    fallback_llm=FALLBACK_LLM,
-    local_vlm=None,
-    cloud_vlm="paligemma-3b",
-    local_embedding="qwen3-embedding",
-    cloud_embedding="google_genai:models/gemini-embedding-2",
+    local_ip=OLLAMA_IP,
+    cloud_ip=CLOUD_IP,
+    default_llm=ModelConfig(LlmProvider.OLLAMA, LOCAL_LLM),
+    default_embedding=ModelConfig(LlmProvider.OLLAMA, LOCAL_EMBEDDING, "embedding"),
+    default_vlm=ModelConfig(LlmProvider.GEMINI, CLOUD_VLM, "vlm"),
+    fallback_llm=ModelConfig(LlmProvider.GEMINI, CLOUD_LLM),
+    fallback_embedding=ModelConfig(LlmProvider.GEMINI, CLOUD_EMBEDDING, "embedding"),
     temperature=0.1,
 )
 

@@ -2,6 +2,7 @@ from .refi_service import RefiService
 from .model_provider import ModelProvider
 from .enums import LlmProvider, EvaluationMode, RealEvaluation
 from .evaluator_agent import ReqFidelityReview
+from .exceptions import DomainError, ModelConfigurationError, ModelsNotConfiguredError, ProviderConnectionError
 
 
 __all__ = [
@@ -10,5 +11,9 @@ __all__ = [
     "ModelProvider",
     "LlmProvider",
     "EvaluationMode",
-    "RealEvaluation"
+    "RealEvaluation",
+    "DomainError",
+    "ModelConfigurationError",
+    "ModelsNotConfiguredError",
+    "ProviderConnectionError",
 ]

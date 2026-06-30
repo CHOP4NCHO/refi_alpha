@@ -11,6 +11,8 @@ import logging
 from dotenv import load_dotenv
 
 from core.model_provider import ModelProvider
+from core.model_config import ModelConfig
+from core.enums import LlmProvider
 from core.requirements_extractor.extractor import RequirementsExtractor
 
 logging.basicConfig(
@@ -21,28 +23,29 @@ logging.basicConfig(
 load_dotenv()
 
 OLLAMA_IP = "10.113.20.117"
+CLOUD_IP = "generativelanguage.googleapis.com/v1beta/openai"
 
 def main():
     pdf_path = Path("/home/chopancho/dev/pruebas_langchain/refi_demo/pdfs/epa.pdf")
 
     try:
         model_provider = ModelProvider(
-            ip=OLLAMA_IP,
-            local_llm="gemma4:12b",
-            fallback_llm="google_genai:gemini-3.1-flash-lite",
-            local_vlm=None,
-            cloud_vlm="gemini-2.5-flash-lite",
-            local_embedding="qwen3-embedding",
-            cloud_embedding="google_genai:models/gemini-embedding-2",
+            local_ip=OLLAMA_IP,
+            cloud_ip=CLOUD_IP,
+            default_llm=ModelConfig(LlmProvider.OLLAMA, "gemma4:12b"),
+            default_embedding=ModelConfig(LlmProvider.OLLAMA, "qwen3-embedding", "embedding"),
+            default_vlm=ModelConfig(LlmProvider.GEMINI, "gemini-2.5-flash-lite", "vlm"),
+            fallback_llm=ModelConfig(LlmProvider.GEMINI, "google_genai:gemini-3.1-flash-lite"),
+            fallback_embedding=ModelConfig(LlmProvider.GEMINI, "google_genai:models/gemini-embedding-2", "embedding"),
             temperature=0.1,
         )
 
         print("Inicializando extractor...")
         extractor = RequirementsExtractor(
             llm_ref=model_provider.get_llm(),
-            embedding_ref=model_provider.current_embedding,
+            embedding_ref=model_provider.get_embeddings(),
             vlm_options=model_provider.get_vlm_options(),
-            is_local=model_provider.is_local,
+            is_local=model_provider.is_local_provider(),
         )
 
         print(f"Cargando documento: {pdf_path}")

@@ -1,7 +1,9 @@
 import ttkbootstrap as ttk
+from tkinter import messagebox
 
 from core.enums import EvaluationMode, RealEvaluation, LlmProvider
 from core.model_config import ModelConfig
+from core.exceptions import DomainError
 
 
 class ConfigTab(ttk.Frame):
@@ -34,7 +36,8 @@ class ConfigTab(ttk.Frame):
             row=4, column=0, sticky="w", padx=20, pady=(10, 2)
         )
 
-        self.provider_var = ttk.StringVar(value=self.app.service.model_provider.current_provider.value)
+        provider_val = self.app.service.model_provider.current_provider
+        self.provider_var = ttk.StringVar(value=provider_val.value if provider_val else "")
 
         combo_provider = ttk.Combobox(
             self,
@@ -108,8 +111,6 @@ class ConfigTab(ttk.Frame):
         combo_real.grid(row=15, column=0, sticky="w", padx=20)
         combo_real.bind("<<ComboboxSelected>>", self._on_real_eval_change)
 
-        # INIT MODELS
-        self._refresh_models()
 
     # --------------------------------------------------
     # Model handling
@@ -146,16 +147,34 @@ class ConfigTab(ttk.Frame):
         self._refresh_models()
 
     def _on_llm_change(self, event=None):
-        model = self._find_model(self.llm_var.get(), "chat")
-        self.app.service.model_provider.set_llm(model)
+        try:
+            model = self._find_model(self.llm_var.get(), "chat")
+            self.app.service.model_provider.set_llm(model)
+            self.app.service._update_evaluator_llm()
+        except ValueError as e:
+            messagebox.showwarning("Modelo no encontrado", str(e))
+        except DomainError as e:
+            messagebox.showerror("Error", str(e))
 
     def _on_vlm_change(self, event=None):
-        model = self._find_model(self.vlm_var.get(), "vlm")
-        self.app.service.model_provider.set_vlm(model)
+        try:
+            model = self._find_model(self.vlm_var.get(), "vlm")
+            self.app.service.model_provider.set_vlm(model)
+            self.app.service._reset_requirements_extractor()
+        except ValueError as e:
+            messagebox.showwarning("Modelo no encontrado", str(e))
+        except DomainError as e:
+            messagebox.showerror("Error", str(e))
 
     def _on_embedding_change(self, event=None):
-        model = self._find_model(self.embedding_var.get(), "embedding")
-        self.app.service.model_provider.set_embedding(model)
+        try:
+            model = self._find_model(self.embedding_var.get(), "embedding")
+            self.app.service.model_provider.set_embedding(model)
+            self.app.service._reset_requirements_extractor()
+        except ValueError as e:
+            messagebox.showwarning("Modelo no encontrado", str(e))
+        except DomainError as e:
+            messagebox.showerror("Error", str(e))
 
     def _on_eval_mode_change(self, event=None):
         self.app.service.evaluation_mode = EvaluationMode(self.eval_mode_var.get())

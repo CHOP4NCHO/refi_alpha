@@ -6,8 +6,6 @@ from ui import RefiApp
 from core import RefiService
 from core.enums import EvaluationMode, RealEvaluation
 from core.model_provider import ModelProvider
-from core.model_config import ModelConfig
-from core.enums import LlmProvider
 
 load_dotenv()
 
@@ -17,20 +15,16 @@ logging.basicConfig(
 )
 
 if __name__ == "__main__":
-    # === CENTRALIZACIÓN DE VARIABLES DE CONFIGURACIÓN ===
+    # === CONFIGURACIÓN DE LA APLICACIÓN ===
+    # Modelos se configuran desde la UI (Pestaña 4: Configuración)
     CONFIG = {
         "title": "REFI ALPHA - UI Prototype",
         "geometry": "1024x720",
         "themename": "cosmo",
         "workdir": ".",
         "codebase_name": "REFI_SOURCE_CODE",
-        "local_ip": "10.113.20.117",
+        "local_ip": "localhost",
         "cloud_ip": "generativelanguage.googleapis.com/v1beta/openai",
-        "local_llm": "gemma4:12b",
-        "cloud_llm": "google_genai:gemini-3.1-flash-lite",
-        "cloud_vlm": "gemini-2.5-flash-lite",
-        "local_embedding": "qwen3-embedding",
-        "cloud_embedding": "google_genai:models/gemini-embedding-2",
         "temperature": 0.1,
         "debug_mode": True,
     }
@@ -38,11 +32,9 @@ if __name__ == "__main__":
     root = ttk.Window(themename=CONFIG["themename"])
 
     model_provider = ModelProvider(
-        local_ip="localhost",
-        cloud_ip="generativelanguage.googleapis.com/v1beta/openai",
-        default_llm=ModelConfig(LlmProvider.GEMINI, "google_genai:gemini-3.1-flash-lite"),
-        default_embedding=ModelConfig(LlmProvider.GEMINI, "gemini-embedding-001", "embedding"),
-        default_vlm=ModelConfig(LlmProvider.GEMINI, "gemini-2.5-flash", "vlm"),
+        local_ip=CONFIG["local_ip"],
+        cloud_ip=CONFIG["cloud_ip"],
+        temperature=CONFIG["temperature"],
     )
 
     service = RefiService(

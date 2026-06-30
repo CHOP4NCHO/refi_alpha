@@ -140,6 +140,8 @@ class RefiService:
         if path.suffix.lower() != ".pdf":
             raise ValueError("El archivo seleccionado debe tener extensión .pdf.")
 
+        self._model_provider.validate_for_pdf_import()
+
         extractor = self._get_requirements_extractor()
         extractor.set_document(path)
 
@@ -176,7 +178,15 @@ class RefiService:
         if not self._file_context:
             raise ValueError("No hay archivos cargados en el contexto.")
 
-        current_llm = self._model_provider.get_llm()
+        # Validate models based on evaluation mode
+        if self._evaluation_mode == EvaluationMode.AGENT_AI:
+            self._model_provider.validate_for_agent()
+        else:
+            self._model_provider.validate_for_pipeline()
+
+        current_llm = self._model_provider.get_llm(
+            operation=self._evaluation_mode.value
+        )
 
         if self._evaluation_mode == EvaluationMode.AGENT_AI:
             review = perform_agent_evaluation(
@@ -262,3 +272,7 @@ class RefiService:
 
         if self._requirements_extractor is not None:
             self._requirements_extractor.llm = new_llm
+
+    def _reset_requirements_extractor(self) -> None:
+        """Reset the extractor so it is lazily recreated with updated VLM/embedding config."""
+        self._requirements_extractor = None

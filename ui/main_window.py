@@ -1,9 +1,11 @@
 import threading
+import traceback
 
 from tkinter import messagebox
 import ttkbootstrap as ttk
 
 from core.refi_service import RefiService
+from core.exceptions import ModelConfigurationError, ModelsNotConfiguredError, DomainError
 
 # Local sub-modules
 from .workingtree_tab import WorkingtreeTab
@@ -82,10 +84,34 @@ class RefiApp:
                 / self.service.result_manager.default_save_name
             )
             self.log_message(f"RESULTADOS GUARDADOS: {save_path}")
-        except Exception as e:
-            self.log_message(f"Error crítico en el proceso de evaluación: {str(e.with_traceback)}")
-        finally:
-            self.root.after(0, self.tab_requirements.update_req_listbox)
             self.root.after(
                 0, lambda: messagebox.showinfo("Éxito", "Evaluación completada con éxito.")
             )
+        except ModelsNotConfiguredError as e:
+            self.log_message(f"Error de configuración: {e.message}")
+            msg = (
+                f"Para la operación '{e.operation}' se requieren modelos "
+                f"que no están configurados: {', '.join(e.missing_models)}.\n"
+                "Por favor, vaya a la pestaña de Configuración para configurarlos."
+            )
+            self.root.after(0, lambda msg=msg: messagebox.showerror("Configuración requerida", msg))
+    
+        except ModelConfigurationError as e:
+            self.log_message(f"Error de configuración: {e.message}")
+            msg = (
+                f"Error con el modelo {e.model_type.upper()}: {e.message}\n"
+                "Verifique la configuración en la pestaña correspondiente."
+            )
+            self.root.after(0, lambda msg=msg: messagebox.showerror("Error de configuración", msg))
+        except DomainError as e:
+            self.log_message(f"Error de REFI-ALPHA: {e}")
+            msg = str(e)
+            self.root.after(0, lambda msg=msg: messagebox.showerror("Error", msg))
+        except Exception as e:
+            tb = traceback.format_exc()
+            self.log_message(f"Error crítico en el proceso de evaluación: {e}\n{tb}")
+            msg = str(e)
+            self.root.after(0, lambda msg=msg: messagebox.showerror("Error inesperado", msg))
+        finally:
+            self.root.after(0, self.tab_requirements.update_req_listbox)
+            
