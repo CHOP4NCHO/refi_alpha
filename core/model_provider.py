@@ -230,7 +230,7 @@ class ModelProvider:
 
     # --------------------------------------------------
     # Model discovery
-    # TODO: mejorar el import automático de Model COnfig según el LlmProvider
+    # TODO: mejorar el import automático de Model Config según el LlmProvider
     # --------------------------------------------------
 
     def list_models(self) -> List[ModelConfig]:
