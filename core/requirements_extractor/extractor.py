@@ -4,7 +4,7 @@ from typing import cast
 import logging
 
 import requests
-from langchain.chat_models import BaseChatModel, init_chat_model
+from langchain.chat_models import BaseChatModel
 from langchain.messages import SystemMessage, HumanMessage
 from docling.document_converter import DocumentConverter, PdfFormatOption
 from pydantic import BaseModel
@@ -20,7 +20,7 @@ from .vlm_retry import VlmRetryWrapper
 from docling.datamodel.base_models import InputFormat
 from docling.datamodel.pipeline_options import VlmPipelineOptions
 from docling.pipeline.vlm_pipeline import VlmPipeline
-
+from langchain.embeddings.base import Embeddings
 
 logger = logging.getLogger(__name__)
 
@@ -40,8 +40,8 @@ class RequirementsExtractor:
 
     def __init__(
         self,
-        llm_ref: str | BaseChatModel,
-        embedding_ref: str,
+        llm_ref: BaseChatModel,
+        embedding_ref: Embeddings,
         vlm_options,
         is_local: bool = True,
     ):
@@ -168,11 +168,7 @@ class RequirementsExtractor:
         ]
 
         try:
-            model = (
-                init_chat_model(model=self.llm, temperature=0)
-                if isinstance(self.llm, str)
-                else self.llm
-            )
+            model = self.llm
             logger.info("Configuring structured requirements output.")
             structured_model = model.with_structured_output(RequirementsResponse)
 

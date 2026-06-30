@@ -1,8 +1,10 @@
 from pathlib import Path
-from langchain.chat_models import BaseChatModel
 
 from .evaluator_agent.evaluator import Evaluator
-from .evaluator_agent.evaluation_runner import perform_agent_evaluation, perform_pipeline_evaluation
+from .evaluator_agent.evaluation_runner import (
+    perform_agent_evaluation,
+    perform_pipeline_evaluation
+)
 from .evaluator_agent.req_fidelity_review import ReqFidelityReview
 from .codebase_reader.codebase import CodeBase
 from .codebase_reader.codebase_reader import CodeBaseReader
@@ -10,7 +12,7 @@ from .codebase_reader.code_file import CodeFile
 from .requirements_extractor.req_document import ReqDocument, Requirement
 from .result_manager.result_manager import ResultManager
 from .model_provider import ModelProvider
-from .enums import EvaluationMode, RealEvaluation, LlmProvider
+from .enums import EvaluationMode, RealEvaluation
 
 
 class RefiService:
@@ -23,7 +25,6 @@ class RefiService:
         self,
         workdir: str,
         codebase_name: str,
-        evaluator_llm: BaseChatModel,
         model_provider: ModelProvider,
         debug_mode: bool = False,
         evaluation_mode: EvaluationMode = EvaluationMode.AGENT_AI,
@@ -36,22 +37,13 @@ class RefiService:
         self._real_evaluation = real_evaluation
 
         # Core modules
-        self._evaluator = Evaluator(llm_ref=evaluator_llm)
-        self._evaluator_llm = evaluator_llm
+        self._evaluator = Evaluator()
         self._requirements_extractor = None
         self._req_document = ReqDocument(workdir)
         self._codebase = CodeBase(path=workdir, name=codebase_name)
         self._codebase_reader = CodeBaseReader(codebase=self._codebase)
         self._result_manager = ResultManager()
         self._file_context: list[CodeFile] = []
-
-        # Determine LLM provider from model name
-        model_name = self._evaluator.get_model_name().lower().split()[0]
-        match model_name:
-            case "gemini":
-                self._current_llm = LlmProvider.GEMINI
-            case _:
-                self._current_llm = LlmProvider.OLLAMA
 
     # ------------------------------------------------------------------ #
     #  Workspace (CODEBASE READER)
@@ -125,7 +117,11 @@ class RefiService:
         req_id = "".join(
             random.choices(string.ascii_uppercase + string.digits, k=3)
         )
-        requirement = Requirement(id=req_id, description=description, type=req_type)
+        requirement = Requirement(
+            id=req_id,
+            description=description,
+            type=req_type
+        )
         self._req_document.add_requirement(requirement)
         return requirement
 
@@ -136,45 +132,51 @@ class RefiService:
         self._req_document.requirements.clear()
 
     def extract_requirements_from_pdf(self, pdf_path: str | Path) -> ReqDocument:
-        """Extract requirements from a PDF and make them the active document.
-
-        The current requirements are only replaced after the complete extraction
-        succeeds, so a converter or model error does not discard user data.
-        """
         path = Path(pdf_path).expanduser()
+
         if not path.is_file():
             raise FileNotFoundError(f"No se encontró el archivo PDF: {path}")
+
         if path.suffix.lower() != ".pdf":
             raise ValueError("El archivo seleccionado debe tener extensión .pdf.")
 
         extractor = self._get_requirements_extractor()
         extractor.set_document(path)
+
         extracted_document = extractor.get_requirements()
         self._req_document = extracted_document
+
         return extracted_document
 
     def _get_requirements_extractor(self):
-        """Create the document extractor only when a PDF is first imported."""
+        """
+        Create the document extractor only when a PDF is first imported.
+        """
+
         if self._requirements_extractor is None:
             from .requirements_extractor.extractor import RequirementsExtractor
 
             self._requirements_extractor = RequirementsExtractor(
-                llm_ref=self._evaluator_llm,
-                embedding_ref="",
+                llm_ref=self._model_provider.get_llm(),
+                embedding_ref=self._model_provider.get_embeddings(), #type: ignore
                 vlm_options=self._model_provider.get_vlm_options(),
-                is_local=self._model_provider.is_ollama_reachable,
+                is_local=self._model_provider.is_local_provider(),
             )
+
         return self._requirements_extractor
 
     # ------------------------------------------------------------------ #
     #  Evaluation
     # ------------------------------------------------------------------ #
 
-    def evaluate(self, log_callback=None) -> ReqFidelityReview:
+    def evaluate(self, log_callback=None) -> None:
         if not self._req_document.requirements:
             raise ValueError("No hay requerimientos cargados.")
+
         if not self._file_context:
             raise ValueError("No hay archivos cargados en el contexto.")
+
+        current_llm = self._model_provider.get_llm()
 
         if self._evaluation_mode == EvaluationMode.AGENT_AI:
             review = perform_agent_evaluation(
@@ -183,7 +185,7 @@ class RefiService:
                 codebase_reader=self._codebase_reader,
                 file_context=self._file_context,
                 model_provider=self._model_provider,
-                current_llm=self._current_llm,
+                current_llm=current_llm,
                 debug_mode=self._debug_mode,
                 real_batch_evaluation_type=self._real_evaluation,
                 log_callback=log_callback,
@@ -193,17 +195,17 @@ class RefiService:
                 evaluator=self._evaluator,
                 req_document=self._req_document,
                 file_context=self._file_context,
-                current_llm=self._current_llm,
+                model_provider=self._model_provider,
+                current_llm=current_llm,
                 debug_mode=self._debug_mode,
                 real_batch_evaluation_type=self._real_evaluation,
                 log_callback=log_callback,
             )
-
+        
         self._result_manager.add_review(review=review)
         review_index = len(self._result_manager.saved_reviews) - 1
         self._result_manager.save_review(review_index)
-
-        return review
+        
 
     # ------------------------------------------------------------------ #
     #  Results
@@ -224,6 +226,10 @@ class RefiService:
     # ------------------------------------------------------------------ #
 
     @property
+    def model_provider(self) -> ModelProvider:
+        return self._model_provider
+
+    @property
     def evaluation_mode(self) -> EvaluationMode:
         return self._evaluation_mode
 
@@ -240,17 +246,19 @@ class RefiService:
         self._real_evaluation = value
 
     @property
-    def current_llm(self) -> LlmProvider:
-        return self._current_llm
-
-    @current_llm.setter
-    def current_llm(self, value: LlmProvider) -> None:
-        self._current_llm = value
-
-    @property
     def debug_mode(self) -> bool:
         return self._debug_mode
 
     @debug_mode.setter
     def debug_mode(self, value: bool) -> None:
         self._debug_mode = value
+
+    # ------------------------------------------------------------------ #
+    #  Internal helpers
+    # ------------------------------------------------------------------ #
+
+    def _update_evaluator_llm(self) -> None:
+        new_llm = self._model_provider.get_llm()
+
+        if self._requirements_extractor is not None:
+            self._requirements_extractor.llm = new_llm

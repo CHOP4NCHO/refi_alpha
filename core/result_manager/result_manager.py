@@ -88,7 +88,7 @@ class ResultManager:
             [
                 "ESTADÍSTICAS DE EVALUACIÓN SUPERVISADA",
                 f"DEBUG MODE: {review.debug_mode}",
-                f"MODEL: {review.llm_provider.value}",
+                f"MODEL: {review.llm_provider}",
                 f"EVALUATION MODE: {review.evaluation_mode.value}",
                 f"GROUND TRUTH VALUE: {review.real_evaluation.value}",
                 f"RESPONSE TIME: {review.response_time:.2f}s"

@@ -3,7 +3,6 @@ import threading
 from tkinter import messagebox
 import ttkbootstrap as ttk
 
-from core.enums import LlmProvider, EvaluationMode, RealEvaluation
 from core.refi_service import RefiService
 
 # Local sub-modules
@@ -84,7 +83,7 @@ class RefiApp:
             )
             self.log_message(f"RESULTADOS GUARDADOS: {save_path}")
         except Exception as e:
-            self.log_message(f"Error crítico en el proceso de evaluación: {str(e)}")
+            self.log_message(f"Error crítico en el proceso de evaluación: {str(e.with_traceback)}")
         finally:
             self.root.after(0, self.tab_requirements.update_req_listbox)
             self.root.after(

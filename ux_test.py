@@ -18,8 +18,8 @@ load_dotenv()
 
 CURRENT_WORKDIR = "."
 OLLAMA_IP = "10.113.20.117"
-LOCAL_MODEL = "gemma4:12b"
-FALLBACK_MODEL = "google_genai:gemini-3.1-flash-lite"
+LOCAL_LLM = "gemma4:12b"
+FALLBACK_LLM = "google_genai:gemini-3.1-flash-lite"
 
 # ==========================================
 # Initialization
@@ -31,15 +31,18 @@ print("==============================")
 
 model_provider = ModelProvider(
     ip=OLLAMA_IP,
-    local_model=LOCAL_MODEL,
-    fallback_model=FALLBACK_MODEL,
-    cloud_vlm_model="paligemma-3b",
+    local_llm=LOCAL_LLM,
+    fallback_llm=FALLBACK_LLM,
+    local_vlm=None,
+    cloud_vlm="paligemma-3b",
+    local_embedding="qwen3-embedding",
+    cloud_embedding="google_genai:models/gemini-embedding-2",
+    temperature=0.1,
 )
 
 service = RefiService(
     workdir=CURRENT_WORKDIR,
     codebase_name="REFI_SOURCE_CODE",
-    evaluator_llm=model_provider.get_multimodal_model(),
     model_provider=model_provider,
     debug_mode=False,
 )

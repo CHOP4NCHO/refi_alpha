@@ -2,7 +2,7 @@ from enum import Enum
 
 
 class LlmProvider(Enum):
-    GEMINI = 'gemini3.1-flash'
+    GEMINI = 'gemini'
     OLLAMA = 'ollama'
 
 

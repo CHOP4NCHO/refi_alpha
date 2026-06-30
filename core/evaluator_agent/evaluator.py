@@ -10,8 +10,6 @@ from .constants import EVALUATOR_SYSTEM_PROMPT
 from ..codebase_reader.codebase import CodeBase
 from .token_tracker import TokenTrackerHandler
 
-logger = logging.getLogger(__name__)
-
 from .tools import (
     create_evaluator_toolbelt
 )
@@ -27,6 +25,8 @@ from pathlib import Path
 from langchain_core.documents import Document
 from langchain_core.vectorstores import InMemoryVectorStore
 
+logger = logging.getLogger(__name__)
+
 @dataclass
 class CodeFileContext:
     code_content: list[str]
@@ -37,7 +37,6 @@ class SingleRequirementEval(BaseModel):
     is_fulfilled: bool 
 
 class Evaluator:
-    _llm_ref: BaseChatModel
     _requirement_list: list[Requirement]
     _working_tree: dict | None
     _codebase: CodeBase | None
@@ -48,9 +47,8 @@ class Evaluator:
     total_input_tokens: int
     total_output_tokens: int
 
-    def __init__(self, llm_ref: BaseChatModel):
+    def __init__(self):
         """Initializes auxiliary variables."""
-        self._llm_ref = llm_ref
         self._requirement_list = []
         self._tools = []
         self._working_tree = None
@@ -134,16 +132,20 @@ class Evaluator:
             self._vector_store = None
             logger.info("In-memory RAG vector store cleared and memory released.")
 
-    def get_model_name(self) -> str:
-        if hasattr(self._llm_ref, 'model'):
-            return self._llm_ref.model # type: ignore
+    def get_model_name(self, llm_ref) -> str:
+        if hasattr(llm_ref, 'model'):
+            return llm_ref.model # type: ignore
         else:
-            return self._llm_ref.profile['name']  # type: ignore
+            return llm_ref.profile['name']  # type: ignore
     
-    def eval_requirement_llm(self, req: Requirement, files_content: list[CodeFile]):
+    def eval_requirement_llm(
+            self, 
+            req: Requirement, 
+            files_content: list[CodeFile],
+            llm_ref: BaseChatModel
+        ):
         """Performs one single evaluation with given model, req and files content."""
-        llm = self._llm_ref
-        
+        llm = llm_ref
 
         files_index_map = "\n".join(
             [f"File Index {idx}: {f.path.name}\n{f.get_raw_content()}" for idx, f in enumerate(files_content)]
@@ -185,13 +187,14 @@ class Evaluator:
         self,
         codebase_reader: CodeBaseReader,
         req: Requirement,
-        files_content: list[CodeFile]
+        files_content: list[CodeFile],
+        llm_ref: BaseChatModel
     ) -> None:
         """
         Executes an agentic evaluation loop over a requirement.
         Integrates RAG if an active vector store is present.
         """
-        llm = self._llm_ref
+        llm = llm_ref
 
         # Baseline file map summary to feed initial context
         files_index_map = "\n".join(f"- {f.path}" for f in files_content)

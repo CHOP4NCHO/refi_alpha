@@ -1,96 +1,108 @@
 import os
 import requests
+from typing import List
+
 from langchain_ollama import ChatOllama
 from langchain.chat_models import BaseChatModel, init_chat_model
 from langchain.embeddings import init_embeddings
 from pydantic import AnyUrl
 from docling.datamodel.pipeline_options_vlm_model import ApiVlmOptions, ResponseFormat
 
+from .enums import LlmProvider
+from .model_config import ModelConfig
+
+
 class ModelProvider:
     def __init__(
         self,
-        ip: str,
-        local_model: str,
-        fallback_model: str,
-        cloud_vlm_model: str,
+        local_ip: str,
+        cloud_ip: str,
+        default_llm: ModelConfig,
+        default_embedding: ModelConfig,
+        default_vlm: ModelConfig,
+        temperature: float = 0.1,
     ):
-        """
-        Inicializa el proveedor de modelos.
-        
-        :param ip: La dirección IP donde corre el servidor Ollama (ej: 'localhost' o '192.168.1.10')
-        :param model: El nombre del modelo a utilizar (ej: 'qwen3.5', 'llama3')
-        """
-        self.ip = ip
-        self.local_model = local_model
-        self.fallback_model = fallback_model
-        self.cloud_vlm_model = cloud_vlm_model
-        self.local_embedding = "qwen3-embedding"
-        # Intentamos conectar al puerto por defecto de Ollama (11434) para validar disponibilidad
-        self.is_ollama_reachable = self._check_connection(self.ip)
+        self._local_ip = local_ip
+        self._cloud_ip = cloud_ip
+
+        self._llm_config = default_llm
+        self._embedding_config = default_embedding
+        self._vlm_config = default_vlm
+
+        self._temperature = temperature
+
+        self.is_ollama_reachable = self._check_connection(self._local_ip)
+
+    # --------------------------------------------------
+    # Connection
+    # --------------------------------------------------
 
     def _check_connection(self, ip: str) -> bool:
-        """Verifica si el servidor en la IP especificada responde."""
         try:
-            # Intentamos una petición simple al endpoint de status o tags de Ollama
-            response = requests.get(f"http://{ip}:11434/api/tags", timeout=5)
+            response = requests.get(f"http://{ip}:11434/api/tags", timeout=3)
             return response.status_code == 200
-        except (requests.exceptions.RequestException, Exception):
+        except Exception:
             return False
 
+    # --------------------------------------------------
+    # LLM
+    # --------------------------------------------------
+
     def get_llm(self) -> BaseChatModel:
-        """
-        Retorna una instancia de ChatOllama si la IP es válida, 
-        de lo contrario, inicializa un modelo por defecto vía init_chat_model.
-        """
-        if self.is_ollama_reachable:
-            print(f"Conexión exitosa a Ollama en {self.ip}. Cargando modelo: {self.local_model}")
+        config = self._llm_config
+
+        if config.provider == LlmProvider.OLLAMA and self.is_ollama_reachable:
             return ChatOllama(
-                model=self.local_model,
-                base_url=f"http://{self.ip}:11434",
+                model=config.model_id,
+                base_url=f"http://{self._local_ip}:11434",
+                temperature=self._temperature,
                 format="json"
             )
-        else:
-            print(f"Error de conexión en {self.ip}. Cediendo a init_chat_model.")
-            return self.get_default_model()
 
-    def get_multimodal_model(self) -> BaseChatModel:
-        """
-        Provee un modelo multimodal (ejemplo para visión). 
-        Sigue la misma lógica de validación de IP que el LLM estándar.
-        """
-        if self.is_ollama_reachable:
-            return ChatOllama(
-                model=self.local_model,
-                base_url=f"http://{self.ip}:11434"
+        elif config.provider == LlmProvider.GEMINI:
+            return init_chat_model(
+                config.model_id,
+                temperature=self._temperature
             )
-        else:
 
-            return self.get_default_model()
+        raise ValueError(f"Proveedor no soportado: {config.provider}")
 
-    def get_default_model(self):
-        """Retorna el modelo por defecto usando init_chat_model sin validación de IP específica."""
-        return init_chat_model(self.fallback_model)
+    def get_llm_label(self) -> str:
+        """
+        Returns a readable identifier of the active model.
+        Example: 'ollama:llama3' or 'gemini:gemini-2.5-flash'
+        """
+        return f"{self._llm_config.provider.value}:{self._llm_config.model_id}"
+
+    # --------------------------------------------------
+    # Embeddings
+    # --------------------------------------------------
 
     def get_embeddings(self):
-        """
-        Retrieves the appropriate embeddings instance based on connection availability.
-        Uses Ollama local embeddings if reachable, and falls back to Gemini embedding model.
-        """
-        if self.is_ollama_reachable:
-            print(f"[ModelProvider] Local Ollama is reachable. Loading local embeddings: {self.local_model}")
+        config = self._embedding_config
+
+        if config.provider == LlmProvider.OLLAMA and self.is_ollama_reachable:
             return init_embeddings(
-                f"ollama:{self.local_embedding}",
-                base_url=f"http://{self.ip}:11434"
+                f"ollama:{config.model_id}",
+                base_url=f"http://{self._local_ip}:11434"
             )
-        else:
-            print("[ModelProvider] Local Ollama unreachable. Falling back to Google GenAI embeddings.")
-            return init_embeddings("google_genai:models/gemini-embedding-2")
+
+        elif config.provider == LlmProvider.GEMINI:
+            return init_embeddings(config.model_id)
+
+        raise ValueError(f"Proveedor no soportado: {config.provider}")
+
+    # --------------------------------------------------
+    # VLM (Docling)
+    # --------------------------------------------------
 
     def get_vlm_options(self, prompt: str = "OCR the full page to markdown") -> ApiVlmOptions:
-        if self.is_ollama_reachable:
+        config = self._vlm_config
+
+        if config.provider == LlmProvider.OLLAMA and self.is_ollama_reachable:
             return ApiVlmOptions(
-                url=AnyUrl(f"http://{self.ip}:11434/v1/chat/completions"),
-                params=dict(model=self.local_model),
+                url=AnyUrl(f"http://{self._local_ip}:11434/v1/chat/completions"),
+                params=dict(model=config.model_id),
                 prompt=prompt,
                 timeout=90,
                 scale=1.0,
@@ -98,13 +110,80 @@ class ModelProvider:
             )
 
         api_key = os.environ.get("GOOGLE_API_KEY", "")
-        cloud_headers = {"Authorization": f"Bearer {api_key}"} if api_key else {}
+        headers = {"Authorization": f"Bearer {api_key}"} if api_key else {}
+
         return ApiVlmOptions(
-            url=AnyUrl("https://generativelanguage.googleapis.com/v1beta/openai/chat/completions"),
-            headers=cloud_headers,
-            params=dict(model=self.cloud_vlm_model),
+            url=AnyUrl(f"https://{self._cloud_ip}/chat/completions"),
+            headers=headers,
+            params=dict(model=config.model_id),
             prompt=prompt,
             timeout=90,
             scale=1.0,
             response_format=ResponseFormat.MARKDOWN,
+        )
+
+    # --------------------------------------------------
+    # Setters
+    # --------------------------------------------------
+
+    def set_llm(self, config: ModelConfig):
+        self._llm_config = config
+
+    def set_embedding(self, config: ModelConfig):
+        self._embedding_config = config
+
+    def set_vlm(self, config: ModelConfig):
+        self._vlm_config = config
+
+    # --------------------------------------------------
+    # Model discovery
+    # --------------------------------------------------
+
+    def list_models(self) -> List[ModelConfig]:
+        models: List[ModelConfig] = []
+
+        # Ollama (dynamic)
+        if self.is_ollama_reachable:
+            try:
+                response = requests.get(f"http://{self._local_ip}:11434/api/tags")
+                data = response.json()
+
+                for m in data.get("models", []):
+                    models.append(ModelConfig(
+                        provider=LlmProvider.OLLAMA,
+                        model_id=m["name"],
+                        category="chat"
+                    ))
+            except Exception:
+                pass
+
+        # Gemini (static or API-based)
+        models.extend([
+            ModelConfig(LlmProvider.GEMINI, "google_genai:gemini-3.1-flash-lite", "chat"),
+            ModelConfig(LlmProvider.GEMINI, "google_genai:gemini-2.5-flash", "chat"),
+            ModelConfig(LlmProvider.GEMINI, "google_genai:gemini-2.5-pro", "chat"),
+            ModelConfig(LlmProvider.GEMINI, "google_genai:gemini-embedding-2", "embedding"),
+        ])
+
+        return models
+
+    # --------------------------------------------------
+    # Helpers
+    # --------------------------------------------------
+
+    @property
+    def current_llm(self) -> str:
+        return self._llm_config.model_id
+
+    @property
+    def current_provider(self) -> LlmProvider:
+        return self._llm_config.provider
+
+    def is_local_provider(self) -> bool:
+        """
+        Returns True if the active model is using a local provider (Ollama).
+        """
+        return (
+            self._llm_config.provider == LlmProvider.OLLAMA
+            and self.is_ollama_reachable
         )

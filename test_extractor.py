@@ -10,6 +10,7 @@ import logging
 
 from dotenv import load_dotenv
 
+from core.model_provider import ModelProvider
 from core.requirements_extractor.extractor import RequirementsExtractor
 
 logging.basicConfig(
@@ -19,17 +20,29 @@ logging.basicConfig(
 
 load_dotenv()
 
+OLLAMA_IP = "10.113.20.117"
+
 def main():
     pdf_path = Path("/home/chopancho/dev/pruebas_langchain/refi_demo/pdfs/epa.pdf")
 
-    llm_model = "google_genai:gemini-3.1-flash-lite"
-    embedding_model = "text-embedding-3-small"
-
     try:
+        model_provider = ModelProvider(
+            ip=OLLAMA_IP,
+            local_llm="gemma4:12b",
+            fallback_llm="google_genai:gemini-3.1-flash-lite",
+            local_vlm=None,
+            cloud_vlm="gemini-2.5-flash-lite",
+            local_embedding="qwen3-embedding",
+            cloud_embedding="google_genai:models/gemini-embedding-2",
+            temperature=0.1,
+        )
+
         print("Inicializando extractor...")
         extractor = RequirementsExtractor(
-            llm_ref=llm_model,
-            embedding_ref=""
+            llm_ref=model_provider.get_llm(),
+            embedding_ref=model_provider.current_embedding,
+            vlm_options=model_provider.get_vlm_options(),
+            is_local=model_provider.is_local,
         )
 
         print(f"Cargando documento: {pdf_path}")

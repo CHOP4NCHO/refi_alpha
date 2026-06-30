@@ -5,9 +5,11 @@ from ..codebase_reader.code_file import CodeFile
 from ..codebase_reader.codebase_reader import CodeBaseReader
 from .evaluator import Evaluator
 from .req_fidelity_review import ReqFidelityReview
-from ..enums import EvaluationMode, LlmProvider, RealEvaluation
+from ..enums import EvaluationMode, RealEvaluation
 from ..model_provider import ModelProvider
 from ..requirements_extractor.req_document import ReqDocument
+
+from langchain.chat_models import BaseChatModel
 
 def perform_agent_evaluation(
     evaluator: Evaluator,
@@ -15,7 +17,7 @@ def perform_agent_evaluation(
     codebase_reader: CodeBaseReader,
     file_context: list[CodeFile],
     model_provider: ModelProvider,
-    current_llm: LlmProvider,
+    current_llm: BaseChatModel,
     debug_mode: bool,
     real_batch_evaluation_type: RealEvaluation,
     log_callback=None
@@ -56,7 +58,8 @@ def perform_agent_evaluation(
                 evaluator.eval_requirement_agent(
                     codebase_reader=codebase_reader,
                     req=req,
-                    files_content=file_context
+                    files_content=file_context,
+                    llm_ref=current_llm
                 )
                 log(f"Evaluación completada para: {req.id}")
             except Exception as e:
@@ -73,7 +76,7 @@ def perform_agent_evaluation(
                 reviewed_reqs=list(evaluator._req_evaluations),
                 input_tokens=evaluator.total_input_tokens,
                 output_tokens=evaluator.total_output_tokens,
-                llm_provider=current_llm,
+                llm_provider=model_provider.get_llm_label(),
                 evaluation_mode=EvaluationMode.AGENT_AI,
                 real_evaluation=real_batch_evaluation_type,
                 response_time=elapsed_time
@@ -109,10 +112,11 @@ def perform_pipeline_evaluation(
     evaluator: Evaluator,
     req_document: ReqDocument,
     file_context: list[CodeFile],
-    current_llm,
+    current_llm: BaseChatModel,
+    model_provider: ModelProvider,
     debug_mode,
     real_batch_evaluation_type,
-    log_callback=None
+    log_callback=None,
 ) -> ReqFidelityReview:
     """
     Orchestrates the entire evaluation lifecycle:
@@ -137,7 +141,8 @@ def perform_pipeline_evaluation(
                 log("Performing evaluation in LLM Pipeline mode...")
                 evaluator.eval_requirement_llm(
                     req=req,
-                    files_content=file_context
+                    files_content=file_context,
+                    llm_ref=current_llm
                 )
                 log(f"Evaluación completada para: {req.id}")
             except Exception as e:
@@ -154,8 +159,8 @@ def perform_pipeline_evaluation(
                 reviewed_reqs=list(evaluator._req_evaluations),
                 input_tokens=evaluator.total_input_tokens,
                 output_tokens=evaluator.total_output_tokens,
-                llm_provider=current_llm,
-                evaluation_mode=EvaluationMode.AGENT_AI,
+                llm_provider=model_provider.get_llm_label(),
+                evaluation_mode=EvaluationMode.LLM_PIPELINE,
                 real_evaluation=real_batch_evaluation_type,
                 response_time=elapsed_time
             )

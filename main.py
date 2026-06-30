@@ -6,7 +6,8 @@ from ui import RefiApp
 from core import RefiService
 from core.enums import EvaluationMode, RealEvaluation
 from core.model_provider import ModelProvider
-
+from core.model_config import ModelConfig
+from core.enums import LlmProvider
 
 load_dotenv()
 
@@ -23,27 +24,30 @@ if __name__ == "__main__":
         "themename": "cosmo",
         "workdir": ".",
         "codebase_name": "REFI_SOURCE_CODE",
-        "evaluator_llm": "google_genai:gemini-3.1-flash-lite",
-        "ollama_model": "gemma4:12b",
-        "cloud_vlm_model": "gemini-2.5-flash-lite",
-        "ollama_temperature": 0.1,
-        "ollama_ip": "10.113.20.117",
+        "local_ip": "10.113.20.117",
+        "cloud_ip": "generativelanguage.googleapis.com/v1beta/openai",
+        "local_llm": "gemma4:12b",
+        "cloud_llm": "google_genai:gemini-3.1-flash-lite",
+        "cloud_vlm": "gemini-2.5-flash-lite",
+        "local_embedding": "qwen3-embedding",
+        "cloud_embedding": "google_genai:models/gemini-embedding-2",
+        "temperature": 0.1,
         "debug_mode": True,
     }
 
     root = ttk.Window(themename=CONFIG["themename"])
 
     model_provider = ModelProvider(
-        ip=CONFIG["ollama_ip"],
-        local_model=CONFIG["ollama_model"],
-        fallback_model=CONFIG["evaluator_llm"],
-        cloud_vlm_model=CONFIG["cloud_vlm_model"],
+        local_ip="localhost",
+        cloud_ip="generativelanguage.googleapis.com/v1beta/openai",
+        default_llm=ModelConfig(LlmProvider.GEMINI, "google_genai:gemini-3.1-flash-lite"),
+        default_embedding=ModelConfig(LlmProvider.GEMINI, "gemini-embedding-001", "embedding"),
+        default_vlm=ModelConfig(LlmProvider.GEMINI, "gemini-2.5-flash", "vlm"),
     )
 
     service = RefiService(
         workdir=CONFIG["workdir"],
         codebase_name=CONFIG["codebase_name"],
-        evaluator_llm=model_provider.get_multimodal_model(),
         model_provider=model_provider,
         debug_mode=CONFIG["debug_mode"],
         evaluation_mode=EvaluationMode.AGENT_AI,
