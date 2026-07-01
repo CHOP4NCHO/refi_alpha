@@ -110,13 +110,20 @@ class RefiService:
     def req_document(self) -> ReqDocument:
         return self._req_document
 
-    def add_requirement(self, description: str, req_type: str) -> Requirement:
+    def add_requirement(
+        self,
+        description: str,
+        req_type: str,
+        requirement_id: str | None = None,
+    ) -> Requirement:
         import random
         import string
 
-        req_id = "".join(
+        req_id = (requirement_id or "").strip() or "".join(
             random.choices(string.ascii_uppercase + string.digits, k=3)
         )
+        if any(requirement.id == req_id for requirement in self._req_document.requirements):
+            raise ValueError(f"Ya existe un requerimiento con ID '{req_id}'.")
         requirement = Requirement(
             id=req_id,
             description=description,
@@ -130,6 +137,27 @@ class RefiService:
 
     def clear_requirements(self) -> None:
         self._req_document.requirements.clear()
+
+    def remove_requirement(self, requirement_id: str) -> bool:
+        """Remove a requirement by ID and report whether it existed."""
+        previous_count = len(self._req_document.requirements)
+        self._req_document.requirements = [
+            requirement
+            for requirement in self._req_document.requirements
+            if requirement.id != requirement_id
+        ]
+        return len(self._req_document.requirements) != previous_count
+
+    def update_requirement_type(self, requirement_id: str, req_type: str) -> Requirement:
+        """Replace an immutable requirement with a copy using the requested type."""
+        for index, requirement in enumerate(self._req_document.requirements):
+            if requirement.id == requirement_id:
+                updated = requirement.model_copy(update={"type": req_type})
+                # model_copy does not validate updates in Pydantic v2.
+                updated = Requirement.model_validate(updated.model_dump())
+                self._req_document.requirements[index] = updated
+                return updated
+        raise ValueError(f"No existe un requerimiento con ID '{requirement_id}'.")
 
     def extract_requirements_from_pdf(self, pdf_path: str | Path) -> ReqDocument:
         path = Path(pdf_path).expanduser()

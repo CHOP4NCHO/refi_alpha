@@ -3,6 +3,7 @@
 from PyQt6.QtCore import pyqtSignal
 from PyQt6.QtWidgets import (
     QComboBox,
+    QFormLayout,
     QMessageBox,
     QWidget,
 )
@@ -26,6 +27,15 @@ class ConfigPage(QWidget):
         self._loading = False
 
     def _setup_ui(self) -> None:
+        self.debugLabel.setText("Modo Debug")
+        tooltips = {
+            self.provider_combo: "Servicio que suministra los modelos disponibles.",
+            self.llm_combo: "Modelo de lenguaje que evalúa el cumplimiento de los requerimientos.",
+            self.vlm_combo: "Modelo visual utilizado para interpretar documentos PDF.",
+            self.embedding_combo: "Modelo que convierte texto en vectores para la búsqueda semántica.",
+        }
+        for widget, tooltip in tooltips.items():
+            widget.setToolTip(tooltip)
         self.debug_check.toggled.connect(self._set_debug)
         for value in EvaluationMode:
             self.eval_mode_combo.addItem(self._evaluation_label(value), value)
@@ -39,6 +49,15 @@ class ConfigPage(QWidget):
         self.llm_combo.currentIndexChanged.connect(self._set_llm)
         self.vlm_combo.currentIndexChanged.connect(self._set_vlm)
         self.embedding_combo.currentIndexChanged.connect(self._set_embedding)
+
+    def set_compact(self, compact: bool) -> None:
+        policy = (
+            QFormLayout.RowWrapPolicy.WrapAllRows
+            if compact
+            else QFormLayout.RowWrapPolicy.DontWrapRows
+        )
+        self.generalForm.setRowWrapPolicy(policy)
+        self.modelForm.setRowWrapPolicy(policy)
 
     def _load_state(self) -> None:
         provider = self.service.model_provider.current_provider or LlmProvider.GEMINI

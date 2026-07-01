@@ -33,5 +33,5 @@ designer ui_pyqt/forms/main_window.ui
 ```
 
 No es necesario ejecutar `pyuic6` después de guardarlos. Conserva los nombres de
-objeto usados desde Python (por ejemplo `run_button`, `pages` o `metricsLayout`) para
+objeto usados desde Python (por ejemplo `run_button`, `pages` o `info_button`) para
 que sus señales y datos continúen conectados.

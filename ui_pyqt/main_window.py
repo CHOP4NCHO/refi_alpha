@@ -4,15 +4,15 @@ from datetime import datetime
 from pathlib import Path
 
 from PyQt6.QtCore import QThreadPool
-from PyQt6.QtWidgets import QButtonGroup, QMainWindow, QMessageBox, QWidget
+from PyQt6.QtGui import QResizeEvent
+from PyQt6.QtWidgets import QButtonGroup, QLayout, QMainWindow, QMessageBox, QPushButton, QWidget
 
 from core.exceptions import DomainError, ModelConfigurationError, ModelsNotConfiguredError
 
-from .components import Metric
 from .config_page import ConfigPage
 from .evaluation_page import EvaluationPage
 from .requirements_page import RequirementsPage
-from .theme import DARK_STYLESHEET, LIGHT_STYLESHEET
+from .theme import LIGHT_STYLESHEET
 from .ui_loader import load_ui
 from .workers import ServiceWorker
 from .workspace_page import WorkspacePage
@@ -30,45 +30,48 @@ class RefiMainWindow(QMainWindow):
     ):
         super().__init__(parent)
         self.service = service
-        self._dark_mode = False
         self.thread_pool = QThreadPool.globalInstance()
         self._workers: set[ServiceWorker] = set()
-        self._page_titles = [
-            ("Espacio de trabajo", "Define el código que el evaluador tendrá a la vista."),
-            ("Requerimientos", "Carga y organiza el alcance funcional que quieres comprobar."),
-            ("Evaluación", "Ejecuta el análisis y explora sus resultados."),
-            ("Configuración", "Prepara modelos, proveedor y estrategia de evaluación."),
+        self._compact_mode: bool | None = None
+        self._page_titles = ["Espacio de trabajo", "Requerimientos", "Evaluación", "Configuración"]
+        self._page_help = [
+            "Selecciona un repositorio y arrastra archivos al contexto de evaluación.",
+            "Agrega, importa, clasifica o elimina los requerimientos a comprobar.",
+            "Revisa el contexto preparado, ejecuta el análisis y consulta sus informes.",
+            "Configura el comportamiento, proveedor y modelos usados por la aplicación.",
         ]
 
         load_ui("main_window.ui", self)
         self.setWindowTitle(title)
         self.resize(*size)
+        self.setMinimumSize(720, 560)
         self.setStyleSheet(LIGHT_STYLESHEET)
         self._setup_ui()
         self._connect_pages()
-        self._update_metrics()
         self.log_message("Sistema listo. La interfaz PyQt6 está conectada a RefiService.")
 
     def _setup_ui(self) -> None:
         navigation = QButtonGroup(self)
         navigation.setExclusive(True)
-        nav_buttons = (
+        self.nav_buttons = (
             self.workspaceNavButton,
             self.requirementsNavButton,
             self.evaluationNavButton,
             self.configNavButton,
         )
-        for index, button in enumerate(nav_buttons):
+        for index, button in enumerate(self.nav_buttons):
             button.clicked.connect(lambda checked=False, page=index: self.show_page(page))
             navigation.addButton(button, index)
+        self.menu_button = QPushButton("☰", self.header)
+        self.menu_button.setToolTip("Mostrar u ocultar la navegación")
+        self.menu_button.setFixedWidth(42)
+        self.menu_button.clicked.connect(self._toggle_sidebar)
+        self.headerLayout.insertWidget(0, self.menu_button)
         self.page_title.setObjectName("pageTitle")
-        self.files_metric = Metric("Archivos", "0")
-        self.requirements_metric = Metric("Requisitos", "0")
-        self.reviews_metric = Metric("Informes", "0")
-        self.theme_button.toggled.connect(self._toggle_theme)
-        self.metricsLayout.addWidget(self.files_metric)
-        self.metricsLayout.addWidget(self.requirements_metric)
-        self.metricsLayout.addWidget(self.reviews_metric)
+        self.page_title.setMinimumWidth(0)
+        self.page_title.setMaximumWidth(16777215)
+        self.titleLayout.setSizeConstraint(QLayout.SizeConstraint.SetDefaultConstraint)
+        self.info_button.clicked.connect(self._show_page_help)
 
         self.workspace_page = WorkspacePage(self.service)
         self.requirements_page = RequirementsPage(self.service)
@@ -83,37 +86,57 @@ class RefiMainWindow(QMainWindow):
             self.pages.addWidget(page)
         self.console_toggle.toggled.connect(self._toggle_console)
         self.consoleTitle.setObjectName("sectionTitle")
+        self.statusBar().setSizeGripEnabled(True)
+        self._apply_responsive_layout(self.width())
 
     def _connect_pages(self) -> None:
         self.workspace_page.message.connect(self.log_message)
-        self.workspace_page.context_changed.connect(self._update_metrics)
+        self.workspace_page.context_changed.connect(self.evaluation_page.refresh_summary)
         self.requirements_page.message.connect(self.log_message)
-        self.requirements_page.requirements_changed.connect(self._update_metrics)
+        self.requirements_page.requirements_changed.connect(self.evaluation_page.refresh_summary)
         self.requirements_page.import_requested.connect(self.start_pdf_import)
         self.evaluation_page.evaluation_requested.connect(self.start_evaluation)
         self.config_page.message.connect(self.log_message)
+        self.config_page.message.connect(lambda _message: self.evaluation_page.refresh_summary())
 
     def show_page(self, index: int) -> None:
         self.pages.setCurrentIndex(index)
-        title, subtitle = self._page_titles[index]
-        self.page_title.setText(title)
-        self.page_subtitle.setText(subtitle)
+        self.page_title.setText(self._page_titles[index])
         if index == 2:
             self.evaluation_page.refresh()
+        if self._compact_mode:
+            self.sidebar.hide()
+
+    def resizeEvent(self, event: QResizeEvent) -> None:
+        super().resizeEvent(event)
+        if hasattr(self, "sidebar") and hasattr(self, "workspace_page"):
+            self._apply_responsive_layout(event.size().width())
+
+    def _apply_responsive_layout(self, width: int) -> None:
+        compact = width < 980
+        if compact != self._compact_mode:
+            self._compact_mode = compact
+            self.sidebar.setVisible(not compact)
+            self.menu_button.setVisible(compact)
+        self.theme_button.setVisible(width >= 820)
+        margin = 12 if compact else 24
+        self.bodyLayout.setContentsMargins(margin, 12 if compact else 20, margin, 12)
+        self.console.setMaximumHeight(90 if compact else 125)
+        self.workspace_page.set_compact(compact)
+        self.requirements_page.set_compact(compact)
+        self.evaluation_page.set_compact(compact)
+        self.config_page.set_compact(compact)
+
+    def _toggle_sidebar(self) -> None:
+        self.sidebar.setVisible(not self.sidebar.isVisible())
 
     def _toggle_console(self, hidden: bool) -> None:
         self.console.setVisible(not hidden)
         self.console_toggle.setText("Mostrar" if hidden else "Ocultar")
 
-    def _toggle_theme(self, dark_mode: bool) -> None:
-        self._dark_mode = dark_mode
-        self.setStyleSheet(DARK_STYLESHEET if dark_mode else LIGHT_STYLESHEET)
-        self.theme_button.setText("☀  Modo claro" if dark_mode else "☾  Modo oscuro")
-
-    def _update_metrics(self) -> None:
-        self.files_metric.set_value(len(self.service.file_context))
-        self.requirements_metric.set_value(len(self.service.get_requirements()))
-        self.reviews_metric.set_value(len(self.service.get_saved_reviews()))
+    def _show_page_help(self) -> None:
+        index = self.pages.currentIndex()
+        QMessageBox.information(self, f"Uso de {self._page_titles[index]}", self._page_help[index])
 
     def log_message(self, message: str) -> None:
         timestamp = datetime.now().strftime("%H:%M:%S")
@@ -132,7 +155,7 @@ class RefiMainWindow(QMainWindow):
         self.requirements_page.finish_import(document=document)
         count = len(document.requirements)
         self.log_message(f"Extracción completada: {count} requerimiento(s) cargado(s).")
-        self._update_metrics()
+        self.evaluation_page.refresh_summary()
         QMessageBox.information(self, "Extracción completada", f"Se cargaron {count} requerimiento(s).")
 
     def _pdf_import_failed(self, error: Exception, trace: str) -> None:
@@ -166,7 +189,7 @@ class RefiMainWindow(QMainWindow):
         self.evaluation_page.set_busy(False)
         self.evaluation_page.refresh()
         self.requirements_page.refresh()
-        self._update_metrics()
+        self.evaluation_page.refresh_summary()
         output = self.service.result_manager.default_save_path / self.service.result_manager.default_save_name
         self.log_message(f"Evaluación completada. Resultados guardados en: {output}")
         QMessageBox.information(self, "Evaluación completada", "El informe se generó correctamente.")

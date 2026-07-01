@@ -12,8 +12,8 @@
   </property>
   <property name="minimumSize">
    <size>
-    <width>1040</width>
-    <height>680</height>
+    <width>720</width>
+    <height>560</height>
    </size>
   </property>
   <property name="windowTitle">
@@ -76,7 +76,7 @@
        <item>
         <widget class="QLabel" name="brandCaption">
          <property name="text">
-          <string>REQUIREMENTS FIDELITY</string>
+          <string></string>
          </property>
         </widget>
        </item>
@@ -167,7 +167,7 @@
        <item>
         <widget class="QLabel" name="versionLabel">
          <property name="text">
-          <string>Prototype 2 (wip)</string>
+          <string></string>
          </property>
          <property name="muted" stdset="0">
           <bool>true</bool>
@@ -210,45 +210,38 @@
           <number>14</number>
          </property>
          <item>
-          <layout class="QVBoxLayout" name="titleLayout">
+          <layout class="QHBoxLayout" name="titleLayout">
+           <property name="sizeConstraint"><enum>QLayout::SizeConstraint::SetDefaultConstraint</enum></property>
            <item>
             <widget class="QLabel" name="page_title">
+             <property name="minimumSize"><size><width>0</width><height>0</height></size></property>
+             <property name="maximumSize"><size><width>16777215</width><height>16777215</height></size></property>
              <property name="text">
               <string>Espacio de trabajo</string>
              </property>
             </widget>
            </item>
            <item>
-            <widget class="QLabel" name="page_subtitle">
+            <widget class="QPushButton" name="info_button">
+             <property name="minimumSize"><size><width>38</width><height>32</height></size></property>
+             <property name="maximumSize"><size><width>38</width><height>32</height></size></property>
+             <property name="toolTip"><string>Ver información de uso de esta pestaña</string></property>
              <property name="text">
-              <string>Define el código que el evaluador tendrá a la vista.</string>
-             </property>
-             <property name="muted" stdset="0">
-              <bool>true</bool>
+              <string>?</string>
              </property>
             </widget>
            </item>
           </layout>
          </item>
          <item>
-          <widget class="QPushButton" name="theme_button">
-           <property name="toolTip">
-            <string>Alternar entre los modos claro y oscuro</string>
-           </property>
-           <property name="text">
-            <string>☾  Modo oscuro</string>
-           </property>
-           <property name="checkable">
-            <bool>true</bool>
-           </property>
-          </widget>
+          <spacer name="headerStretch"><property name="orientation"><enum>Qt::Horizontal</enum></property><property name="sizeHint"><size><width>40</width><height>20</height></size></property></spacer>
          </item>
          <item>
-          <layout class="QHBoxLayout" name="metricsLayout">
-           <property name="spacing">
-            <number>6</number>
-           </property>
-          </layout>
+          <widget class="QPushButton" name="theme_button">
+           <property name="enabled"><bool>false</bool></property>
+           <property name="toolTip"><string>El modo claro es el modo disponible</string></property>
+           <property name="text"><string>☀  Modo claro</string></property>
+          </widget>
          </item>
         </layout>
        </widget>
