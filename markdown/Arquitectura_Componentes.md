@@ -167,16 +167,18 @@ innecesarios al arrancar la aplicación.
 # ModelProvider
 
 **ModelProvider** encapsula la selección y creación de modelos de
-inteligencia artificial. Actúa como fábrica que provee instancias
-estándar de LangChain (`BaseChatModel`, `Embeddings`) sin exponer los
-detalles de conexión a la lógica de negocio.
+inteligencia artificial. Actúa como fachada que coordina catálogos y
+fábricas para proveer instancias estándar de LangChain
+(`BaseChatModel`, `Embeddings`) sin exponer los detalles de conexión a
+la lógica de negocio.
 
 **Proveedores soportados**
 
 -   **Ollama** (local): modelos descubiertos dinámicamente vía API
     (`/api/tags`). Conexión verificada al iniciar.
--   **Gemini** (cloud): modelos estáticos configurados vía
-    `google_genai`.
+-   **Gemini** (cloud): modelos configurados vía `google_genai`.
+-   **OpenAI** (cloud): modelos vía API REST.
+-   **Claude** (cloud): modelos chat sin soporte de embeddings ni VLM.
 
 **Fallback automático**
 
@@ -188,6 +190,224 @@ las peticiones al proveedor cloud sin intervención del usuario.
 Cada operación del sistema (evaluación, importación PDF) valida que
 los modelos requeridos estén configurados antes de ejecutarse, elevando
 excepciones claras cuando faltan componentes.
+
+**Dependencias internas**
+
+-   `ModelFactory` — construye instancias ejecutables de LangChain.
+-   `ProviderCatalog` (y subclases) — descubren y clasifican modelos
+    disponibles por proveedor.
+-   `ModelConfig` — estructura de datos inmutable para configuración
+    de un modelo.
+
+# ModelConfig
+
+**Responsabilidad**
+
+Estructura de datos inmutable (`dataclass`) que representa la
+configuración de un modelo de IA seleccionado.
+
+**Campos**
+
+-   `provider` (`LlmProvider | None`): proveedor propietario del
+    modelo.
+-   `model_id` (`str | None`): identificador único del modelo dentro
+    del proveedor.
+-   `category` (`str`): clasificación funcional — `chat`, `embedding`
+    o `vlm`.
+
+**Métodos**
+
+-   `is_configured() -> bool`: retorna `True` cuando proveedor e
+    identificador no son `None`.
+
+**Uso**
+
+Se utiliza como unidad de intercambio entre catálogos, fábricas y la
+fachada `ModelProvider`.
+
+# ModelFactory
+
+**Responsabilidad**
+
+Construye instancias ejecutables de LangChain (`BaseChatModel`,
+`Embeddings`) y objetos Docling (`ApiVlmOptions`) a partir de un
+`ModelConfig`. Aísla los detalles de conexión a cada proveedor.
+
+**Constructor**
+
+Recibe `local_ip`, `cloud_ip` y `temperature` como parámetros
+globales aplicados a todas las instancias creadas.
+
+**Métodos**
+
+-   `create_llm(config, operation)`: crea un `BaseChatModel`
+    según el proveedor.
+    -   `Ollama` → `ChatOllama` con `base_url` local y formato JSON.
+    -   `Gemini / OpenAI / Claude` → `init_chat_model` de LangChain.
+-   `create_embeddings(config, operation)`: crea un objeto
+    `Embeddings`.
+    -   `Ollama` → `init_embeddings` con prefijo `ollama:`.
+    -   `Gemini / OpenAI` → `init_embeddings` directo.
+    -   `Claude` → eleva `ValueError` (no soportado).
+-   `create_vlm_options(config, prompt, operation)`: devuelve un
+    `ApiVlmOptions` para Docling.
+    -   `Ollama` → endpoint local `/v1/chat/completions`.
+    -   `OpenAI` → endpoint remoto con API key.
+    -   `Gemini` → endpoint `generativelanguage.googleapis.com` con
+        prefijo `google_genai:` eliminado.
+
+**Excepciones**
+
+-   `ModelConfigurationError` si `config` no está configurado.
+-   `ValueError` si el proveedor no es soportado.
+
+# Catálogos de Modelos
+
+## ProviderCatalog (base)
+
+**Responsabilidad**
+
+Clase abstracta que define la interfaz para descubrir y clasificar
+modelos de un proveedor determinado.
+
+**Campos**
+
+-   `provider` (`LlmProvider`): proveedor asociado.
+-   `_cache` (`list[ModelConfig] | None`): caché de modelos
+    descubiertos.
+-   `_source` (`"remote" | "empty"`): origen de los datos del
+    catálogo.
+-   `_last_error` (`str | None`): último error de conexión registrado.
+
+**Métodos**
+
+-   `list_models() -> list[ModelConfig]`: retorna los modelos del
+    caché (refresca si es necesario).
+-   `refresh()`: fuerza la recarga desde la fuente (implementación
+    específica por subclase).
+-   `get_status() -> str`: describe el estado del catálogo.
+
+---
+
+## OllamaCatalog
+
+**Responsabilidad**
+
+Descubre modelos instalados en una instancia local de Ollama mediante
+el endpoint `/api/tags`.
+
+**Clasificación** (`_classify`)
+
+-   `embedding`: nombres contienen `embed`, `nomic-embed`,
+    `mxbai-embed`, `bge-`, `e5-`, `snowflake-arctic-embed`.
+-   `vlm`: nombres contienen `vision`, `llava`, `bakllava`,
+    `minicpm-v`, `moondream`, `granite3.2-vision`, `gemma3`.
+-   `chat`: por defecto para el resto.
+
+---
+
+## OpenAICatalog
+
+**Responsabilidad**
+
+Lista modelos disponibles en la API de OpenAI.
+
+**Clasificación** (`_classify`)
+
+-   `embedding`: prefijo `text-embedding`.
+-   `chat`: nombres que contienen `gpt-4o`, `gpt-4.1`, `gpt-5` o
+    prefijo `gpt-`.
+
+---
+
+## GeminiCatalog
+
+**Responsabilidad**
+
+Lista modelos de Google Gemini. Consulta la API REST de
+`generativelanguage.googleapis.com` cuando la API key está disponible.
+
+**Clasificación** (`_classify`)
+
+-   `embedding`: contiene `embedding`.
+-   `chat`: contiene `gemini` y no contiene `image`, `tts` ni
+    `preview`.
+-   `vlm`: contiene `gemini` (fallback).
+
+---
+
+## ClaudeCatalog
+
+**Responsabilidad**
+
+Lista modelos de Anthropic Claude. Solo soporta categoría `chat` (sin
+embeddings ni VLM).
+
+**Clasificación**: todos los modelos se clasifican como `chat`.
+
+# Enums de Dominio
+
+## LlmProvider
+
+Define los proveedores de modelos de lenguaje soportados por el
+sistema.
+
+-   `GEMINI` — Google Gemini (cloud).
+-   `OLLAMA` — Ollama (local).
+-   `OPENAI` — OpenAI (cloud).
+-   `CLAUDE` — Anthropic Claude (cloud).
+
+## EvaluationMode
+
+Establece los modos de evaluación disponibles.
+
+-   `LLM_PIPELINE` — Evaluación directa con contexto explícito, sin
+    RAG.
+-   `AGENT_AI` — Ciclo agéntico con RAG vectorial y herramientas
+    especializadas.
+
+## RealEvaluation
+
+Resultado binario de la evaluación de un requerimiento.
+
+-   `FULFILLED` — Requerimiento implementado.
+-   `NOT_FULFILLED` — Requerimiento no implementado.
+
+## RefiOperations
+
+Identificador de las operaciones principales del sistema.
+
+-   `EVALUATE_PIPELINE` — Ejecutar evaluación en modo pipeline.
+-   `EVALUATE_AGENT` — Ejecutar evaluación en modo agente.
+-   `IMPORT_PDF` — Importar documento de requerimientos.
+
+# Excepciones de Dominio
+
+## DomainError
+
+Excepción base para todos los errores de dominio del sistema.
+
+## ModelConfigurationError
+
+Se eleva cuando un modelo requerido no está configurado para una
+operación determinada.
+
+-   `model_type`: tipo de modelo (`"llm"`, `"embedding"`, `"vlm"`).
+-   `operation`: operación que requiere el modelo.
+
+## ModelsNotConfiguredError
+
+Se eleva cuando faltan múltiples modelos para una operación.
+
+-   `missing_models`: lista de tipos de modelo faltantes.
+-   `operation`: operación que requiere los modelos.
+
+## ProviderConnectionError
+
+Se eleva cuando no se puede conectar a un proveedor externo.
+
+-   `provider`: nombre del proveedor.
+-   `details`: información adicional del error.
 
 # Proveedores Externos
 

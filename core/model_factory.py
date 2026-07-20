@@ -95,10 +95,12 @@ class ModelFactory:
         if config.provider == LlmProvider.GEMINI:
             api_key = os.environ.get("GOOGLE_API_KEY", "")
             headers = {"Authorization": f"Bearer {api_key}"} if api_key else {}
+            trimmed_id = config.model_id.replace("google_genai:","")
+            trimmed_id = trimmed_id.replace("models/","")
             return ApiVlmOptions(
-                url=AnyUrl(f"https://{self._cloud_ip}/chat/completions"),
+                url=AnyUrl("https://generativelanguage.googleapis.com/v1beta/openai/chat/completions"),
                 headers=headers,
-                params=dict(model=config.model_id),
+                params=dict(model=trimmed_id),
                 prompt=prompt,
                 timeout=90,
                 scale=1.0,

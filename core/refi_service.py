@@ -188,7 +188,6 @@ class RefiService:
 
             self._requirements_extractor = RequirementsExtractor(
                 llm_ref=self._model_provider.get_llm(),
-                embedding_ref=self._model_provider.get_embeddings(), #type: ignore
                 vlm_options=self._model_provider.get_vlm_options(),
                 is_local=self._model_provider.is_local_provider(),
             )

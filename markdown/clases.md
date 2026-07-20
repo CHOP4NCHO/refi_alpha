@@ -40,8 +40,11 @@ Clases principales:
 - `AppSettings`
 - `ModelProvider`
 - `ModelConfig`
-- `ModelVendor`
-- `ModelCategory`
+- `ModelFactory`
+- `LlmProvider`
+- `EvaluationMode`
+- `RealEvaluation`
+- `RefiOperations`
 
 ---
 
@@ -81,6 +84,112 @@ Responsabilidades principales:
 
 ---
 
+### `ProviderCatalog`
+
+`ProviderCatalog` es una clase abstracta que define la interfaz para descubrir y clasificar modelos de un proveedor determinado.
+
+Responsabilidades principales:
+
+- Mantener un caché de modelos descubiertos.
+- Clasificar modelos por categoría funcional.
+- Reportar el origen de los datos (remoto o vacío).
+- Registrar errores de conexión.
+
+Métodos principales:
+
+- `list_models()` — retorna los modelos del caché.
+- `refresh()` — fuerza la recarga desde la fuente.
+- `get_status()` — describe el estado del catálogo.
+
+---
+
+### `OllamaCatalog`
+
+`OllamaCatalog` descubre modelos instalados en una instancia local de Ollama mediante el endpoint `/api/tags`.
+
+Responsabilidades principales:
+
+- Conectar a la API local de Ollama.
+- Descubrir modelos disponibles.
+- Clasificar modelos en categorías (`chat`, `embedding`, `vlm`).
+
+---
+
+### `OpenAICatalog`
+
+`OpenAICatalog` lista modelos disponibles en la API de OpenAI.
+
+Responsabilidades principales:
+
+- Consultar la API REST de OpenAI.
+- Clasificar modelos por categoría funcional.
+- Manejar ausencia de API key de forma graceful.
+
+---
+
+### `GeminiCatalog`
+
+`GeminiCatalog` lista modelos de Google Gemini. Consulta la API REST de `generativelanguage.googleapis.com`.
+
+Responsabilidades principales:
+
+- Consultar la API REST de Gemini.
+- Clasificar modelos en categorías (`chat`, `embedding`, `vlm`).
+- Manejar ausencia de API key de forma graceful.
+
+---
+
+### `ClaudeCatalog`
+
+`ClaudeCatalog` lista modelos de Anthropic Claude. Solo soporta categoría `chat` (sin embeddings ni VLM).
+
+Responsabilidades principales:
+
+- Consultar la API REST de Anthropic.
+- Clasificar todos los modelos como `chat`.
+- Manejar ausencia de API key de forma graceful.
+
+---
+
+### `DomainError`
+
+`DomainError` es la excepción base para todos los errores de dominio del sistema. Todas las excepciones específicas del dominio heredan de esta clase.
+
+---
+
+### `ModelConfigurationError`
+
+`ModelConfigurationError` se eleva cuando un modelo requerido no está configurado para una operación determinada.
+
+Campos principales:
+
+- `model_type` — tipo de modelo faltante (`"llm"`, `"embedding"`, `"vlm"`).
+- `operation` — operación que requiere el modelo.
+
+---
+
+### `ModelsNotConfiguredError`
+
+`ModelsNotConfiguredError` se eleva cuando faltan múltiples modelos para una operación.
+
+Campos principales:
+
+- `missing_models` — lista de tipos de modelo faltantes.
+- `operation` — operación que requiere los modelos.
+
+---
+
+### `ProviderConnectionError`
+
+`ProviderConnectionError` se eleva cuando no se puede conectar a un proveedor externo.
+
+Campos principales:
+
+- `provider` — nombre del proveedor.
+- `details` — información adicional del error.
+
+---
+
 ### `ModelConfig`
 
 `ModelConfig` representa la configuración de un modelo específico. Contiene información mínima para identificar qué modelo se utilizará, a qué proveedor pertenece y cuál es su categoría funcional.
@@ -92,11 +201,77 @@ Responsabilidades principales:
 - Indicar la categoría del modelo.
 - Permitir validar si una configuración de modelo está completa.
 
-Ejemplos de categorías:
+Categorías soportadas:
 
-- LLM
-- VLM
-- Embeddings
+- `chat` — modelos de lenguaje para conversación.
+- `embedding` — modelos de vectores para búsqueda semántica.
+- `vlm` — modelos visuales para procesamiento de documentos.
+
+---
+
+### `ModelFactory`
+
+`ModelFactory` construye instancias ejecutables de LangChain (`BaseChatModel`, `Embeddings`) y objetos Docling (`ApiVlmOptions`) a partir de un `ModelConfig`. Aísla los detalles de conexión a cada proveedor.
+
+Responsabilidades principales:
+
+- Crear instancias de LLM según el proveedor.
+- Crear instancias de embeddings según el proveedor.
+- Crear opciones VLM para Docling.
+- Manejar las diferencias de conexión entre proveedores locales y cloud.
+
+Métodos principales:
+
+- `create_llm(config, operation)` — crea un `BaseChatModel`.
+- `create_embeddings(config, operation)` — crea un objeto `Embeddings`.
+- `create_vlm_options(config, prompt, operation)` — devuelve un `ApiVlmOptions`.
+
+---
+
+### `LlmProvider`
+
+`LlmProvider` es una enumeración que define los proveedores de modelos de lenguaje soportados por el sistema.
+
+Valores principales:
+
+- `GEMINI` — Google Gemini (cloud).
+- `OLLAMA` — Ollama (local).
+- `OPENAI` — OpenAI (cloud).
+- `CLAUDE` — Anthropic Claude (cloud).
+
+---
+
+### `EvaluationMode`
+
+`EvaluationMode` es una enumeración que establece los modos de evaluación disponibles.
+
+Valores principales:
+
+- `LLM_PIPELINE` — Evaluación directa con contexto explícito, sin RAG.
+- `AGENT_AI` — Ciclo agéntico con RAG vectorial y herramientas especializadas.
+
+---
+
+### `RealEvaluation`
+
+`RealEvaluation` es una enumeración que representa el resultado binario de la evaluación de un requerimiento.
+
+Valores principales:
+
+- `FULFILLED` — Requerimiento implementado.
+- `NOT_FULFILLED` — Requerimiento no implementado.
+
+---
+
+### `RefiOperations`
+
+`RefiOperations` es una enumeración que identifica las operaciones principales del sistema.
+
+Valores principales:
+
+- `EVALUATE_PIPELINE` — Ejecutar evaluación en modo pipeline.
+- `EVALUATE_AGENT` — Ejecutar evaluación en modo agente.
+- `IMPORT_PDF` — Importar documento de requerimientos.
 
 ---
 

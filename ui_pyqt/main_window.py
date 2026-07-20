@@ -3,7 +3,7 @@
 from datetime import datetime
 from pathlib import Path
 
-from PyQt6.QtCore import Qt, QThreadPool
+from PyQt6.QtCore import Qt, QThreadPool, pyqtSignal
 from PyQt6.QtGui import QPixmap, QResizeEvent
 from PyQt6.QtWidgets import QButtonGroup, QLayout, QMainWindow, QMessageBox, QPushButton, QWidget
 
@@ -12,6 +12,7 @@ from core.exceptions import DomainError, ModelConfigurationError, ModelsNotConfi
 from .config_page import ConfigPage
 from .evaluation_page import EvaluationPage
 from .requirements_page import RequirementsPage
+from .review_viewer_page import ReviewViewerPage
 from .theme import LIGHT_STYLESHEET
 from .theme_manager import ThemeManager
 from .ui_loader import load_ui
@@ -22,6 +23,8 @@ from .workspace_page import WorkspacePage
 class RefiMainWindow(QMainWindow):
     """A presentation-only shell whose state and operations come from RefiService."""
 
+    back_to_landing = pyqtSignal()
+
     def __init__(
         self,
         service,
@@ -29,21 +32,26 @@ class RefiMainWindow(QMainWindow):
         size: tuple[int, int] = (1280, 820),
         parent: QWidget | None = None,
         theme_manager: ThemeManager | None = None,
+        mode: str = "evaluation",
+        review_data: dict | None = None,
     ):
         super().__init__(parent)
         self.service = service
+        self.mode = mode
+        self.review_data = review_data
         if theme_manager is None:
             theme_manager = ThemeManager()
         self.theme_manager = theme_manager
         self.thread_pool = QThreadPool.globalInstance()
         self._workers: set[ServiceWorker] = set()
         self._compact_mode: bool | None = None
-        self._page_titles = ["Espacio de trabajo", "Requerimientos", "Evaluación", "Configuración"]
+        self._page_titles = ["Espacio de trabajo", "Requerimientos", "Evaluación", "Configuración", "Revisión"]
         self._page_help = [
             "Selecciona un repositorio y arrastra archivos al contexto de evaluación.",
             "Agrega, importa, clasifica o elimina los requerimientos a comprobar.",
             "Revisa el contexto preparado, ejecuta el análisis y consulta sus informes.",
             "Configura el comportamiento, proveedor y modelos usados por la aplicación.",
+            "Consulta los resultados de una evaluación previamente exportada.",
         ]
 
         load_ui("main_window.ui", self)
@@ -72,6 +80,20 @@ class RefiMainWindow(QMainWindow):
         self.menu_button.setFixedWidth(42)
         self.menu_button.clicked.connect(self._toggle_sidebar)
         self.headerLayout.insertWidget(0, self.menu_button)
+
+        self.back_button = QPushButton("← Volver", self.header)
+        self.back_button.setToolTip("Volver a la pantalla de inicio")
+        self.back_button.setCursor(Qt.CursorShape.PointingHandCursor)
+        self.back_button.clicked.connect(self.back_to_landing.emit)
+        self.back_button.setVisible(False)
+        self.headerLayout.insertWidget(0, self.back_button)
+
+        self.sidebar_back_button = QPushButton("← Volver al inicio", self.sidebar)
+        self.sidebar_back_button.setToolTip("Volver a la pantalla de inicio")
+        self.sidebar_back_button.setCursor(Qt.CursorShape.PointingHandCursor)
+        self.sidebar_back_button.clicked.connect(self.back_to_landing.emit)
+        self.sidebarLayout.insertWidget(3, self.sidebar_back_button)
+
         self._setup_brand_logo()
         self.page_title.setObjectName("pageTitle")
         self.page_title.setMinimumWidth(0)
@@ -92,10 +114,24 @@ class RefiMainWindow(QMainWindow):
             self.config_page,
         ):
             self.pages.addWidget(page)
+
+        self.review_viewer_page = None
+        if self.mode == "review" and self.review_data is not None:
+            self.review_viewer_page = ReviewViewerPage(
+                self.review_data, theme_manager=self.theme_manager
+            )
+            self.review_viewer_page.back_requested.connect(self.back_to_landing.emit)
+            self.pages.addWidget(self.review_viewer_page)
+
         self.console_toggle.toggled.connect(self._toggle_console)
         self.consoleTitle.setObjectName("sectionTitle")
         self.statusBar().setSizeGripEnabled(True)
-        self._apply_responsive_layout(self.width())
+
+        if self.mode == "review":
+            self._apply_review_mode()
+        else:
+            self.consoleCard.setVisible(False)
+            self._apply_responsive_layout(self.width())
 
     def _setup_brand_logo(self) -> None:
         logo_path = Path(__file__).with_name("refi.png")
@@ -127,13 +163,25 @@ class RefiMainWindow(QMainWindow):
     def show_page(self, index: int) -> None:
         self.pages.setCurrentIndex(index)
         self.page_title.setText(self._page_titles[index])
+        self.consoleCard.setVisible(index == 2)
         if index == 2:
             self.evaluation_page.refresh()
 
     def resizeEvent(self, event: QResizeEvent) -> None:
         super().resizeEvent(event)
+        if self.mode == "review":
+            return
         if hasattr(self, "sidebar") and hasattr(self, "workspace_page"):
             self._apply_responsive_layout(event.size().width())
+
+    def _apply_review_mode(self) -> None:
+        self.sidebar.setVisible(False)
+        self.menu_button.setVisible(False)
+        self.back_button.setVisible(True)
+        self.consoleCard.setVisible(False)
+        self.info_button.setVisible(False)
+        self.pages.setCurrentIndex(4)
+        self.page_title.setText("Revisión de evaluación")
 
     def _apply_responsive_layout(self, width: int) -> None:
         compact = width < 980

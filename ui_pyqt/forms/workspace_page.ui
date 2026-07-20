@@ -2,17 +2,236 @@
 <ui version="4.0">
  <class>WorkspacePage</class>
  <widget class="QWidget" name="WorkspacePage">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>1046</width>
+    <height>458</height>
+   </rect>
+  </property>
   <layout class="QVBoxLayout" name="pageLayout">
-   <property name="spacing"><number>14</number></property><property name="leftMargin"><number>0</number></property><property name="topMargin"><number>0</number></property><property name="rightMargin"><number>0</number></property><property name="bottomMargin"><number>0</number></property>
-   <item><widget class="QFrame" name="workspaceCard"><property name="card" stdset="0"><bool>true</bool></property><layout class="QVBoxLayout" name="workspaceCardLayout"><property name="spacing"><number>12</number></property><property name="leftMargin"><number>18</number></property><property name="topMargin"><number>16</number></property><property name="rightMargin"><number>18</number></property><property name="bottomMargin"><number>18</number></property>
-    <item><widget class="QLabel" name="workspaceTitle"><property name="text"><string>Espacio de trabajo</string></property></widget></item>
-    <item><layout class="QHBoxLayout" name="workspaceRow"><item><widget class="QLabel" name="activeRepoCaption"><property name="text"><string>Repositorio activo</string></property></widget></item><item><widget class="QLabel" name="workspace_label"><property name="text"><string>—</string></property></widget></item><item><spacer name="workspaceStretch"><property name="orientation"><enum>Qt::Horizontal</enum></property><property name="sizeHint"><size><width>40</width><height>20</height></size></property></spacer></item><item><widget class="QPushButton" name="change_button"><property name="text"><string>Cambiar directorio</string></property><property name="primary" stdset="0"><bool>true</bool></property></widget></item></layout></item>
-    <item><layout class="QHBoxLayout" name="pathRow"><item><widget class="QLineEdit" name="path_input"><property name="placeholderText"><string>Ruta relativa a un archivo o directorio/</string></property></widget></item><item><widget class="QPushButton" name="add_button"><property name="text"><string>Añadir al contexto</string></property></widget></item></layout></item>
-   </layout></widget></item>
-   <item><widget class="QSplitter" name="splitter"><property name="orientation"><enum>Qt::Horizontal</enum></property>
-    <widget class="QFrame" name="treeCard"><property name="card" stdset="0"><bool>true</bool></property><layout class="QVBoxLayout" name="treeCardLayout"><property name="leftMargin"><number>18</number></property><property name="topMargin"><number>16</number></property><property name="rightMargin"><number>18</number></property><property name="bottomMargin"><number>18</number></property><item><widget class="QLabel" name="treeTitle"><property name="text"><string>Archivos del proyecto</string></property></widget></item><item><widget class="QLabel" name="treeSubtitle"><property name="text"><string>Haz doble clic o arrastra archivos al contexto. Los directorios no se pueden arrastrar.</string></property><property name="muted" stdset="0"><bool>true</bool></property></widget></item><item><widget class="QTreeWidget" name="tree"><property name="alternatingRowColors"><bool>true</bool></property><property name="columnCount"><number>1</number></property><column><property name="text"><string>Ruta</string></property></column></widget></item></layout></widget>
-    <widget class="QFrame" name="contextCard"><property name="card" stdset="0"><bool>true</bool></property><layout class="QVBoxLayout" name="contextCardLayout"><property name="leftMargin"><number>18</number></property><property name="topMargin"><number>16</number></property><property name="rightMargin"><number>18</number></property><property name="bottomMargin"><number>18</number></property><item><widget class="QLabel" name="contextTitle"><property name="text"><string>Contexto seleccionado</string></property></widget></item><item><widget class="QLabel" name="contextSubtitle"><property name="text"><string>Suelta archivos aquí o haz doble clic para quitarlos.</string></property><property name="muted" stdset="0"><bool>true</bool></property></widget></item><item><widget class="QListWidget" name="context_list"><property name="acceptDrops"><bool>true</bool></property></widget></item><item alignment="Qt::AlignRight"><widget class="QPushButton" name="clear_button"><property name="text"><string>Vaciar contexto</string></property></widget></item></layout></widget>
-   </widget></item>
+   <property name="spacing">
+    <number>14</number>
+   </property>
+   <property name="leftMargin">
+    <number>0</number>
+   </property>
+   <property name="topMargin">
+    <number>0</number>
+   </property>
+   <property name="rightMargin">
+    <number>0</number>
+   </property>
+   <property name="bottomMargin">
+    <number>0</number>
+   </property>
+   <item>
+    <widget class="QFrame" name="workspaceCard">
+     <property name="card" stdset="0">
+      <bool>true</bool>
+     </property>
+     <layout class="QVBoxLayout" name="workspaceCardLayout">
+      <property name="spacing">
+       <number>12</number>
+      </property>
+      <property name="leftMargin">
+       <number>18</number>
+      </property>
+      <property name="topMargin">
+       <number>16</number>
+      </property>
+      <property name="rightMargin">
+       <number>18</number>
+      </property>
+      <property name="bottomMargin">
+       <number>18</number>
+      </property>
+      <item>
+       <widget class="QLabel" name="workspaceTitle">
+        <property name="text">
+         <string>Espacio de trabajo</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <layout class="QHBoxLayout" name="workspaceRow">
+        <item>
+         <widget class="QLabel" name="activeRepoCaption">
+          <property name="text">
+           <string>Repositorio activo</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QLabel" name="workspace_label">
+          <property name="text">
+           <string>—</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <spacer name="workspaceStretch">
+          <property name="orientation">
+           <enum>Qt::Orientation::Horizontal</enum>
+          </property>
+          <property name="sizeHint" stdset="0">
+           <size>
+            <width>40</width>
+            <height>20</height>
+           </size>
+          </property>
+         </spacer>
+        </item>
+        <item>
+         <widget class="QPushButton" name="change_button">
+          <property name="text">
+           <string>Cambiar directorio</string>
+          </property>
+          <property name="primary" stdset="0">
+           <bool>true</bool>
+          </property>
+         </widget>
+        </item>
+       </layout>
+      </item>
+      <item>
+       <layout class="QHBoxLayout" name="pathRow">
+        <item>
+         <widget class="QLineEdit" name="path_input">
+          <property name="placeholderText">
+           <string>Ruta relativa a un archivo o directorio/</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QPushButton" name="add_button">
+          <property name="text">
+           <string>Añadir al contexto</string>
+          </property>
+         </widget>
+        </item>
+       </layout>
+      </item>
+     </layout>
+    </widget>
+   </item>
+   <item>
+    <widget class="QSplitter" name="splitter">
+     <property name="maximumSize">
+      <size>
+       <width>1046</width>
+       <height>16777215</height>
+      </size>
+     </property>
+     <property name="orientation">
+      <enum>Qt::Orientation::Horizontal</enum>
+     </property>
+     <widget class="QFrame" name="treeCard">
+      <property name="card" stdset="0">
+       <bool>true</bool>
+      </property>
+      <layout class="QVBoxLayout" name="treeCardLayout">
+       <property name="leftMargin">
+        <number>18</number>
+       </property>
+       <property name="topMargin">
+        <number>16</number>
+       </property>
+       <property name="rightMargin">
+        <number>18</number>
+       </property>
+       <property name="bottomMargin">
+        <number>18</number>
+       </property>
+       <item>
+        <widget class="QLabel" name="treeTitle">
+         <property name="text">
+          <string>Archivos del proyecto</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QLabel" name="treeSubtitle">
+         <property name="text">
+          <string>Haz doble clic o arrastra archivos al contexto. Los directorios no se pueden arrastrar.</string>
+         </property>
+         <property name="muted" stdset="0">
+          <bool>true</bool>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QTreeWidget" name="tree">
+         <property name="alternatingRowColors">
+          <bool>true</bool>
+         </property>
+         <property name="columnCount">
+          <number>1</number>
+         </property>
+         <column>
+          <property name="text">
+           <string>Ruta</string>
+          </property>
+         </column>
+        </widget>
+       </item>
+      </layout>
+     </widget>
+     <widget class="QFrame" name="contextCard">
+      <property name="card" stdset="0">
+       <bool>true</bool>
+      </property>
+      <layout class="QVBoxLayout" name="contextCardLayout">
+       <property name="leftMargin">
+        <number>18</number>
+       </property>
+       <property name="topMargin">
+        <number>16</number>
+       </property>
+       <property name="rightMargin">
+        <number>18</number>
+       </property>
+       <property name="bottomMargin">
+        <number>18</number>
+       </property>
+       <item>
+        <widget class="QLabel" name="contextTitle">
+         <property name="text">
+          <string>Contexto seleccionado</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QLabel" name="contextSubtitle">
+         <property name="text">
+          <string>Suelta archivos aquí o haz doble clic para quitarlos.</string>
+         </property>
+         <property name="muted" stdset="0">
+          <bool>true</bool>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QListWidget" name="context_list">
+         <property name="acceptDrops">
+          <bool>true</bool>
+         </property>
+        </widget>
+       </item>
+       <item alignment="Qt::AlignmentFlag::AlignRight">
+        <widget class="QPushButton" name="clear_button">
+         <property name="text">
+          <string>Vaciar contexto</string>
+         </property>
+        </widget>
+       </item>
+      </layout>
+     </widget>
+    </widget>
+   </item>
   </layout>
- </widget><resources/><connections/>
+ </widget>
+ <resources/>
+ <connections/>
 </ui>

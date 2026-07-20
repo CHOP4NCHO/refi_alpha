@@ -71,17 +71,26 @@ class RequirementsPage(QWidget):
             if answer != QMessageBox.StandardButton.Yes:
                 return
         path = Path(filename)
-        self.import_status.setText(f"Extrayendo {path.name}…")
-        self.import_button.setEnabled(False)
+        self.set_busy(True, f"Extrayendo {path.name}…")
         self.import_requested.emit(path)
 
+    def set_busy(self, busy: bool, status_text: str | None = None) -> None:
+        self.import_button.setEnabled(not busy)
+        self.import_progress.setVisible(busy)
+        if busy:
+            self.import_progress.setMaximum(0)
+            self.import_status.setText(status_text or "Procesando…")
+        else:
+            self.import_progress.setMaximum(100)
+            self.import_progress.setValue(0)
+
     def finish_import(self, document=None, error: str | None = None) -> None:
-        self.import_button.setEnabled(True)
+        self.set_busy(False)
         if error:
             self.import_status.setText("No fue posible completar la extracción")
             return
         count = len(document.requirements)
-        self.import_status.setText(f"{document.name} · {count} requerimiento(s)")
+        self.import_status.setText(f"{count} requerimiento(s)")
         self.refresh()
 
     def add_requirement(self) -> None:

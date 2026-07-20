@@ -6,13 +6,14 @@ import os
 import sys
 
 from dotenv import load_dotenv
-from PyQt6.QtWidgets import QApplication
+from PyQt6.QtWidgets import QApplication, QMainWindow
 from PyQt6.QtGui import QIcon
 
 from core import RefiService
 from core.enums import EvaluationMode, RealEvaluation
 from core.model_provider import ModelProvider
 
+from .landing_page import LandingPage
 from .main_window import RefiMainWindow
 from .theme_manager import ThemeManager
 
@@ -22,6 +23,57 @@ def get_resource_path(relative_path: str) -> str:
     if hasattr(sys, "_MEIPASS"):
         return os.path.join(sys._MEIPASS, relative_path)
     return os.path.join(os.path.dirname(__file__), relative_path)
+
+
+class LandingWindow(QMainWindow):
+    """Shell that shows the landing page and spawns RefiMainWindow on demand."""
+
+    def __init__(self, service, theme_manager, icon_path):
+        super().__init__()
+        self.service = service
+        self.theme_manager = theme_manager
+        self.icon_path = icon_path
+        self.main_window = None
+
+        self.setWindowTitle("REFI ALPHA")
+        self.resize(800, 600)
+        self.setMinimumSize(800, 600)
+
+        self.landing = LandingPage(theme_manager=theme_manager)
+        self.setCentralWidget(self.landing)
+        self.theme_manager.apply_to(self)
+
+        self.landing.new_evaluation_requested.connect(self._open_evaluation)
+        self.landing.review_loaded.connect(self._open_review)
+
+    def _open_evaluation(self) -> None:
+        self.main_window = RefiMainWindow(
+            service=self.service,
+            theme_manager=self.theme_manager,
+            mode="evaluation",
+        )
+        self.main_window.setWindowIcon(QIcon(self.icon_path))
+        self.main_window.back_to_landing.connect(self._back_to_landing)
+        self.main_window.show()
+        self.hide()
+
+    def _open_review(self, data: dict) -> None:
+        self.main_window = RefiMainWindow(
+            service=self.service,
+            theme_manager=self.theme_manager,
+            mode="review",
+            review_data=data,
+        )
+        self.main_window.setWindowIcon(QIcon(self.icon_path))
+        self.main_window.back_to_landing.connect(self._back_to_landing)
+        self.main_window.show()
+        self.hide()
+
+    def _back_to_landing(self) -> None:
+        if self.main_window:
+            self.main_window.close()
+            self.main_window = None
+        self.show()
 
 
 def main() -> int:
@@ -53,8 +105,9 @@ def main() -> int:
         real_evaluation=RealEvaluation.FULFILLED,
     )
     theme_manager = ThemeManager()
-    window = RefiMainWindow(service=service, theme_manager=theme_manager)
-    window.setWindowIcon(QIcon(icon_path)) 
+
+    window = LandingWindow(service=service, theme_manager=theme_manager, icon_path=icon_path)
+    window.setWindowIcon(QIcon(icon_path))
     window.show()
     return app.exec()
 

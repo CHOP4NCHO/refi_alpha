@@ -1,6 +1,263 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<ui version="4.0"><class>RequirementsPage</class><widget class="QWidget" name="RequirementsPage"><layout class="QVBoxLayout" name="pageLayout"><property name="spacing"><number>14</number></property><property name="leftMargin"><number>0</number></property><property name="topMargin"><number>0</number></property><property name="rightMargin"><number>0</number></property><property name="bottomMargin"><number>0</number></property>
-<item><widget class="QFrame" name="entryCard"><property name="card" stdset="0"><bool>true</bool></property><layout class="QVBoxLayout" name="entryCardLayout"><property name="spacing"><number>12</number></property><property name="leftMargin"><number>18</number></property><property name="topMargin"><number>16</number></property><property name="rightMargin"><number>18</number></property><property name="bottomMargin"><number>18</number></property><item><widget class="QLabel" name="entryTitle"><property name="text"><string>Agregar Nuevo Requerimiento</string></property></widget></item><item><layout class="QHBoxLayout" name="entryRow"><item><widget class="QLineEdit" name="id_input"><property name="maximumSize"><size><width>130</width><height>16777215</height></size></property><property name="placeholderText"><string>ID (opcional)</string></property></widget></item><item><widget class="QLineEdit" name="description_input"><property name="placeholderText"><string>Describe el comportamiento o restricción esperada…</string></property></widget></item><item><widget class="QRadioButton" name="functional_radio"><property name="text"><string>Funcional</string></property><property name="checked"><bool>true</bool></property></widget></item><item><widget class="QRadioButton" name="non_functional_radio"><property name="text"><string>No funcional</string></property></widget></item><item><widget class="QPushButton" name="add_button"><property name="text"><string>Agregar</string></property></widget></item></layout></item></layout></widget></item>
-<item><widget class="QFrame" name="importCard"><property name="card" stdset="0"><bool>true</bool></property><layout class="QVBoxLayout" name="importCardLayout"><property name="spacing"><number>12</number></property><property name="leftMargin"><number>18</number></property><property name="topMargin"><number>16</number></property><property name="rightMargin"><number>18</number></property><property name="bottomMargin"><number>18</number></property><item><widget class="QLabel" name="importTitle"><property name="text"><string>Importar desde PDF</string></property></widget></item><item><widget class="QLabel" name="importSubtitle"><property name="text"><string>La extracción reemplaza la lista actual y utiliza el modelo VLM configurado.</string></property><property name="muted" stdset="0"><bool>true</bool></property><property name="wordWrap"><bool>true</bool></property></widget></item><item><layout class="QHBoxLayout" name="importRow"><item><widget class="QLabel" name="import_status"><property name="text"><string>Ningún documento seleccionado</string></property><property name="muted" stdset="0"><bool>true</bool></property></widget></item><item><widget class="QPushButton" name="import_button"><property name="text"><string>Seleccionar PDF</string></property><property name="primary" stdset="0"><bool>true</bool></property></widget></item></layout></item></layout></widget></item>
-<item><widget class="QFrame" name="listCard"><property name="card" stdset="0"><bool>true</bool></property><layout class="QVBoxLayout" name="listCardLayout"><property name="spacing"><number>12</number></property><property name="leftMargin"><number>18</number></property><property name="topMargin"><number>16</number></property><property name="rightMargin"><number>18</number></property><property name="bottomMargin"><number>18</number></property><item><widget class="QLabel" name="listTitle"><property name="text"><string>Requerimientos actuales</string></property></widget></item><item><widget class="QLabel" name="listSubtitle"><property name="text"><string>Cambia el tipo desde la lista o elimina un requerimiento.</string></property><property name="muted" stdset="0"><bool>true</bool></property></widget></item><item><widget class="QTableWidget" name="table"><property name="alternatingRowColors"><bool>true</bool></property><property name="selectionBehavior"><enum>QAbstractItemView::SelectRows</enum></property><property name="editTriggers"><set>QAbstractItemView::NoEditTriggers</set></property><property name="columnCount"><number>4</number></property><column><property name="text"><string>ID</string></property></column><column><property name="text"><string>Tipo</string></property></column><column><property name="text"><string>Descripción</string></property></column><column><property name="text"><string>Acciones</string></property></column></widget></item></layout></widget></item>
-</layout></widget><resources/><connections/></ui>
+<ui version="4.0">
+ <class>RequirementsPage</class>
+ <widget class="QWidget" name="RequirementsPage">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>622</width>
+    <height>535</height>
+   </rect>
+  </property>
+  <layout class="QVBoxLayout" name="pageLayout">
+   <property name="spacing">
+    <number>14</number>
+   </property>
+   <property name="leftMargin">
+    <number>0</number>
+   </property>
+   <property name="topMargin">
+    <number>0</number>
+   </property>
+   <property name="rightMargin">
+    <number>0</number>
+   </property>
+   <property name="bottomMargin">
+    <number>0</number>
+   </property>
+   <item>
+    <widget class="QFrame" name="entryCard">
+     <property name="card" stdset="0">
+      <bool>true</bool>
+     </property>
+     <layout class="QVBoxLayout" name="entryCardLayout">
+      <property name="spacing">
+       <number>12</number>
+      </property>
+      <property name="leftMargin">
+       <number>18</number>
+      </property>
+      <property name="topMargin">
+       <number>16</number>
+      </property>
+      <property name="rightMargin">
+       <number>18</number>
+      </property>
+      <property name="bottomMargin">
+       <number>18</number>
+      </property>
+      <item>
+       <widget class="QLabel" name="entryTitle">
+        <property name="text">
+         <string>Agregar Nuevo Requerimiento</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <layout class="QHBoxLayout" name="entryRow">
+        <item>
+         <widget class="QLineEdit" name="id_input">
+          <property name="maximumSize">
+           <size>
+            <width>130</width>
+            <height>16777215</height>
+           </size>
+          </property>
+          <property name="placeholderText">
+           <string>ID (opcional)</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QLineEdit" name="description_input">
+          <property name="placeholderText">
+           <string>Describe el comportamiento o restricción esperada…</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QRadioButton" name="functional_radio">
+          <property name="text">
+           <string>Funcional</string>
+          </property>
+          <property name="checked">
+           <bool>true</bool>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QRadioButton" name="non_functional_radio">
+          <property name="text">
+           <string>No funcional</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QPushButton" name="add_button">
+          <property name="text">
+           <string>Agregar</string>
+          </property>
+         </widget>
+        </item>
+       </layout>
+      </item>
+     </layout>
+    </widget>
+   </item>
+   <item>
+    <widget class="QFrame" name="importCard">
+     <property name="card" stdset="0">
+      <bool>true</bool>
+     </property>
+     <layout class="QVBoxLayout" name="importCardLayout">
+      <property name="spacing">
+       <number>12</number>
+      </property>
+      <property name="leftMargin">
+       <number>18</number>
+      </property>
+      <property name="topMargin">
+       <number>16</number>
+      </property>
+      <property name="rightMargin">
+       <number>18</number>
+      </property>
+      <property name="bottomMargin">
+       <number>18</number>
+      </property>
+      <item>
+       <widget class="QLabel" name="importTitle">
+        <property name="text">
+         <string>Importar desde PDF</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <layout class="QHBoxLayout" name="importRow">
+        <item>
+         <widget class="QLabel" name="import_status">
+          <property name="text">
+           <string>Ningún documento seleccionado</string>
+          </property>
+          <property name="muted" stdset="0">
+           <bool>true</bool>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QProgressBar" name="import_progress">
+          <property name="maximumSize">
+           <size>
+            <width>180</width>
+            <height>16777215</height>
+           </size>
+          </property>
+          <property name="visible">
+           <bool>false</bool>
+          </property>
+          <property name="minimum">
+           <number>0</number>
+          </property>
+          <property name="maximum">
+           <number>0</number>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QPushButton" name="import_button">
+          <property name="text">
+           <string>Seleccionar PDF</string>
+          </property>
+          <property name="primary" stdset="0">
+           <bool>true</bool>
+          </property>
+         </widget>
+        </item>
+       </layout>
+      </item>
+     </layout>
+    </widget>
+   </item>
+   <item>
+    <widget class="QFrame" name="listCard">
+     <property name="card" stdset="0">
+      <bool>true</bool>
+     </property>
+     <layout class="QVBoxLayout" name="listCardLayout">
+      <property name="spacing">
+       <number>12</number>
+      </property>
+      <property name="leftMargin">
+       <number>18</number>
+      </property>
+      <property name="topMargin">
+       <number>16</number>
+      </property>
+      <property name="rightMargin">
+       <number>18</number>
+      </property>
+      <property name="bottomMargin">
+       <number>18</number>
+      </property>
+      <item>
+       <widget class="QLabel" name="listTitle">
+        <property name="text">
+         <string>Requerimientos actuales</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QLabel" name="listSubtitle">
+        <property name="text">
+         <string>Cambia el tipo desde la lista o elimina un requerimiento.</string>
+        </property>
+        <property name="muted" stdset="0">
+         <bool>true</bool>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QTableWidget" name="table">
+        <property name="editTriggers">
+         <set>QAbstractItemView::EditTrigger::NoEditTriggers</set>
+        </property>
+        <property name="alternatingRowColors">
+         <bool>true</bool>
+        </property>
+        <property name="selectionBehavior">
+         <enum>QAbstractItemView::SelectionBehavior::SelectRows</enum>
+        </property>
+        <property name="columnCount">
+         <number>4</number>
+        </property>
+        <column>
+         <property name="text">
+          <string>ID</string>
+         </property>
+        </column>
+        <column>
+         <property name="text">
+          <string>Tipo</string>
+         </property>
+        </column>
+        <column>
+         <property name="text">
+          <string>Descripción</string>
+         </property>
+        </column>
+        <column>
+         <property name="text">
+          <string>Acciones</string>
+         </property>
+        </column>
+       </widget>
+      </item>
+     </layout>
+    </widget>
+   </item>
+  </layout>
+ </widget>
+ <resources/>
+ <connections/>
+</ui>

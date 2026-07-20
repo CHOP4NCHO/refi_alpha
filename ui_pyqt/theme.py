@@ -107,6 +107,24 @@ QSplitter::handle { background: #d9e3ec; width: 2px; }
 QToolTip { color: #243447; background: #ffffff; border: 1px solid #b8c8d8; }
 QStatusBar { background: #f4f7fb; color: #6f8093; border-top: 1px solid #dce4ee; }
 QDialog, QMessageBox, QFileDialog { background: #ffffff; }
+QPushButton[landing="true"] {
+    color: #294057;
+    background: #ffffff;
+    border: 2px solid #dde6f0;
+    border-radius: 14px;
+    padding: 22px 20px;
+    font-size: 15px;
+    font-weight: 650;
+    text-align: left;
+}
+QPushButton[landing="true"]:hover { background: #e0f3ee; border-color: #168f76; }
+QPushButton[landing="true"]:pressed { background: #d0ebe4; }
+QPushButton[landing="true"][primary="true"] {
+    color: #ffffff;
+    background: #168f76;
+    border-color: #168f76;
+}
+QPushButton[landing="true"][primary="true"]:hover { background: #117963; border-color: #117963; }
 """
 
 DARK_STYLESHEET = """
@@ -214,6 +232,24 @@ QSplitter::handle { background: #182a40; width: 2px; }
 QToolTip { color: #e9f3fe; background: #17283e; border: 1px solid #3b5673; }
 QStatusBar { background: #08111f; color: #7f93aa; border-top: 1px solid #1d2d43; }
 QDialog, QMessageBox, QFileDialog { background: #0f1c2e; }
+QPushButton[landing="true"] {
+    color: #dbe7f4;
+    background: #0f1c2e;
+    border: 2px solid #20324a;
+    border-radius: 14px;
+    padding: 22px 20px;
+    font-size: 15px;
+    font-weight: 650;
+    text-align: left;
+}
+QPushButton[landing="true"]:hover { background: #153a3c; border-color: #63e6be; }
+QPushButton[landing="true"]:pressed { background: #0d2e2f; }
+QPushButton[landing="true"][primary="true"] {
+    color: #06131b;
+    background: #63e6be;
+    border-color: #63e6be;
+}
+QPushButton[landing="true"][primary="true"]:hover { background: #7cebc9; border-color: #7cebc9; }
 """
 
 # Kept as the public default for callers that imported this constant previously.
