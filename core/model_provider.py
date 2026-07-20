@@ -1,20 +1,25 @@
-import os
-import requests
+import logging
 from typing import List
 
-from langchain_ollama import ChatOllama
-from langchain.chat_models import init_chat_model
-from langchain.embeddings import init_embeddings
-from pydantic import AnyUrl
-from docling.datamodel.pipeline_options_vlm_model import ApiVlmOptions, ResponseFormat
+import requests
+from docling.datamodel.pipeline_options_vlm_model import ApiVlmOptions
 
 from .enums import LlmProvider
 from .model_config import ModelConfig
 from .exceptions import ModelConfigurationError, ModelsNotConfiguredError
+from .model_catalogs import (
+    ProviderCatalog,
+    OllamaCatalog,
+    OpenAICatalog,
+    GeminiCatalog,
+    ClaudeCatalog,
+)
+from .model_factory import ModelFactory
+
+logger = logging.getLogger(__name__)
 
 
 class ModelProvider:
-    # Constantes para identificar operaciones
     OP_EVALUATE_PIPELINE = "evaluar_pipeline"
     OP_EVALUATE_AGENT = "evaluar_agente"
     OP_IMPORT_PDF = "importar_pdf"
@@ -29,6 +34,8 @@ class ModelProvider:
         fallback_llm: ModelConfig | None = None,
         fallback_embedding: ModelConfig | None = None,
         temperature: float = 0.1,
+        catalogs: dict[LlmProvider, ProviderCatalog] | None = None,
+        factory: ModelFactory | None = None,
     ):
         self._local_ip = local_ip
         self._cloud_ip = cloud_ip
@@ -44,6 +51,21 @@ class ModelProvider:
 
         self.is_ollama_reachable = self._check_connection(self._local_ip)
 
+        # Catalogs
+        self._catalogs: dict[LlmProvider, ProviderCatalog] = catalogs or {
+            LlmProvider.OLLAMA: OllamaCatalog(local_ip),
+            LlmProvider.GEMINI: GeminiCatalog(),
+            LlmProvider.OPENAI: OpenAICatalog(),
+            LlmProvider.CLAUDE: ClaudeCatalog(),
+        }
+
+        # Factory
+        self._factory = factory or ModelFactory(
+            local_ip=local_ip,
+            cloud_ip=cloud_ip,
+            temperature=temperature,
+        )
+
     # --------------------------------------------------
     # Connection
     # --------------------------------------------------
@@ -55,7 +77,10 @@ class ModelProvider:
         except Exception:
             return False
 
-    # Métodos de consulta (retornan bool, no lanzan excepciones)
+    # --------------------------------------------------
+    # Query methods (return bool, never raise)
+    # --------------------------------------------------
+
     def is_llm_configured(self) -> bool:
         return self._llm_config is not None and self._llm_config.is_configured()
 
@@ -66,11 +91,10 @@ class ModelProvider:
         return self._vlm_config is not None and self._vlm_config.is_configured()
 
     # --------------------------------------------------
-    # Validación contextual por operación
+    # Contextual validation per operation
     # --------------------------------------------------
 
     def validate_for_pipeline(self) -> None:
-        """Valida modelos requeridos para evaluación en modo Pipeline."""
         missing = []
         if not self.is_llm_configured():
             missing.append("LLM")
@@ -78,7 +102,6 @@ class ModelProvider:
             raise ModelsNotConfiguredError(missing, self.OP_EVALUATE_PIPELINE)
 
     def validate_for_agent(self) -> None:
-        """Valida modelos requeridos para evaluación en modo Agente."""
         missing = []
         if not self.is_llm_configured():
             missing.append("LLM")
@@ -88,7 +111,6 @@ class ModelProvider:
             raise ModelsNotConfiguredError(missing, self.OP_EVALUATE_AGENT)
 
     def validate_for_pdf_import(self) -> None:
-        """Valida modelos requeridos para importar PDF."""
         missing = []
         if not self.is_vlm_configured():
             missing.append("VLM")
@@ -96,13 +118,11 @@ class ModelProvider:
             raise ModelsNotConfiguredError(missing, self.OP_IMPORT_PDF)
 
     def validate_for_operation(self, operation: str) -> None:
-        """Valida modelos para una operación específica."""
         validators = {
             self.OP_EVALUATE_PIPELINE: self.validate_for_pipeline,
             self.OP_EVALUATE_AGENT: self.validate_for_agent,
             self.OP_IMPORT_PDF: self.validate_for_pdf_import,
         }
-        
         validator = validators.get(operation)
         if validator:
             validator()
@@ -114,31 +134,21 @@ class ModelProvider:
     # --------------------------------------------------
 
     def get_llm(self, operation: str | None = None):
-        """ Returns current LLM Reference"""
         if not self.is_llm_configured():
             raise ModelConfigurationError("llm", operation or "general")
+
         config = self._llm_config
 
+        # Try primary config via factory
         if config.provider == LlmProvider.OLLAMA and self.is_ollama_reachable:
-            return ChatOllama(
-                model=config.model_id or " ",
-                base_url=f"http://{self._local_ip}:11434",
-                temperature=self._temperature,
-                format="json"
-            )
+            return self._factory.create_llm(config, operation)
 
         if config.provider in (LlmProvider.GEMINI, LlmProvider.OPENAI, LlmProvider.CLAUDE):
-            return init_chat_model(
-                config.model_id,
-                temperature=self._temperature
-            )
+            return self._factory.create_llm(config, operation)
 
-        # Fallback: Ollama unreachable, use cloud model
+        # Fallback
         if self._fallback_llm and self._fallback_llm.is_configured():
-            return init_chat_model(
-                self._fallback_llm.model_id,
-                temperature=self._temperature
-            )
+            return self._factory.create_llm(self._fallback_llm, operation)
 
         raise ValueError(
             f"Proveedor '{config.provider.value if config.provider else 'None'}' no disponible "
@@ -147,10 +157,6 @@ class ModelProvider:
         )
 
     def get_llm_label(self) -> str:
-        """
-        Returns a readable identifier of the active model.
-        Example: 'ollama:llama3' or 'gemini:gemini-2.5-flash'
-        """
         provider_name = self._llm_config.provider.value if (self._llm_config and self._llm_config.provider) else "None"
         model_id = self._llm_config.model_id if (self._llm_config and self._llm_config.model_id) else "None"
         return f"{provider_name}:{model_id}"
@@ -162,20 +168,18 @@ class ModelProvider:
     def get_embeddings(self, operation: str | None = None):
         if not self.is_embedding_configured():
             raise ModelConfigurationError("embedding", operation or "general")
+
         config = self._embedding_config
 
         if config.provider == LlmProvider.OLLAMA and self.is_ollama_reachable:
-            return init_embeddings(
-                f"ollama:{config.model_id}",
-                base_url=f"http://{self._local_ip}:11434"
-            )
+            return self._factory.create_embeddings(config, operation)
 
         if config.provider in (LlmProvider.GEMINI, LlmProvider.OPENAI):
-            return init_embeddings(config.model_id or " ")
+            return self._factory.create_embeddings(config, operation)
 
-        # Fallback: Ollama unreachable, use cloud embeddings
+        # Fallback
         if self._fallback_embedding and self._fallback_embedding.is_configured():
-            return init_embeddings(self._fallback_embedding.model_id or " ")
+            return self._factory.create_embeddings(self._fallback_embedding, operation)
 
         raise ValueError(
             f"Proveedor embeddings '{config.provider.value if config.provider else 'None'}' no disponible "
@@ -190,42 +194,17 @@ class ModelProvider:
     def get_vlm_options(self, prompt: str = "OCR the full page to markdown", operation: str | None = None) -> ApiVlmOptions:
         if not self.is_vlm_configured():
             raise ModelConfigurationError("vlm", operation or "general")
+
         config = self._vlm_config
 
         if config.provider == LlmProvider.OLLAMA and self.is_ollama_reachable:
-            return ApiVlmOptions(
-                url=AnyUrl(f"http://{self._local_ip}:11434/v1/chat/completions"),
-                params=dict(model=config.model_id),
-                prompt=prompt,
-                timeout=90,
-                scale=1.0,
-                response_format=ResponseFormat.MARKDOWN,
-            )
+            return self._factory.create_vlm_options(config, prompt, operation)
 
-        if config.provider == LlmProvider.OPENAI:
-            api_key = os.environ.get("OPENAI_API_KEY", "")
-            headers = {"Authorization": f"Bearer {api_key}"} if api_key else {}
-            return ApiVlmOptions(
-                url=AnyUrl("https://api.openai.com/v1/chat/completions"),
-                headers=headers,
-                params=dict(model=config.model_id),
-                prompt=prompt,
-                timeout=90,
-                scale=1.0,
-                response_format=ResponseFormat.MARKDOWN,
-            )
+        if config.provider in (LlmProvider.OPENAI, LlmProvider.GEMINI):
+            return self._factory.create_vlm_options(config, prompt, operation)
 
-        api_key = os.environ.get("GOOGLE_API_KEY", "")
-        headers = {"Authorization": f"Bearer {api_key}"} if api_key else {}
-
-        return ApiVlmOptions(
-            url=AnyUrl(f"https://{self._cloud_ip}/chat/completions"),
-            headers=headers,
-            params=dict(model=config.model_id),
-            prompt=prompt,
-            timeout=90,
-            scale=1.0,
-            response_format=ResponseFormat.MARKDOWN,
+        raise ValueError(
+            f"Proveedor VLM '{config.provider.value if config.provider else 'None'}' no soportado."
         )
 
     # --------------------------------------------------
@@ -242,49 +221,31 @@ class ModelProvider:
         self._vlm_config = config
 
     # --------------------------------------------------
-    # Model discovery
-    # TODO: mejorar el import automático de Model Config según el LlmProvider
+    # Catalog refresh
+    # --------------------------------------------------
+
+    def refresh_catalog(self, provider: LlmProvider) -> None:
+        """Force a catalog to re-fetch models (e.g. after loading an API key)."""
+        catalog = self._catalogs.get(provider)
+        if catalog is not None:
+            catalog._cache = None
+            catalog.refresh()
+
+    # --------------------------------------------------
+    # Model discovery (union of all catalogs)
     # --------------------------------------------------
 
     def list_models(self) -> List[ModelConfig]:
         models: List[ModelConfig] = []
+        for catalog in self._catalogs.values():
+            models.extend(catalog.list_models())
+        return self._dedupe_models(models)
 
-        # Ollama (dynamic)
-        if self.is_ollama_reachable:
-            try:
-                response = requests.get(f"http://{self._local_ip}:11434/api/tags")
-                data = response.json()
-
-                for m in data.get("models", []):
-                    model_id = m["name"]
-                    models.append(ModelConfig(
-                        provider=LlmProvider.OLLAMA,
-                        model_id=model_id,
-                        category=self._classify_ollama_model(model_id)
-                    ))
-            except Exception:
-                pass
-
-        # Cloud providers (static catalogs)
-        models.extend([
-            ModelConfig(LlmProvider.GEMINI, "google_genai:gemini-3.1-flash-lite", "chat"),
-            ModelConfig(LlmProvider.GEMINI, "google_genai:gemini-2.5-flash", "chat"),
-            ModelConfig(LlmProvider.GEMINI, "google_genai:gemini-2.5-pro", "chat"),
-            ModelConfig(LlmProvider.GEMINI, "gemini-2.5-flash-lite", "vlm"),
-            ModelConfig(LlmProvider.GEMINI, "google_genai:gemini-embedding-2", "embedding"),
-            ModelConfig(LlmProvider.OPENAI, "openai:gpt-5.1", "chat"),
-            ModelConfig(LlmProvider.OPENAI, "openai:gpt-5-mini", "chat"),
-            ModelConfig(LlmProvider.OPENAI, "openai:gpt-4.1-mini", "chat"),
-            ModelConfig(LlmProvider.OPENAI, "gpt-4o-mini", "vlm"),
-            ModelConfig(LlmProvider.OPENAI, "gpt-4o", "vlm"),
-            ModelConfig(LlmProvider.OPENAI, "openai:text-embedding-3-small", "embedding"),
-            ModelConfig(LlmProvider.OPENAI, "openai:text-embedding-3-large", "embedding"),
-            ModelConfig(LlmProvider.CLAUDE, "anthropic:claude-opus-4-7", "chat"),
-            ModelConfig(LlmProvider.CLAUDE, "anthropic:claude-sonnet-4-6", "chat"),
-            ModelConfig(LlmProvider.CLAUDE, "anthropic:claude-haiku-4-5", "chat"),
-        ])
-
-        return models
+    def get_catalog_status(self, provider: LlmProvider) -> str:
+        catalog = self._catalogs.get(provider)
+        if catalog is None:
+            return "Proveedor no registrado"
+        return catalog.get_status()
 
     # --------------------------------------------------
     # Helpers
@@ -307,7 +268,6 @@ class ModelProvider:
         return self._llm_config.provider if self._llm_config else None
 
     def is_local_provider(self) -> bool:
-        """Returns True if the active model is using a local provider (Ollama)."""
         return (
             self._llm_config is not None
             and self._llm_config.provider == LlmProvider.OLLAMA
@@ -315,33 +275,20 @@ class ModelProvider:
         )
 
     def set_ollama_ip(self, ip: str) -> None:
-        """Update the Ollama IP and re-verify the connection."""
         self._local_ip = ip
         self.is_ollama_reachable = self._check_connection(ip)
+        self._factory.set_local_ip(ip)
+        ollama_catalog = self._catalogs.get(LlmProvider.OLLAMA)
+        if isinstance(ollama_catalog, OllamaCatalog):
+            ollama_catalog.set_local_ip(ip)
 
     @staticmethod
-    def _classify_ollama_model(model_id: str) -> str:
-        normalized = model_id.lower()
-        embedding_markers = (
-            "embed",
-            "embedding",
-            "nomic-embed",
-            "mxbai-embed",
-            "bge-",
-            "e5-",
-            "snowflake-arctic-embed",
-        )
-        vlm_markers = (
-            "vision",
-            "llava",
-            "bakllava",
-            "minicpm-v",
-            "moondream",
-            "granite3.2-vision",
-            "gemma3",
-        )
-        if any(marker in normalized for marker in embedding_markers):
-            return "embedding"
-        if any(marker in normalized for marker in vlm_markers):
-            return "vlm"
-        return "chat"
+    def _dedupe_models(models: list[ModelConfig]) -> list[ModelConfig]:
+        seen: set[tuple] = set()
+        result: list[ModelConfig] = []
+        for m in models:
+            key = (m.provider, m.model_id, m.category)
+            if key not in seen:
+                seen.add(key)
+                result.append(m)
+        return result

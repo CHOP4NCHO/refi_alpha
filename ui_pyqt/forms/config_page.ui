@@ -73,113 +73,268 @@
       <property name="bottomMargin"><number>18</number></property>
       <item>
        <widget class="QLabel" name="modelTitle">
-        <property name="text"><string>Configurar modelos</string></property>
+        <property name="text"><string>Configurar modelos por categoría</string></property>
        </widget>
       </item>
       <item>
        <widget class="QLabel" name="modelSubtitle">
-        <property name="text"><string>Selecciona un vendor, valida su acceso y activa las instancias requeridas.</string></property>
+        <property name="text"><string>Cada categoría puede usar un vendor distinto. La API key se reutiliza entre categorías por defecto.</string></property>
         <property name="muted" stdset="0"><bool>true</bool></property>
         <property name="wordWrap"><bool>true</bool></property>
        </widget>
       </item>
       <item>
-       <layout class="QFormLayout" name="modelForm">
-        <property name="horizontalSpacing"><number>24</number></property>
-        <item row="0" column="0">
-         <widget class="QLabel" name="providerLabel">
-          <property name="text"><string>Vendor</string></property>
-         </widget>
-        </item>
-        <item row="0" column="1">
-         <widget class="QComboBox" name="provider_combo"/>
-        </item>
-        <item row="1" column="0">
-         <widget class="QLabel" name="ollamaHostLabel">
-          <property name="text"><string>Host Ollama</string></property>
-         </widget>
-        </item>
-        <item row="1" column="1">
-         <widget class="QWidget" name="ollama_host_container">
-          <layout class="QHBoxLayout" name="ollamaHostLayout">
-           <property name="spacing"><number>8</number></property>
-           <property name="leftMargin"><number>0</number></property>
-           <property name="topMargin"><number>0</number></property>
-           <property name="rightMargin"><number>0</number></property>
-           <property name="bottomMargin"><number>0</number></property>
-           <item>
-            <widget class="QLineEdit" name="ollama_host_input"/>
-           </item>
-           <item>
-            <widget class="QPushButton" name="ollama_verify_button">
-             <property name="text"><string>Verificar</string></property>
-            </widget>
-           </item>
-          </layout>
-         </widget>
-        </item>
-        <item row="2" column="0">
-         <widget class="QLabel" name="geminiKeyLabel">
-          <property name="text"><string>Credencial cloud</string></property>
-         </widget>
-        </item>
-        <item row="2" column="1">
-         <widget class="QWidget" name="gemini_key_container">
-          <layout class="QHBoxLayout" name="geminiKeyLayout">
-           <property name="spacing"><number>8</number></property>
-           <property name="leftMargin"><number>0</number></property>
-           <property name="topMargin"><number>0</number></property>
-           <property name="rightMargin"><number>0</number></property>
-           <property name="bottomMargin"><number>0</number></property>
-           <item>
-            <widget class="QLineEdit" name="gemini_key_input"/>
-           </item>
-           <item>
-            <widget class="QPushButton" name="gemini_apply_button">
-             <property name="text"><string>Cargar</string></property>
-            </widget>
-           </item>
-          </layout>
-         </widget>
-        </item>
-        <item row="3" column="0">
-         <widget class="QLabel" name="llmLabel">
-          <property name="text"><string>Modelo de lenguaje</string></property>
-         </widget>
-        </item>
-        <item row="3" column="1">
-         <widget class="QComboBox" name="llm_combo"/>
-        </item>
-        <item row="4" column="0">
-         <widget class="QLabel" name="vlmLabel">
-          <property name="text"><string>Modelo visual</string></property>
-         </widget>
-        </item>
-        <item row="4" column="1">
-         <widget class="QComboBox" name="vlm_combo"/>
-        </item>
-        <item row="5" column="0">
-         <widget class="QLabel" name="embeddingLabel">
-          <property name="text"><string>Embeddings</string></property>
-         </widget>
-        </item>
-        <item row="5" column="1">
-         <widget class="QComboBox" name="embedding_combo"/>
-        </item>
-       </layout>
-      </item>
-      <item>
-       <widget class="QLabel" name="connection_label">
-        <property name="text"><string/></property>
-        <property name="muted" stdset="0"><bool>true</bool></property>
-        <property name="wordWrap"><bool>true</bool></property>
-       </widget>
-      </item>
-      <item>
-       <widget class="QLabel" name="credential_status_label">
-        <property name="text"><string/></property>
-        <property name="muted" stdset="0"><bool>true</bool></property>
-        <property name="wordWrap"><bool>true</bool></property>
+       <widget class="QTabWidget" name="category_tabs">
+        <property name="documentMode"><bool>true</bool></property>
+        <widget class="QWidget" name="tab_llm">
+         <layout class="QVBoxLayout" name="llmTabLayout">
+          <property name="spacing"><number>10</number></property>
+          <property name="topMargin"><number>12</number></property>
+          <property name="bottomMargin"><number>12</number></property>
+          <item>
+           <layout class="QFormLayout" name="llmForm">
+            <property name="horizontalSpacing"><number>24</number></property>
+            <item row="0" column="0">
+             <widget class="QLabel" name="llmVendorLabel">
+              <property name="text"><string>Vendor</string></property>
+             </widget>
+            </item>
+            <item row="0" column="1">
+             <widget class="QComboBox" name="llm_vendor_combo"/>
+            </item>
+            <item row="1" column="0">
+             <widget class="QLabel" name="llmOllamaHostLabel">
+              <property name="text"><string>Host Ollama</string></property>
+             </widget>
+            </item>
+            <item row="1" column="1">
+             <widget class="QWidget" name="llm_ollama_host_container">
+              <layout class="QHBoxLayout" name="llmOllamaHostLayout">
+               <property name="spacing"><number>8</number></property>
+               <property name="leftMargin"><number>0</number></property>
+               <property name="topMargin"><number>0</number></property>
+               <property name="rightMargin"><number>0</number></property>
+               <property name="bottomMargin"><number>0</number></property>
+               <item>
+                <widget class="QLineEdit" name="llm_ollama_host_input"/>
+               </item>
+               <item>
+                <widget class="QPushButton" name="llm_ollama_verify_button">
+                 <property name="text"><string>Verificar</string></property>
+                </widget>
+               </item>
+              </layout>
+             </widget>
+            </item>
+            <item row="2" column="0">
+             <widget class="QLabel" name="llmKeyLabel">
+              <property name="text"><string>Credencial</string></property>
+             </widget>
+            </item>
+            <item row="2" column="1">
+             <widget class="QWidget" name="llm_key_container">
+              <layout class="QHBoxLayout" name="llmKeyLayout">
+               <property name="spacing"><number>8</number></property>
+               <property name="leftMargin"><number>0</number></property>
+               <property name="topMargin"><number>0</number></property>
+               <property name="rightMargin"><number>0</number></property>
+               <property name="bottomMargin"><number>0</number></property>
+               <item>
+                <widget class="QLineEdit" name="llm_key_input"/>
+               </item>
+               <item>
+                <widget class="QPushButton" name="llm_key_apply_button">
+                 <property name="text"><string>Cargar</string></property>
+                </widget>
+               </item>
+              </layout>
+             </widget>
+            </item>
+            <item row="3" column="0">
+             <widget class="QLabel" name="llmModelLabel">
+              <property name="text"><string>Modelo</string></property>
+             </widget>
+            </item>
+            <item row="3" column="1">
+             <widget class="QComboBox" name="llm_combo"/>
+            </item>
+           </layout>
+          </item>
+          <item>
+           <widget class="QLabel" name="llm_status_label">
+            <property name="text"><string/></property>
+            <property name="muted" stdset="0"><bool>true</bool></property>
+            <property name="wordWrap"><bool>true</bool></property>
+           </widget>
+          </item>
+         </layout>
+        </widget>
+        <widget class="QWidget" name="tab_vlm">
+         <layout class="QVBoxLayout" name="vlmTabLayout">
+          <property name="spacing"><number>10</number></property>
+          <property name="topMargin"><number>12</number></property>
+          <property name="bottomMargin"><number>12</number></property>
+          <item>
+           <layout class="QFormLayout" name="vlmForm">
+            <property name="horizontalSpacing"><number>24</number></property>
+            <item row="0" column="0">
+             <widget class="QLabel" name="vlmVendorLabel">
+              <property name="text"><string>Vendor</string></property>
+             </widget>
+            </item>
+            <item row="0" column="1">
+             <widget class="QComboBox" name="vlm_vendor_combo"/>
+            </item>
+            <item row="1" column="0">
+             <widget class="QLabel" name="vlmOllamaHostLabel">
+              <property name="text"><string>Host Ollama</string></property>
+             </widget>
+            </item>
+            <item row="1" column="1">
+             <widget class="QWidget" name="vlm_ollama_host_container">
+              <layout class="QHBoxLayout" name="vlmOllamaHostLayout">
+               <property name="spacing"><number>8</number></property>
+               <property name="leftMargin"><number>0</number></property>
+               <property name="topMargin"><number>0</number></property>
+               <property name="rightMargin"><number>0</number></property>
+               <property name="bottomMargin"><number>0</number></property>
+               <item>
+                <widget class="QLineEdit" name="vlm_ollama_host_input"/>
+               </item>
+               <item>
+                <widget class="QPushButton" name="vlm_ollama_verify_button">
+                 <property name="text"><string>Verificar</string></property>
+                </widget>
+               </item>
+              </layout>
+             </widget>
+            </item>
+            <item row="2" column="0">
+             <widget class="QLabel" name="vlmKeyLabel">
+              <property name="text"><string>Credencial</string></property>
+             </widget>
+            </item>
+            <item row="2" column="1">
+             <widget class="QWidget" name="vlm_key_container">
+              <layout class="QHBoxLayout" name="vlmKeyLayout">
+               <property name="spacing"><number>8</number></property>
+               <property name="leftMargin"><number>0</number></property>
+               <property name="topMargin"><number>0</number></property>
+               <property name="rightMargin"><number>0</number></property>
+               <property name="bottomMargin"><number>0</number></property>
+               <item>
+                <widget class="QLineEdit" name="vlm_key_input"/>
+               </item>
+               <item>
+                <widget class="QPushButton" name="vlm_key_apply_button">
+                 <property name="text"><string>Cargar</string></property>
+                </widget>
+               </item>
+              </layout>
+             </widget>
+            </item>
+            <item row="3" column="0">
+             <widget class="QLabel" name="vlmModelLabel">
+              <property name="text"><string>Modelo</string></property>
+             </widget>
+            </item>
+            <item row="3" column="1">
+             <widget class="QComboBox" name="vlm_combo"/>
+            </item>
+           </layout>
+          </item>
+          <item>
+           <widget class="QLabel" name="vlm_status_label">
+            <property name="text"><string/></property>
+            <property name="muted" stdset="0"><bool>true</bool></property>
+            <property name="wordWrap"><bool>true</bool></property>
+           </widget>
+          </item>
+         </layout>
+        </widget>
+        <widget class="QWidget" name="tab_embedding">
+         <layout class="QVBoxLayout" name="embeddingTabLayout">
+          <property name="spacing"><number>10</number></property>
+          <property name="topMargin"><number>12</number></property>
+          <property name="bottomMargin"><number>12</number></property>
+          <item>
+           <layout class="QFormLayout" name="embeddingForm">
+            <property name="horizontalSpacing"><number>24</number></property>
+            <item row="0" column="0">
+             <widget class="QLabel" name="embeddingVendorLabel">
+              <property name="text"><string>Vendor</string></property>
+             </widget>
+            </item>
+            <item row="0" column="1">
+             <widget class="QComboBox" name="embedding_vendor_combo"/>
+            </item>
+            <item row="1" column="0">
+             <widget class="QLabel" name="embeddingOllamaHostLabel">
+              <property name="text"><string>Host Ollama</string></property>
+             </widget>
+            </item>
+            <item row="1" column="1">
+             <widget class="QWidget" name="embedding_ollama_host_container">
+              <layout class="QHBoxLayout" name="embeddingOllamaHostLayout">
+               <property name="spacing"><number>8</number></property>
+               <property name="leftMargin"><number>0</number></property>
+               <property name="topMargin"><number>0</number></property>
+               <property name="rightMargin"><number>0</number></property>
+               <property name="bottomMargin"><number>0</number></property>
+               <item>
+                <widget class="QLineEdit" name="embedding_ollama_host_input"/>
+               </item>
+               <item>
+                <widget class="QPushButton" name="embedding_ollama_verify_button">
+                 <property name="text"><string>Verificar</string></property>
+                </widget>
+               </item>
+              </layout>
+             </widget>
+            </item>
+            <item row="2" column="0">
+             <widget class="QLabel" name="embeddingKeyLabel">
+              <property name="text"><string>Credencial</string></property>
+             </widget>
+            </item>
+            <item row="2" column="1">
+             <widget class="QWidget" name="embedding_key_container">
+              <layout class="QHBoxLayout" name="embeddingKeyLayout">
+               <property name="spacing"><number>8</number></property>
+               <property name="leftMargin"><number>0</number></property>
+               <property name="topMargin"><number>0</number></property>
+               <property name="rightMargin"><number>0</number></property>
+               <property name="bottomMargin"><number>0</number></property>
+               <item>
+                <widget class="QLineEdit" name="embedding_key_input"/>
+               </item>
+               <item>
+                <widget class="QPushButton" name="embedding_key_apply_button">
+                 <property name="text"><string>Cargar</string></property>
+                </widget>
+               </item>
+              </layout>
+             </widget>
+            </item>
+            <item row="3" column="0">
+             <widget class="QLabel" name="embeddingModelLabel">
+              <property name="text"><string>Modelo</string></property>
+             </widget>
+            </item>
+            <item row="3" column="1">
+             <widget class="QComboBox" name="embedding_combo"/>
+            </item>
+           </layout>
+          </item>
+          <item>
+           <widget class="QLabel" name="embedding_status_label">
+            <property name="text"><string/></property>
+            <property name="muted" stdset="0"><bool>true</bool></property>
+            <property name="wordWrap"><bool>true</bool></property>
+           </widget>
+          </item>
+         </layout>
+        </widget>
        </widget>
       </item>
       <item>

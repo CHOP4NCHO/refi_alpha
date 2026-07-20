@@ -38,13 +38,10 @@ def main() -> int:
     app.setApplicationName("REFI ALPHA")
     app.setOrganizationName("REFI")
 
-    # Cargar el icono usando la ruta dinámica
     icon_path = get_resource_path("refi.png")
     app.setWindowIcon(QIcon(icon_path))
 
     model_provider = ModelProvider(
-        local_ip="localhost",
-        cloud_ip="generativelanguage.googleapis.com/v1beta/openai",
         temperature=0.1,
     )
     service = RefiService(
@@ -57,7 +54,7 @@ def main() -> int:
     )
     theme_manager = ThemeManager()
     window = RefiMainWindow(service=service, theme_manager=theme_manager)
-    window.setWindowIcon(QIcon(icon_path))  # Aseguramos el icono en la ventana
+    window.setWindowIcon(QIcon(icon_path)) 
     window.show()
     return app.exec()
 

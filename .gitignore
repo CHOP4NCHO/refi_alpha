@@ -9,3 +9,4 @@ tools.log.txt
 *.csv
 plans/
 stats/*
+.env
