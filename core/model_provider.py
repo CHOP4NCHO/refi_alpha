@@ -127,7 +127,7 @@ class ModelProvider:
                 format="json"
             )
 
-        if config.provider == LlmProvider.GEMINI:
+        if config.provider in (LlmProvider.GEMINI, LlmProvider.OPENAI, LlmProvider.CLAUDE):
             return init_chat_model(
                 config.model_id,
                 temperature=self._temperature
@@ -170,7 +170,7 @@ class ModelProvider:
                 base_url=f"http://{self._local_ip}:11434"
             )
 
-        if config.provider == LlmProvider.GEMINI:
+        if config.provider in (LlmProvider.GEMINI, LlmProvider.OPENAI):
             return init_embeddings(config.model_id or " ")
 
         # Fallback: Ollama unreachable, use cloud embeddings
@@ -195,6 +195,19 @@ class ModelProvider:
         if config.provider == LlmProvider.OLLAMA and self.is_ollama_reachable:
             return ApiVlmOptions(
                 url=AnyUrl(f"http://{self._local_ip}:11434/v1/chat/completions"),
+                params=dict(model=config.model_id),
+                prompt=prompt,
+                timeout=90,
+                scale=1.0,
+                response_format=ResponseFormat.MARKDOWN,
+            )
+
+        if config.provider == LlmProvider.OPENAI:
+            api_key = os.environ.get("OPENAI_API_KEY", "")
+            headers = {"Authorization": f"Bearer {api_key}"} if api_key else {}
+            return ApiVlmOptions(
+                url=AnyUrl("https://api.openai.com/v1/chat/completions"),
+                headers=headers,
                 params=dict(model=config.model_id),
                 prompt=prompt,
                 timeout=90,
@@ -243,21 +256,32 @@ class ModelProvider:
                 data = response.json()
 
                 for m in data.get("models", []):
+                    model_id = m["name"]
                     models.append(ModelConfig(
                         provider=LlmProvider.OLLAMA,
-                        model_id=m["name"],
-                        category="chat"
+                        model_id=model_id,
+                        category=self._classify_ollama_model(model_id)
                     ))
             except Exception:
                 pass
 
-        # Gemini (static or API-based)
+        # Cloud providers (static catalogs)
         models.extend([
             ModelConfig(LlmProvider.GEMINI, "google_genai:gemini-3.1-flash-lite", "chat"),
             ModelConfig(LlmProvider.GEMINI, "google_genai:gemini-2.5-flash", "chat"),
             ModelConfig(LlmProvider.GEMINI, "google_genai:gemini-2.5-pro", "chat"),
             ModelConfig(LlmProvider.GEMINI, "gemini-2.5-flash-lite", "vlm"),
             ModelConfig(LlmProvider.GEMINI, "google_genai:gemini-embedding-2", "embedding"),
+            ModelConfig(LlmProvider.OPENAI, "openai:gpt-5.1", "chat"),
+            ModelConfig(LlmProvider.OPENAI, "openai:gpt-5-mini", "chat"),
+            ModelConfig(LlmProvider.OPENAI, "openai:gpt-4.1-mini", "chat"),
+            ModelConfig(LlmProvider.OPENAI, "gpt-4o-mini", "vlm"),
+            ModelConfig(LlmProvider.OPENAI, "gpt-4o", "vlm"),
+            ModelConfig(LlmProvider.OPENAI, "openai:text-embedding-3-small", "embedding"),
+            ModelConfig(LlmProvider.OPENAI, "openai:text-embedding-3-large", "embedding"),
+            ModelConfig(LlmProvider.CLAUDE, "anthropic:claude-opus-4-7", "chat"),
+            ModelConfig(LlmProvider.CLAUDE, "anthropic:claude-sonnet-4-6", "chat"),
+            ModelConfig(LlmProvider.CLAUDE, "anthropic:claude-haiku-4-5", "chat"),
         ])
 
         return models
@@ -294,3 +318,30 @@ class ModelProvider:
         """Update the Ollama IP and re-verify the connection."""
         self._local_ip = ip
         self.is_ollama_reachable = self._check_connection(ip)
+
+    @staticmethod
+    def _classify_ollama_model(model_id: str) -> str:
+        normalized = model_id.lower()
+        embedding_markers = (
+            "embed",
+            "embedding",
+            "nomic-embed",
+            "mxbai-embed",
+            "bge-",
+            "e5-",
+            "snowflake-arctic-embed",
+        )
+        vlm_markers = (
+            "vision",
+            "llava",
+            "bakllava",
+            "minicpm-v",
+            "moondream",
+            "granite3.2-vision",
+            "gemma3",
+        )
+        if any(marker in normalized for marker in embedding_markers):
+            return "embedding"
+        if any(marker in normalized for marker in vlm_markers):
+            return "vlm"
+        return "chat"

@@ -1,11 +1,13 @@
 from dataclasses import dataclass, field
 
+from pydantic import BaseModel
+
 from .evaluator import SingleRequirementEval
 from ..enums import LlmProvider, EvaluationMode, RealEvaluation
 
 
 @dataclass
-class ReqFidelityReview:
+class ReqFidelityReview():
     debug_mode: bool = False
     review_date: str = ""
     reviewed_reqs: list[SingleRequirementEval] = field(default_factory=list)

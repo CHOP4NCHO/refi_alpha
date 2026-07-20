@@ -20,7 +20,8 @@ def perform_agent_evaluation(
     current_llm: BaseChatModel,
     debug_mode: bool,
     real_batch_evaluation_type: RealEvaluation,
-    log_callback=None
+    log_callback=None,
+    progress_callback=None,
 ) -> ReqFidelityReview:
     """
     Orchestrates the entire evaluation lifecycle:
@@ -51,7 +52,8 @@ def perform_agent_evaluation(
     req_review = None
 
     try:
-        for req in evaluator._requirement_list:
+        total_reqs = len(evaluator._requirement_list)
+        for index, req in enumerate(evaluator._requirement_list):
             log(f"Evaluando requerimiento: {req.description}")
             try:
                 log("Performing evaluation in Agent mode...")
@@ -64,6 +66,8 @@ def perform_agent_evaluation(
                 log(f"Evaluación completada para: {req.id}")
             except Exception as e:
                 log(f"Error evaluando {req.id}: {str(e)}")
+            if progress_callback:
+                progress_callback(index + 1, total_reqs)
 
         try:
             # Calculate elapsed time
@@ -117,6 +121,7 @@ def perform_pipeline_evaluation(
     debug_mode,
     real_batch_evaluation_type,
     log_callback=None,
+    progress_callback=None,
 ) -> ReqFidelityReview:
     """
     Orchestrates the entire evaluation lifecycle:
@@ -135,7 +140,8 @@ def perform_pipeline_evaluation(
     req_review = None
 
     try:
-        for req in evaluator._requirement_list:
+        total_reqs = len(evaluator._requirement_list)
+        for index, req in enumerate(evaluator._requirement_list):
             log(f"Evaluando requerimiento: {req.description}")
             try:
                 log("Performing evaluation in LLM Pipeline mode...")
@@ -147,6 +153,8 @@ def perform_pipeline_evaluation(
                 log(f"Evaluación completada para: {req.id}")
             except Exception as e:
                 log(f"Error evaluando {req.id}: {str(e)}")
+            if progress_callback:
+                progress_callback(index + 1, total_reqs)
 
         try:
             # Calculate elapsed time

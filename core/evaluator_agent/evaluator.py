@@ -31,7 +31,8 @@ logger = logging.getLogger(__name__)
 class CodeFileContext:
     code_content: list[str]
 
-class SingleRequirementEval(BaseModel):
+@dataclass
+class SingleRequirementEval():
     initial_description: str
     reasoning: str       
     is_fulfilled: bool 

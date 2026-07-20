@@ -1,10 +1,207 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ui version="4.0">
- <class>ConfigPage</class><widget class="QWidget" name="ConfigPage">
-  <layout class="QVBoxLayout" name="pageLayout"><property name="spacing"><number>14</number></property><property name="leftMargin"><number>0</number></property><property name="topMargin"><number>0</number></property><property name="rightMargin"><number>0</number></property><property name="bottomMargin"><number>0</number></property>
-   <item><widget class="QFrame" name="generalCard"><property name="card" stdset="0"><bool>true</bool></property><layout class="QVBoxLayout" name="generalCardLayout"><property name="spacing"><number>12</number></property><property name="leftMargin"><number>18</number></property><property name="topMargin"><number>16</number></property><property name="rightMargin"><number>18</number></property><property name="bottomMargin"><number>18</number></property><item><widget class="QLabel" name="generalTitle"><property name="text"><string>Comportamiento</string></property></widget></item><item><widget class="QLabel" name="generalSubtitle"><property name="text"><string>Ajustes aplicados inmediatamente a RefiService.</string></property><property name="muted" stdset="0"><bool>true</bool></property></widget></item><item><layout class="QFormLayout" name="generalForm"><property name="horizontalSpacing"><number>24</number></property><item row="0" column="0"><widget class="QLabel" name="debugLabel"><property name="text"><string>Modo debug</string></property></widget></item><item row="0" column="1"><widget class="QCheckBox" name="debug_check"><property name="text"><string>Registrar detalles técnicos durante el proceso</string></property></widget></item><item row="1" column="0"><widget class="QLabel" name="evalModeLabel"><property name="text"><string>Estrategia de evaluación</string></property></widget></item><item row="1" column="1"><widget class="QComboBox" name="eval_mode_combo"/></item><item row="2" column="0"><widget class="QLabel" name="realEvalLabel"><property name="text"><string>Valor supervisado</string></property></widget></item><item row="2" column="1"><widget class="QComboBox" name="real_eval_combo"/></item></layout></item></layout></widget></item>
-   <item><widget class="QFrame" name="modelCard"><property name="card" stdset="0"><bool>true</bool></property><layout class="QVBoxLayout" name="modelCardLayout"><property name="spacing"><number>12</number></property><property name="leftMargin"><number>18</number></property><property name="topMargin"><number>16</number></property><property name="rightMargin"><number>18</number></property><property name="bottomMargin"><number>18</number></property><item><widget class="QLabel" name="modelTitle"><property name="text"><string>Modelos</string></property></widget></item><item><widget class="QLabel" name="modelSubtitle"><property name="text"><string>Selecciona el proveedor y los modelos requeridos por cada operación.</string></property><property name="muted" stdset="0"><bool>true</bool></property></widget></item><item><layout class="QFormLayout" name="modelForm"><property name="horizontalSpacing"><number>24</number></property><item row="0" column="0"><widget class="QLabel" name="providerLabel"><property name="text"><string>Proveedor</string></property></widget></item><item row="0" column="1"><widget class="QComboBox" name="provider_combo"/></item><item row="1" column="0"><widget class="QLabel" name="llmLabel"><property name="text"><string>Modelo de lenguaje</string></property></widget></item><item row="1" column="1"><widget class="QComboBox" name="llm_combo"/></item><item row="2" column="0"><widget class="QLabel" name="vlmLabel"><property name="text"><string>Modelo visual</string></property></widget></item><item row="2" column="1"><widget class="QComboBox" name="vlm_combo"/></item><item row="3" column="0"><widget class="QLabel" name="embeddingLabel"><property name="text"><string>Embeddings</string></property></widget></item><item row="3" column="1"><widget class="QComboBox" name="embedding_combo"/></item></layout></item><item><widget class="QLabel" name="connection_label"><property name="text"><string/></property><property name="muted" stdset="0"><bool>true</bool></property></widget></item></layout></widget></item>
-   <item><spacer name="bottomStretch"><property name="orientation"><enum>Qt::Vertical</enum></property><property name="sizeHint"><size><width>20</width><height>40</height></size></property></spacer></item>
+ <class>ConfigPage</class>
+ <widget class="QWidget" name="ConfigPage">
+  <layout class="QVBoxLayout" name="pageLayout">
+   <property name="spacing"><number>14</number></property>
+   <property name="leftMargin"><number>0</number></property>
+   <property name="topMargin"><number>0</number></property>
+   <property name="rightMargin"><number>0</number></property>
+   <property name="bottomMargin"><number>0</number></property>
+   <item>
+    <widget class="QFrame" name="generalCard">
+     <property name="card" stdset="0"><bool>true</bool></property>
+     <layout class="QVBoxLayout" name="generalCardLayout">
+      <property name="spacing"><number>12</number></property>
+      <property name="leftMargin"><number>18</number></property>
+      <property name="topMargin"><number>16</number></property>
+      <property name="rightMargin"><number>18</number></property>
+      <property name="bottomMargin"><number>18</number></property>
+      <item>
+       <widget class="QLabel" name="generalTitle">
+        <property name="text"><string>Comportamiento</string></property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QLabel" name="generalSubtitle">
+        <property name="text"><string>Ajustes aplicados inmediatamente a RefiService.</string></property>
+        <property name="muted" stdset="0"><bool>true</bool></property>
+       </widget>
+      </item>
+      <item>
+       <layout class="QFormLayout" name="generalForm">
+        <property name="horizontalSpacing"><number>24</number></property>
+        <item row="0" column="0">
+         <widget class="QLabel" name="debugLabel">
+          <property name="text"><string>Modo debug</string></property>
+         </widget>
+        </item>
+        <item row="0" column="1">
+         <widget class="QCheckBox" name="debug_check">
+          <property name="text"><string>Registrar detalles técnicos durante el proceso</string></property>
+         </widget>
+        </item>
+        <item row="1" column="0">
+         <widget class="QLabel" name="evalModeLabel">
+          <property name="text"><string>Estrategia de evaluación</string></property>
+         </widget>
+        </item>
+        <item row="1" column="1">
+         <widget class="QComboBox" name="eval_mode_combo"/>
+        </item>
+        <item row="2" column="0">
+         <widget class="QLabel" name="realEvalLabel">
+          <property name="text"><string>Valor supervisado</string></property>
+         </widget>
+        </item>
+        <item row="2" column="1">
+         <widget class="QComboBox" name="real_eval_combo"/>
+        </item>
+       </layout>
+      </item>
+     </layout>
+    </widget>
+   </item>
+   <item>
+    <widget class="QFrame" name="modelCard">
+     <property name="card" stdset="0"><bool>true</bool></property>
+     <layout class="QVBoxLayout" name="modelCardLayout">
+      <property name="spacing"><number>12</number></property>
+      <property name="leftMargin"><number>18</number></property>
+      <property name="topMargin"><number>16</number></property>
+      <property name="rightMargin"><number>18</number></property>
+      <property name="bottomMargin"><number>18</number></property>
+      <item>
+       <widget class="QLabel" name="modelTitle">
+        <property name="text"><string>Configurar modelos</string></property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QLabel" name="modelSubtitle">
+        <property name="text"><string>Selecciona un vendor, valida su acceso y activa las instancias requeridas.</string></property>
+        <property name="muted" stdset="0"><bool>true</bool></property>
+        <property name="wordWrap"><bool>true</bool></property>
+       </widget>
+      </item>
+      <item>
+       <layout class="QFormLayout" name="modelForm">
+        <property name="horizontalSpacing"><number>24</number></property>
+        <item row="0" column="0">
+         <widget class="QLabel" name="providerLabel">
+          <property name="text"><string>Vendor</string></property>
+         </widget>
+        </item>
+        <item row="0" column="1">
+         <widget class="QComboBox" name="provider_combo"/>
+        </item>
+        <item row="1" column="0">
+         <widget class="QLabel" name="ollamaHostLabel">
+          <property name="text"><string>Host Ollama</string></property>
+         </widget>
+        </item>
+        <item row="1" column="1">
+         <widget class="QWidget" name="ollama_host_container">
+          <layout class="QHBoxLayout" name="ollamaHostLayout">
+           <property name="spacing"><number>8</number></property>
+           <property name="leftMargin"><number>0</number></property>
+           <property name="topMargin"><number>0</number></property>
+           <property name="rightMargin"><number>0</number></property>
+           <property name="bottomMargin"><number>0</number></property>
+           <item>
+            <widget class="QLineEdit" name="ollama_host_input"/>
+           </item>
+           <item>
+            <widget class="QPushButton" name="ollama_verify_button">
+             <property name="text"><string>Verificar</string></property>
+            </widget>
+           </item>
+          </layout>
+         </widget>
+        </item>
+        <item row="2" column="0">
+         <widget class="QLabel" name="geminiKeyLabel">
+          <property name="text"><string>Credencial cloud</string></property>
+         </widget>
+        </item>
+        <item row="2" column="1">
+         <widget class="QWidget" name="gemini_key_container">
+          <layout class="QHBoxLayout" name="geminiKeyLayout">
+           <property name="spacing"><number>8</number></property>
+           <property name="leftMargin"><number>0</number></property>
+           <property name="topMargin"><number>0</number></property>
+           <property name="rightMargin"><number>0</number></property>
+           <property name="bottomMargin"><number>0</number></property>
+           <item>
+            <widget class="QLineEdit" name="gemini_key_input"/>
+           </item>
+           <item>
+            <widget class="QPushButton" name="gemini_apply_button">
+             <property name="text"><string>Cargar</string></property>
+            </widget>
+           </item>
+          </layout>
+         </widget>
+        </item>
+        <item row="3" column="0">
+         <widget class="QLabel" name="llmLabel">
+          <property name="text"><string>Modelo de lenguaje</string></property>
+         </widget>
+        </item>
+        <item row="3" column="1">
+         <widget class="QComboBox" name="llm_combo"/>
+        </item>
+        <item row="4" column="0">
+         <widget class="QLabel" name="vlmLabel">
+          <property name="text"><string>Modelo visual</string></property>
+         </widget>
+        </item>
+        <item row="4" column="1">
+         <widget class="QComboBox" name="vlm_combo"/>
+        </item>
+        <item row="5" column="0">
+         <widget class="QLabel" name="embeddingLabel">
+          <property name="text"><string>Embeddings</string></property>
+         </widget>
+        </item>
+        <item row="5" column="1">
+         <widget class="QComboBox" name="embedding_combo"/>
+        </item>
+       </layout>
+      </item>
+      <item>
+       <widget class="QLabel" name="connection_label">
+        <property name="text"><string/></property>
+        <property name="muted" stdset="0"><bool>true</bool></property>
+        <property name="wordWrap"><bool>true</bool></property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QLabel" name="credential_status_label">
+        <property name="text"><string/></property>
+        <property name="muted" stdset="0"><bool>true</bool></property>
+        <property name="wordWrap"><bool>true</bool></property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QLabel" name="active_models_label">
+        <property name="text"><string/></property>
+        <property name="muted" stdset="0"><bool>true</bool></property>
+        <property name="wordWrap"><bool>true</bool></property>
+       </widget>
+      </item>
+     </layout>
+    </widget>
+   </item>
+   <item>
+    <spacer name="bottomStretch">
+     <property name="orientation"><enum>Qt::Vertical</enum></property>
+     <property name="sizeHint">
+      <size><width>20</width><height>40</height></size>
+     </property>
+    </spacer>
+   </item>
   </layout>
- </widget><resources/><connections/>
+ </widget>
+ <resources/>
+ <connections/>
 </ui>

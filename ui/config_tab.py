@@ -150,7 +150,7 @@ class ConfigTab(ttk.Frame):
         try:
             model = self._find_model(self.llm_var.get(), "chat")
             self.app.service.model_provider.set_llm(model)
-            self.app.service._update_evaluator_llm()
+            self.app.service.update_evaluator_llm()
         except ValueError as e:
             messagebox.showwarning("Modelo no encontrado", str(e))
         except DomainError as e:
@@ -160,7 +160,7 @@ class ConfigTab(ttk.Frame):
         try:
             model = self._find_model(self.vlm_var.get(), "vlm")
             self.app.service.model_provider.set_vlm(model)
-            self.app.service._reset_requirements_extractor()
+            self.app.service.reset_requirements_extractor()
         except ValueError as e:
             messagebox.showwarning("Modelo no encontrado", str(e))
         except DomainError as e:
@@ -170,7 +170,7 @@ class ConfigTab(ttk.Frame):
         try:
             model = self._find_model(self.embedding_var.get(), "embedding")
             self.app.service.model_provider.set_embedding(model)
-            self.app.service._reset_requirements_extractor()
+            self.app.service.reset_requirements_extractor()
         except ValueError as e:
             messagebox.showwarning("Modelo no encontrado", str(e))
         except DomainError as e:

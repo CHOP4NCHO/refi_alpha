@@ -22,9 +22,10 @@ class WorkspacePage(QWidget):
     context_changed = pyqtSignal()
     message = pyqtSignal(str)
 
-    def __init__(self, service, parent: QWidget | None = None):
+    def __init__(self, service, parent: QWidget | None = None, theme_manager=None):
         super().__init__(parent)
         self.service = service
+        self.theme_manager = theme_manager
         self._drag_start = QPoint()
         load_ui("workspace_page.ui", self)
         self._setup_ui()
@@ -51,6 +52,13 @@ class WorkspacePage(QWidget):
         self.tree.itemDoubleClicked.connect(self.toggle_tree_item)
         self.context_list.itemDoubleClicked.connect(self.remove_context_item)
         self.clear_button.clicked.connect(self.clear_context)
+
+        from PyQt6.QtWidgets import QLineEdit
+        self.filter_input = QLineEdit(self)
+        self.filter_input.setPlaceholderText("Filtrar archivos...")
+        self.filter_input.textChanged.connect(self._filter_tree)
+        idx = self.treeCardLayout.indexOf(self.tree)
+        self.treeCardLayout.insertWidget(idx, self.filter_input)
         self.splitter.setSizes([680, 380])
 
     def set_compact(self, compact: bool) -> None:
@@ -85,7 +93,8 @@ class WorkspacePage(QWidget):
                 if key not in directory_items:
                     directory_items[key] = QTreeWidgetItem(parent, [part])
                     directory_items[key].setIcon(0, self.style().standardIcon(QStyle.StandardPixmap.SP_DirIcon))
-                    directory_items[key].setForeground(0, QColor("#26384a"))
+                    text_color = self.theme_manager.get_palette_color("text") if self.theme_manager else "#26384a"
+                    directory_items[key].setForeground(0, QColor(text_color))
                 parent = directory_items[key]
 
             file_path = str(Path(file_obj.path))
@@ -98,7 +107,8 @@ class WorkspacePage(QWidget):
         self._refresh_context()
 
     def _style_file_item(self, item: QTreeWidgetItem, selected: bool) -> None:
-        item.setForeground(0, QColor("#26384a"))
+        text_color = self.theme_manager.get_palette_color("text") if self.theme_manager else "#26384a"
+        item.setForeground(0, QColor(text_color))
         font = item.font(0)
         font.setBold(selected)
         item.setFont(0, font)
@@ -166,7 +176,7 @@ class WorkspacePage(QWidget):
             for path in paths:
                 added += int(self.service.add_file_to_context(path))
         except Exception as error:
-            QMessageBox.critical(self, "No se pudo añadir", str(error))
+            self._show_messagebox("critical", "No se pudo añadir", str(error))
             return
         self.message.emit(f"{added} archivo(s) arrastrado(s) al contexto.")
         self.refresh()
@@ -190,10 +200,19 @@ class WorkspacePage(QWidget):
         directory = QFileDialog.getExistingDirectory(self, "Selecciona el espacio de trabajo")
         if not directory:
             return
+        if self.service.file_context or self.service.get_requirements():
+            from PyQt6.QtWidgets import QMessageBox
+            answer = self._show_messagebox(
+                "question",
+                "Cambiar espacio de trabajo",
+                "Se perderán el contexto y los requerimientos actuales. ¿Continuar?",
+            )
+            if answer != QMessageBox.StandardButton.Yes:
+                return
         try:
             self.service.set_workdir(directory, Path(directory).name)
         except Exception as error:
-            QMessageBox.critical(self, "No se pudo abrir", str(error))
+            self._show_messagebox("critical", "No se pudo abrir", str(error))
             return
         self.message.emit(f"Espacio de trabajo cambiado a: {directory}")
         self.refresh()
@@ -201,11 +220,11 @@ class WorkspacePage(QWidget):
     def add_path(self) -> None:
         relative_path = self.path_input.text().strip()
         if not relative_path:
-            QMessageBox.warning(self, "Ruta requerida", "Ingresa una ruta relativa válida.")
+            self._show_messagebox("warning", "Ruta requerida", "Ingresa una ruta relativa válida.")
             return
         codebase = self.service.codebase
         if not codebase:
-            QMessageBox.warning(self, "Sin repositorio", "Selecciona primero un espacio de trabajo.")
+            self._show_messagebox("warning", "Sin repositorio", "Selecciona primero un espacio de trabajo.")
             return
         path = Path(codebase.path) / relative_path
         try:
@@ -216,7 +235,7 @@ class WorkspacePage(QWidget):
                 added = self.service.add_file_to_context(path)
                 self.message.emit(f"Archivo {'añadido' if added else 'ya presente'}: {relative_path}")
         except Exception as error:
-            QMessageBox.critical(self, "No se pudo añadir", str(error))
+            self._show_messagebox("critical", "No se pudo añadir", str(error))
             return
         self.path_input.clear()
         self.refresh()
@@ -236,7 +255,7 @@ class WorkspacePage(QWidget):
                 self.service.add_file_to_context(path)
                 self.message.emit(f"Añadido al contexto: {path.name}")
         except Exception as error:
-            QMessageBox.critical(self, "No se pudo actualizar", str(error))
+            self._show_messagebox("critical", "No se pudo actualizar", str(error))
             return
         self.refresh()
 
@@ -252,3 +271,50 @@ class WorkspacePage(QWidget):
         self.service.clear_file_context()
         self.message.emit("Contexto de archivos vaciado.")
         self.refresh()
+
+    def _filter_tree(self, text: str) -> None:
+        from PyQt6.QtWidgets import QTreeWidgetItemIterator
+        text = text.lower()
+        if not text:
+            iterator = QTreeWidgetItemIterator(self.tree)
+            while iterator.value():
+                iterator.value().setHidden(False)
+                iterator += 1
+            return
+
+        iterator = QTreeWidgetItemIterator(self.tree)
+        while iterator.value():
+            iterator.value().setHidden(True)
+            iterator += 1
+
+        iterator = QTreeWidgetItemIterator(self.tree)
+        while iterator.value():
+            item = iterator.value()
+            item_text = item.text(0).lower()
+            if text in item_text:
+                curr = item
+                while curr:
+                    curr.setHidden(False)
+                    curr = curr.parent()
+            iterator += 1
+
+    def _show_messagebox(self, icon_type: str, title: str, text: str, buttons=None):
+        if self.theme_manager:
+            return self.theme_manager.show_message_box(self, icon_type, title, text, buttons)
+        from PyQt6.QtWidgets import QMessageBox
+        if icon_type == "info":
+            return QMessageBox.information(self, title, text)
+        elif icon_type == "warning":
+            return QMessageBox.warning(self, title, text)
+        elif icon_type == "critical":
+            return QMessageBox.critical(self, title, text)
+        elif icon_type == "question":
+            return QMessageBox.question(self, title, text)
+
+    def _populate_combo(self, combo, items, current=None):
+        from .components import populate_combo
+        populate_combo(combo, items, current)
+
+    def _safe_operation(self, fn, error_title="Error"):
+        from .components import safe_operation
+        return safe_operation(self, fn, error_title)

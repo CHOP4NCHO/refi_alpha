@@ -39,3 +39,6 @@ class ReqDocument:
     def add_requirement(self, *reqs: Requirement):
         self.requirements.append(*reqs)
 
+    def delete_requirement(self, req: Requirement):
+        self.requirements.remove(req)
+

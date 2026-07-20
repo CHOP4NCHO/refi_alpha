@@ -24,9 +24,10 @@ from .ui_loader import load_ui
 class EvaluationPage(QWidget):
     evaluation_requested = pyqtSignal()
 
-    def __init__(self, service, parent: QWidget | None = None):
+    def __init__(self, service, parent: QWidget | None = None, theme_manager=None):
         super().__init__(parent)
         self.service = service
+        self.theme_manager = theme_manager
         load_ui("evaluation_page.ui", self)
         self._setup_ui()
         self.refresh()
@@ -35,7 +36,10 @@ class EvaluationPage(QWidget):
         self.run_button.clicked.connect(self.evaluation_requested)
         self.review_combo.currentIndexChanged.connect(self.show_selected_review)
         self.refresh_button.clicked.connect(self.refresh)
-        self.state_label.hide()
+        self.export_button = QPushButton("Exportar", self.resultsCard)
+        self.export_button.clicked.connect(self.export_selected_review)
+        self.resultRow.addWidget(self.export_button)
+        self.state_label.setText("Lista para comenzar")
         self.summary_layout = QHBoxLayout()
         self.files_metric = Metric("Archivos", "0")
         self.requirements_metric = Metric("Requisitos", "0")
@@ -66,7 +70,20 @@ class EvaluationPage(QWidget):
     def set_busy(self, busy: bool) -> None:
         self.run_button.setEnabled(not busy)
         self.progress.setVisible(busy)
-        self.run_button.setText("…  Evaluación en curso" if busy else "▶  Iniciar evaluación")
+        if busy:
+            self.progress.setMaximum(0)
+            self.state_label.setText("Iniciando evaluación...")
+            self.run_button.setText("…  Evaluación en curso")
+        else:
+            self.progress.setMaximum(100)
+            self.progress.setValue(0)
+            self.state_label.setText("Lista para comenzar")
+            self.run_button.setText("▶  Iniciar evaluación")
+
+    def update_progress(self, current: int, total: int) -> None:
+        self.progress.setMaximum(total)
+        self.progress.setValue(current)
+        self.state_label.setText(f"Evaluando {current}/{total}...")
 
     def refresh(self) -> None:
         self.refresh_summary()
@@ -78,8 +95,9 @@ class EvaluationPage(QWidget):
             self.review_combo.addItem(f"#{index + 1} · {review.review_date}", index)
         self.review_combo.blockSignals(False)
         if not reviews:
+            text_muted_color = self.theme_manager.get_palette_color("text_muted") if self.theme_manager else "#7f93aa"
             self.result_view.setHtml(
-                "<div style='color:#7f93aa; padding:24px'>"
+                f"<div style='color:{text_muted_color}; padding:24px'>"
                 "Aún no hay evaluaciones registradas en esta sesión."
                 "</div>"
             )
@@ -125,13 +143,29 @@ class EvaluationPage(QWidget):
                 missing.append("Embeddings")
         if missing:
             details.append(f"<b>Configuración incompleta:</b> falta {', '.join(missing)}.")
+            if self.theme_manager:
+                text_color = self.theme_manager.get_palette_color("warning_text")
+                bg_color = self.theme_manager.get_palette_color("warning_bg")
+                border_color = self.theme_manager.get_palette_color("border")
+            else:
+                text_color = "#765a00"
+                bg_color = "#fff4c2"
+                border_color = "#e6c85c"
             self.model_status.setStyleSheet(
-                "QLabel { color: #765a00; background: #fff4c2; border: 1px solid #e6c85c; "
+                f"QLabel {{ color: {text_color}; background: {bg_color}; border: 1px solid {border_color}; "
                 "border-radius: 8px; padding: 9px; }"
             )
         else:
+            if self.theme_manager:
+                text_color = self.theme_manager.get_palette_color("info_text")
+                bg_color = self.theme_manager.get_palette_color("info_bg")
+                border_color = self.theme_manager.get_palette_color("border")
+            else:
+                text_color = "#294057"
+                bg_color = "#f5f8fb"
+                border_color = "#d7e1eb"
             self.model_status.setStyleSheet(
-                "QLabel { color: #294057; background: #f5f8fb; border: 1px solid #d7e1eb; "
+                f"QLabel {{ color: {text_color}; background: {bg_color}; border: 1px solid {border_color}; "
                 "border-radius: 8px; padding: 9px; }"
             )
         self.model_status.setText(" &nbsp;·&nbsp; ".join(details))
@@ -149,6 +183,44 @@ class EvaluationPage(QWidget):
         layout.addWidget(buttons)
         dialog.exec()
 
+    def export_selected_review(self) -> None:
+        index = self.review_combo.currentData()
+        if index is None:
+            self._show_messagebox("warning", "No hay evaluación", "No hay ninguna evaluación seleccionada para exportar.")
+            return
+        reviews = self.service.get_saved_reviews()
+        if not reviews or index < 0 or index >= len(reviews):
+            return
+        review = reviews[index]
+        
+        from PyQt6.QtWidgets import QFileDialog
+        from pathlib import Path
+        filename, _ = QFileDialog.getSaveFileName(
+            self,
+            "Exportar informe de fidelidad",
+            f"review_{review.review_date.replace(' ', '_').replace(':', '-')}.json",
+            "JSON Files (*.json)",
+        )
+        if not filename:
+            return
+            
+        try:
+            import json
+            from dataclasses import asdict
+            from enum import Enum
+            
+            def custom_serializer(obj):
+                if isinstance(obj, Enum):
+                    return obj.value
+                raise TypeError(f"Type {type(obj)} not serializable")
+                
+            data_dict = asdict(review)
+            json_data = json.dumps(data_dict, indent=2, ensure_ascii=False, default=custom_serializer)
+            Path(filename).write_text(json_data, encoding="utf-8")
+            self._show_messagebox("info", "Exportación exitosa", f"El informe se ha exportado correctamente a {filename}")
+        except Exception as error:
+            self._show_messagebox("critical", "Error al exportar", str(error))
+
     def show_selected_review(self, _index: int = -1) -> None:
         index = self.review_combo.currentData()
         if index is None:
@@ -158,8 +230,34 @@ class EvaluationPage(QWidget):
         except Exception as error:
             self.result_view.setPlainText(str(error))
             return
+        accent_color = self.theme_manager.get_palette_color("accent") if self.theme_manager else "#63e6be"
+        text_color = self.theme_manager.get_palette_color("text") if self.theme_manager else "#dbe7f4"
         self.result_view.setHtml(
-            "<style>pre{white-space:pre-wrap;line-height:1.5;}"
-            "h3{color:#63e6be}</style>"
+            f"<style>pre{{white-space:pre-wrap;line-height:1.5;color:{text_color};}}"
+            f"h3{{color:{accent_color}}}</style>"
             f"<h3>Informe de fidelidad</h3><pre>{escape(text)}</pre>"
         )
+
+    def refresh_styles(self) -> None:
+        self.refresh()
+
+    def _show_messagebox(self, icon_type: str, title: str, text: str, buttons=None):
+        if self.theme_manager:
+            return self.theme_manager.show_message_box(self, icon_type, title, text, buttons)
+        from PyQt6.QtWidgets import QMessageBox
+        if icon_type == "info":
+            return QMessageBox.information(self, title, text)
+        elif icon_type == "warning":
+            return QMessageBox.warning(self, title, text)
+        elif icon_type == "critical":
+            return QMessageBox.critical(self, title, text)
+        elif icon_type == "question":
+            return QMessageBox.question(self, title, text)
+
+    def _populate_combo(self, combo, items, current=None):
+        from .components import populate_combo
+        populate_combo(combo, items, current)
+
+    def _safe_operation(self, fn, error_title="Error"):
+        from .components import safe_operation
+        return safe_operation(self, fn, error_title)

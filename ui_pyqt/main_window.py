@@ -3,8 +3,8 @@
 from datetime import datetime
 from pathlib import Path
 
-from PyQt6.QtCore import QThreadPool
-from PyQt6.QtGui import QResizeEvent
+from PyQt6.QtCore import Qt, QThreadPool
+from PyQt6.QtGui import QPixmap, QResizeEvent
 from PyQt6.QtWidgets import QButtonGroup, QLayout, QMainWindow, QMessageBox, QPushButton, QWidget
 
 from core.exceptions import DomainError, ModelConfigurationError, ModelsNotConfiguredError
@@ -13,6 +13,7 @@ from .config_page import ConfigPage
 from .evaluation_page import EvaluationPage
 from .requirements_page import RequirementsPage
 from .theme import LIGHT_STYLESHEET
+from .theme_manager import ThemeManager
 from .ui_loader import load_ui
 from .workers import ServiceWorker
 from .workspace_page import WorkspacePage
@@ -27,9 +28,13 @@ class RefiMainWindow(QMainWindow):
         title: str = "REFI ALPHA",
         size: tuple[int, int] = (1280, 820),
         parent: QWidget | None = None,
+        theme_manager: ThemeManager | None = None,
     ):
         super().__init__(parent)
         self.service = service
+        if theme_manager is None:
+            theme_manager = ThemeManager()
+        self.theme_manager = theme_manager
         self.thread_pool = QThreadPool.globalInstance()
         self._workers: set[ServiceWorker] = set()
         self._compact_mode: bool | None = None
@@ -45,7 +50,7 @@ class RefiMainWindow(QMainWindow):
         self.setWindowTitle(title)
         self.resize(*size)
         self.setMinimumSize(720, 560)
-        self.setStyleSheet(LIGHT_STYLESHEET)
+        self.theme_manager.apply_to(self)
         self._setup_ui()
         self._connect_pages()
         self.log_message("Sistema listo. La interfaz PyQt6 está conectada a RefiService.")
@@ -67,16 +72,19 @@ class RefiMainWindow(QMainWindow):
         self.menu_button.setFixedWidth(42)
         self.menu_button.clicked.connect(self._toggle_sidebar)
         self.headerLayout.insertWidget(0, self.menu_button)
+        self._setup_brand_logo()
         self.page_title.setObjectName("pageTitle")
         self.page_title.setMinimumWidth(0)
         self.page_title.setMaximumWidth(16777215)
         self.titleLayout.setSizeConstraint(QLayout.SizeConstraint.SetDefaultConstraint)
         self.info_button.clicked.connect(self._show_page_help)
+        self.theme_button.clicked.connect(self._toggle_theme)
+        self._update_theme_button_text()
 
-        self.workspace_page = WorkspacePage(self.service)
-        self.requirements_page = RequirementsPage(self.service)
-        self.evaluation_page = EvaluationPage(self.service)
-        self.config_page = ConfigPage(self.service)
+        self.workspace_page = WorkspacePage(self.service, theme_manager=self.theme_manager)
+        self.requirements_page = RequirementsPage(self.service, theme_manager=self.theme_manager)
+        self.evaluation_page = EvaluationPage(self.service, theme_manager=self.theme_manager)
+        self.config_page = ConfigPage(self.service, theme_manager=self.theme_manager)
         for page in (
             self.workspace_page,
             self.requirements_page,
@@ -88,6 +96,23 @@ class RefiMainWindow(QMainWindow):
         self.consoleTitle.setObjectName("sectionTitle")
         self.statusBar().setSizeGripEnabled(True)
         self._apply_responsive_layout(self.width())
+
+    def _setup_brand_logo(self) -> None:
+        logo_path = Path(__file__).with_name("refi.png")
+        logo = QPixmap(str(logo_path))
+        if logo.isNull():
+            return
+        self.brandMark.setText("")
+        self.brandMark.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self.brandMark.setPixmap(
+            logo.scaled(
+                128,
+                128,
+                Qt.AspectRatioMode.KeepAspectRatio,
+                Qt.TransformationMode.SmoothTransformation,
+            )
+        )
+        self.brandMark.setMinimumHeight(128)
 
     def _connect_pages(self) -> None:
         self.workspace_page.message.connect(self.log_message)
@@ -104,8 +129,6 @@ class RefiMainWindow(QMainWindow):
         self.page_title.setText(self._page_titles[index])
         if index == 2:
             self.evaluation_page.refresh()
-        if self._compact_mode:
-            self.sidebar.hide()
 
     def resizeEvent(self, event: QResizeEvent) -> None:
         super().resizeEvent(event)
@@ -136,7 +159,7 @@ class RefiMainWindow(QMainWindow):
 
     def _show_page_help(self) -> None:
         index = self.pages.currentIndex()
-        QMessageBox.information(self, f"Uso de {self._page_titles[index]}", self._page_help[index])
+        self._show_messagebox("info", f"Uso de {self._page_titles[index]}", self._page_help[index])
 
     def log_message(self, message: str) -> None:
         timestamp = datetime.now().strftime("%H:%M:%S")
@@ -156,7 +179,7 @@ class RefiMainWindow(QMainWindow):
         count = len(document.requirements)
         self.log_message(f"Extracción completada: {count} requerimiento(s) cargado(s).")
         self.evaluation_page.refresh_summary()
-        QMessageBox.information(self, "Extracción completada", f"Se cargaron {count} requerimiento(s).")
+        self._show_messagebox("info", "Extracción completada", f"Se cargaron {count} requerimiento(s).")
 
     def _pdf_import_failed(self, error: Exception, trace: str) -> None:
         self.requirements_page.finish_import(error=str(error))
@@ -164,13 +187,13 @@ class RefiMainWindow(QMainWindow):
 
     def start_evaluation(self) -> None:
         if not self.service.get_requirements():
-            QMessageBox.warning(self, "Sin requerimientos", "Agrega al menos un requerimiento antes de evaluar.")
+            self._show_messagebox("warning", "Sin requerimientos", "Agrega al menos un requerimiento antes de evaluar.")
             return
         if not self.service.file_context:
-            QMessageBox.warning(self, "Sin contexto", "Incluye al menos un archivo de código antes de evaluar.")
+            self._show_messagebox("warning", "Sin contexto", "Incluye al menos un archivo de código antes de evaluar.")
             return
-        answer = QMessageBox.question(
-            self,
+        answer = self._show_messagebox(
+            "question",
             "Iniciar evaluación",
             f"Se evaluarán {len(self.service.get_requirements())} requerimiento(s) contra "
             f"{len(self.service.file_context)} archivo(s). ¿Continuar?",
@@ -179,8 +202,12 @@ class RefiMainWindow(QMainWindow):
             return
         self.evaluation_page.set_busy(True)
         self.log_message("Evaluación iniciada.")
-        worker = ServiceWorker(lambda log: self.service.evaluate(log_callback=log))
+        worker = ServiceWorker(lambda log: self.service.evaluate(
+            log_callback=log,
+            progress_callback=lambda current, total: worker.signals.progress.emit(current, total)
+        ))
         worker.signals.log.connect(self.log_message)
+        worker.signals.progress.connect(self.evaluation_page.update_progress)
         worker.signals.succeeded.connect(self._evaluation_succeeded)
         worker.signals.failed.connect(self._evaluation_failed)
         self._start_worker(worker)
@@ -192,7 +219,7 @@ class RefiMainWindow(QMainWindow):
         self.evaluation_page.refresh_summary()
         output = self.service.result_manager.default_save_path / self.service.result_manager.default_save_name
         self.log_message(f"Evaluación completada. Resultados guardados en: {output}")
-        QMessageBox.information(self, "Evaluación completada", "El informe se generó correctamente.")
+        self._show_messagebox("info", "Evaluación completada", "El informe se generó correctamente.")
 
     def _evaluation_failed(self, error: Exception, trace: str) -> None:
         self.evaluation_page.set_busy(False)
@@ -218,4 +245,32 @@ class RefiMainWindow(QMainWindow):
         self.log_message(f"ERROR: {message}")
         if not isinstance(error, DomainError):
             self.log_message(trace)
-        QMessageBox.critical(self, title, message)
+        self._show_messagebox("critical", title, message)
+
+    def _toggle_theme(self) -> None:
+        self.theme_manager.toggle()
+        self.theme_manager.apply_to(self)
+        self._update_theme_button_text()
+        if hasattr(self, "config_page"):
+            self.config_page.update_theme_ui()
+        if hasattr(self, "evaluation_page"):
+            self.evaluation_page.refresh_styles()
+
+    def _update_theme_button_text(self) -> None:
+        if self.theme_manager.is_dark:
+            self.theme_button.setText("🌙  Modo oscuro")
+        else:
+            self.theme_button.setText("☀  Modo claro")
+
+    def _show_messagebox(self, icon_type: str, title: str, text: str, buttons=None):
+        if self.theme_manager:
+            return self.theme_manager.show_message_box(self, icon_type, title, text, buttons)
+        from PyQt6.QtWidgets import QMessageBox
+        if icon_type == "info":
+            return QMessageBox.information(self, title, text)
+        elif icon_type == "warning":
+            return QMessageBox.warning(self, title, text)
+        elif icon_type == "critical":
+            return QMessageBox.critical(self, title, text)
+        elif icon_type == "question":
+            return QMessageBox.question(self, title, text)

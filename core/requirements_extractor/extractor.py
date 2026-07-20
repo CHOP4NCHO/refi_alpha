@@ -41,7 +41,6 @@ class RequirementsExtractor:
     def __init__(
         self,
         llm_ref: BaseChatModel,
-        embedding_ref: Embeddings,
         vlm_options,
         is_local: bool = True,
     ):
@@ -63,7 +62,6 @@ class RequirementsExtractor:
         self.extractor = VlmRetryWrapper(raw_converter)
 
         self.llm = llm_ref
-        self.embedding_ref = embedding_ref
         self.vlm_options = vlm_options
         self.is_local = is_local
         self.ollama_ip = self.vlm_options.url.host or "localhost"

@@ -22,9 +22,10 @@ class RequirementsPage(QWidget):
     requirements_changed = pyqtSignal()
     message = pyqtSignal(str)
 
-    def __init__(self, service, parent: QWidget | None = None):
+    def __init__(self, service, parent: QWidget | None = None, theme_manager=None):
         super().__init__(parent)
         self.service = service
+        self.theme_manager = theme_manager
         load_ui("requirements_page.ui", self)
         self._setup_ui()
         self.refresh()
@@ -33,6 +34,12 @@ class RequirementsPage(QWidget):
         self.import_button.clicked.connect(self.choose_pdf)
         self.description_input.returnPressed.connect(self.add_requirement)
         self.add_button.clicked.connect(self.add_requirement)
+        from PyQt6.QtWidgets import QLineEdit
+        self.filter_input = QLineEdit(self)
+        self.filter_input.setPlaceholderText("Filtrar requerimientos...")
+        self.filter_input.textChanged.connect(self._filter_table)
+        idx = self.listCardLayout.indexOf(self.table)
+        self.listCardLayout.insertWidget(idx, self.filter_input)
         header = self.table.horizontalHeader()
         header.setStretchLastSection(False)
         header.setSectionResizeMode(0, QHeaderView.ResizeMode.ResizeToContents)
@@ -56,8 +63,8 @@ class RequirementsPage(QWidget):
         if not filename:
             return
         if self.service.get_requirements():
-            answer = QMessageBox.question(
-                self,
+            answer = self._show_messagebox(
+                "question",
                 "Reemplazar requerimientos",
                 "La extracción reemplazará los requerimientos actuales. ¿Continuar?",
             )
@@ -80,7 +87,7 @@ class RequirementsPage(QWidget):
     def add_requirement(self) -> None:
         description = self.description_input.text().strip()
         if not description:
-            QMessageBox.warning(self, "Descripción requerida", "La descripción no puede estar vacía.")
+            self._show_messagebox("warning", "Descripción requerida", "La descripción no puede estar vacía.")
             return
         requirement_type = "FUNCTIONAL" if self.functional_radio.isChecked() else "NON_FUNCTIONAL"
         try:
@@ -88,7 +95,7 @@ class RequirementsPage(QWidget):
                 description, requirement_type, self.id_input.text().strip() or None
             )
         except Exception as error:
-            QMessageBox.critical(self, "No se pudo agregar", str(error))
+            self._show_messagebox("critical", "No se pudo agregar", str(error))
             return
         self.description_input.clear()
         self.id_input.clear()
@@ -126,18 +133,48 @@ class RequirementsPage(QWidget):
         try:
             self.service.update_requirement_type(requirement_id, combo.currentData())
         except Exception as error:
-            QMessageBox.critical(self, "No se pudo actualizar", str(error))
+            self._show_messagebox("critical", "No se pudo actualizar", str(error))
             self.refresh()
             return
         self.message.emit(f"Tipo actualizado para el requerimiento [{requirement_id}].")
         self.requirements_changed.emit()
 
     def delete_requirement(self, requirement_id: str) -> None:
-        answer = QMessageBox.question(
-            self, "Eliminar requerimiento", f"¿Eliminar el requerimiento [{requirement_id}]?"
+        answer = self._show_messagebox(
+            "question", "Eliminar requerimiento", f"¿Eliminar el requerimiento [{requirement_id}]?"
         )
         if answer != QMessageBox.StandardButton.Yes:
             return
         if self.service.remove_requirement(requirement_id):
             self.message.emit(f"Requerimiento eliminado: [{requirement_id}]")
             self.refresh()
+
+    def _filter_table(self, text: str) -> None:
+        text = text.lower()
+        for row in range(self.table.rowCount()):
+            id_item = self.table.item(row, 0)
+            desc_item = self.table.item(row, 2)
+            id_match = text in id_item.text().lower() if id_item else False
+            desc_match = text in desc_item.text().lower() if desc_item else False
+            self.table.setRowHidden(row, not (id_match or desc_match) if text else False)
+
+    def _show_messagebox(self, icon_type: str, title: str, text: str, buttons=None):
+        if self.theme_manager:
+            return self.theme_manager.show_message_box(self, icon_type, title, text, buttons)
+        from PyQt6.QtWidgets import QMessageBox
+        if icon_type == "info":
+            return QMessageBox.information(self, title, text)
+        elif icon_type == "warning":
+            return QMessageBox.warning(self, title, text)
+        elif icon_type == "critical":
+            return QMessageBox.critical(self, title, text)
+        elif icon_type == "question":
+            return QMessageBox.question(self, title, text)
+
+    def _populate_combo(self, combo, items, current=None):
+        from .components import populate_combo
+        populate_combo(combo, items, current)
+
+    def _safe_operation(self, fn, error_title="Error"):
+        from .components import safe_operation
+        return safe_operation(self, fn, error_title)

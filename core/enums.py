@@ -4,6 +4,8 @@ from enum import Enum
 class LlmProvider(Enum):
     GEMINI = 'gemini'
     OLLAMA = 'ollama'
+    OPENAI = 'openai'
+    CLAUDE = 'claude'
 
 
 class EvaluationMode(Enum):

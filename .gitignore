@@ -7,3 +7,5 @@ results.txt
 tools.log.txt
 *.txt
 *.csv
+plans/
+stats/*

@@ -199,7 +199,7 @@ class RefiService:
     #  Evaluation
     # ------------------------------------------------------------------ #
 
-    def evaluate(self, log_callback=None) -> None:
+    def evaluate(self, log_callback=None, progress_callback=None) -> None:
         if not self._req_document.requirements:
             raise ValueError("No hay requerimientos cargados.")
 
@@ -227,6 +227,7 @@ class RefiService:
                 debug_mode=self._debug_mode,
                 real_batch_evaluation_type=self._real_evaluation,
                 log_callback=log_callback,
+                progress_callback=progress_callback,
             )
         else:
             review = perform_pipeline_evaluation(
@@ -238,6 +239,7 @@ class RefiService:
                 debug_mode=self._debug_mode,
                 real_batch_evaluation_type=self._real_evaluation,
                 log_callback=log_callback,
+                progress_callback=progress_callback,
             )
         
         self._result_manager.add_review(review=review)
@@ -295,12 +297,12 @@ class RefiService:
     #  Internal helpers
     # ------------------------------------------------------------------ #
 
-    def _update_evaluator_llm(self) -> None:
+    def update_evaluator_llm(self) -> None:
         new_llm = self._model_provider.get_llm()
 
         if self._requirements_extractor is not None:
             self._requirements_extractor.llm = new_llm
 
-    def _reset_requirements_extractor(self) -> None:
+    def reset_requirements_extractor(self) -> None:
         """Reset the extractor so it is lazily recreated with updated VLM/embedding config."""
         self._requirements_extractor = None

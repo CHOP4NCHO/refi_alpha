@@ -11,6 +11,7 @@ class WorkerSignals(QObject):
     succeeded = pyqtSignal(object)
     failed = pyqtSignal(object, str)
     log = pyqtSignal(str)
+    progress = pyqtSignal(int, int)
     finished = pyqtSignal()
 
 

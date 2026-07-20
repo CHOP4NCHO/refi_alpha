@@ -1,19 +1,34 @@
 """Run the PyQt6 edition with ``python -m ui_pyqt``."""
 
+import ctypes
 import logging
+import os
 import sys
 
 from dotenv import load_dotenv
 from PyQt6.QtWidgets import QApplication
+from PyQt6.QtGui import QIcon
 
 from core import RefiService
 from core.enums import EvaluationMode, RealEvaluation
 from core.model_provider import ModelProvider
 
 from .main_window import RefiMainWindow
+from .theme_manager import ThemeManager
+
+
+def get_resource_path(relative_path: str) -> str:
+    """Obtiene la ruta absoluta para recursos (funciona en dev y PyInstaller)."""
+    if hasattr(sys, "_MEIPASS"):
+        return os.path.join(sys._MEIPASS, relative_path)
+    return os.path.join(os.path.dirname(__file__), relative_path)
 
 
 def main() -> int:
+    if sys.platform == "win32":
+        myappid = "refi.alpha.ui.1.0"
+        ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID(myappid)
+
     load_dotenv()
     logging.basicConfig(
         level=logging.INFO,
@@ -22,6 +37,10 @@ def main() -> int:
     app = QApplication(sys.argv)
     app.setApplicationName("REFI ALPHA")
     app.setOrganizationName("REFI")
+
+    # Cargar el icono usando la ruta dinámica
+    icon_path = get_resource_path("refi.png")
+    app.setWindowIcon(QIcon(icon_path))
 
     model_provider = ModelProvider(
         local_ip="localhost",
@@ -36,7 +55,9 @@ def main() -> int:
         evaluation_mode=EvaluationMode.AGENT_AI,
         real_evaluation=RealEvaluation.FULFILLED,
     )
-    window = RefiMainWindow(service=service)
+    theme_manager = ThemeManager()
+    window = RefiMainWindow(service=service, theme_manager=theme_manager)
+    window.setWindowIcon(QIcon(icon_path))  # Aseguramos el icono en la ventana
     window.show()
     return app.exec()
 

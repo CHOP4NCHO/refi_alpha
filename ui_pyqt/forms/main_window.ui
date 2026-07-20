@@ -238,8 +238,7 @@
          </item>
          <item>
           <widget class="QPushButton" name="theme_button">
-           <property name="enabled"><bool>false</bool></property>
-           <property name="toolTip"><string>El modo claro es el modo disponible</string></property>
+           <property name="toolTip"><string>Alternar tema (claro/oscuro)</string></property>
            <property name="text"><string>☀  Modo claro</string></property>
           </widget>
          </item>
