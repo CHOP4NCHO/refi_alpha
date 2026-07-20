@@ -7,7 +7,6 @@ from PyQt6.QtCore import Qt, pyqtSignal
 from PyQt6.QtGui import QPixmap
 from PyQt6.QtWidgets import (
     QFrame,
-    QHBoxLayout,
     QLabel,
     QPushButton,
     QVBoxLayout,

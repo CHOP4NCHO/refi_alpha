@@ -13,7 +13,6 @@ from .config_page import ConfigPage
 from .evaluation_page import EvaluationPage
 from .requirements_page import RequirementsPage
 from .review_viewer_page import ReviewViewerPage
-from .theme import LIGHT_STYLESHEET
 from .theme_manager import ThemeManager
 from .ui_loader import load_ui
 from .workers import ServiceWorker
