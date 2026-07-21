@@ -13,9 +13,16 @@ from core import RefiService
 from core.enums import EvaluationMode, RealEvaluation
 from core.model_provider import ModelProvider
 
-from .landing_page import LandingPage
-from .main_window import RefiMainWindow
-from .theme_manager import ThemeManager
+if getattr(sys, 'frozen', False):
+    # Running as PyInstaller bundle - use absolute imports
+    from ui_pyqt.landing_page import LandingPage
+    from ui_pyqt.main_window import RefiMainWindow
+    from ui_pyqt.theme_manager import ThemeManager
+else:
+    # Running as normal Python package - use relative imports
+    from .landing_page import LandingPage
+    from .main_window import RefiMainWindow
+    from .theme_manager import ThemeManager
 
 
 def get_resource_path(relative_path: str) -> str:

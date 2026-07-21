@@ -10,5 +10,8 @@ tools.log.txt
 *.csv
 plans/
 stats/*
-
+venv/
+dist/
+build/
+*.spec
 

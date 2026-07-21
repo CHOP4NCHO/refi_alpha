@@ -122,7 +122,7 @@ class RequirementsPage(QWidget):
         requirements = self.service.get_requirements()
         self.table.setRowCount(len(requirements))
         self._empty_table_label.setVisible(not requirements)
-        self.table.setVisible(bool(requirements))
+        self.table.setVisible(True)
         for row, requirement in enumerate(requirements):
             values = (requirement.id, requirement.description)
             for column, value in ((0, values[0]), (2, values[1])):
