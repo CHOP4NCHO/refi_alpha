@@ -10,10 +10,10 @@
     <height>535</height>
    </rect>
   </property>
-   <layout class="QVBoxLayout" name="pageLayout">
-    <property name="spacing">
-     <number>14</number>
-    </property>
+  <layout class="QVBoxLayout" name="pageLayout">
+   <property name="spacing">
+    <number>0</number>
+   </property>
    <property name="leftMargin">
     <number>0</number>
    </property>
@@ -27,26 +27,26 @@
     <number>0</number>
    </property>
    <item>
-    <widget class="QFrame" name="entryCard">
+    <widget class="QFrame" name="mainCard">
      <property name="card" stdset="0">
       <bool>true</bool>
      </property>
-      <layout class="QVBoxLayout" name="entryCardLayout">
-       <property name="spacing">
-        <number>12</number>
-       </property>
-       <property name="leftMargin">
-        <number>18</number>
-       </property>
-       <property name="topMargin">
-        <number>16</number>
-       </property>
-       <property name="rightMargin">
-        <number>18</number>
-       </property>
-       <property name="bottomMargin">
-        <number>18</number>
-       </property>
+     <layout class="QVBoxLayout" name="mainCardLayout">
+      <property name="spacing">
+       <number>12</number>
+      </property>
+      <property name="leftMargin">
+       <number>18</number>
+      </property>
+      <property name="topMargin">
+       <number>16</number>
+      </property>
+      <property name="rightMargin">
+       <number>18</number>
+      </property>
+      <property name="bottomMargin">
+       <number>18</number>
+      </property>
       <item>
        <widget class="QLabel" name="entryTitle">
         <property name="text">
@@ -54,9 +54,9 @@
         </property>
        </widget>
       </item>
-       <item>
-        <layout class="QHBoxLayout" name="entryRow">
-         <property name="spacing"><number>6</number></property>
+      <item>
+       <layout class="QHBoxLayout" name="entryRow">
+        <property name="spacing"><number>6</number></property>
         <item>
          <widget class="QLineEdit" name="id_input">
           <property name="maximumSize">
@@ -103,30 +103,16 @@
         </item>
        </layout>
       </item>
-     </layout>
-    </widget>
-   </item>
-   <item>
-    <widget class="QFrame" name="importCard">
-     <property name="card" stdset="0">
-      <bool>true</bool>
-     </property>
-     <layout class="QVBoxLayout" name="importCardLayout">
-      <property name="spacing">
-       <number>12</number>
-      </property>
-      <property name="leftMargin">
-       <number>18</number>
-      </property>
-      <property name="topMargin">
-       <number>16</number>
-      </property>
-      <property name="rightMargin">
-       <number>18</number>
-      </property>
-      <property name="bottomMargin">
-       <number>18</number>
-      </property>
+      <item>
+       <widget class="QFrame" name="separator1">
+        <property name="frameShape">
+         <enum>QFrame::Shape::HLine</enum>
+        </property>
+        <property name="frameShadow">
+         <enum>QFrame::Shadow::Sunken</enum>
+        </property>
+       </widget>
+      </item>
       <item>
        <widget class="QLabel" name="importTitle">
         <property name="text">
@@ -134,9 +120,9 @@
         </property>
        </widget>
       </item>
-       <item>
-        <layout class="QHBoxLayout" name="importRow">
-         <property name="spacing"><number>6</number></property>
+      <item>
+       <layout class="QHBoxLayout" name="importRow">
+        <property name="spacing"><number>6</number></property>
         <item>
          <widget class="QLabel" name="import_status">
           <property name="text">
@@ -178,81 +164,88 @@
         </item>
        </layout>
       </item>
-     </layout>
-    </widget>
-   </item>
-   <item>
-    <widget class="QFrame" name="listCard">
-     <property name="card" stdset="0">
-      <bool>true</bool>
-     </property>
-     <layout class="QVBoxLayout" name="listCardLayout">
-      <property name="spacing">
-       <number>12</number>
-      </property>
-      <property name="leftMargin">
-       <number>18</number>
-      </property>
-      <property name="topMargin">
-       <number>16</number>
-      </property>
-      <property name="rightMargin">
-       <number>18</number>
-      </property>
-      <property name="bottomMargin">
-       <number>18</number>
-      </property>
       <item>
-       <widget class="QLabel" name="listTitle">
-        <property name="text">
-         <string>Requerimientos actuales</string>
+       <widget class="QFrame" name="separator2">
+        <property name="frameShape">
+         <enum>QFrame::Shape::HLine</enum>
+        </property>
+        <property name="frameShadow">
+         <enum>QFrame::Shadow::Sunken</enum>
         </property>
        </widget>
       </item>
       <item>
-       <widget class="QLabel" name="listSubtitle">
-        <property name="text">
-         <string>Cambia el tipo desde la lista o elimina un requerimiento.</string>
-        </property>
-        <property name="muted" stdset="0">
-         <bool>true</bool>
-        </property>
-       </widget>
-      </item>
-      <item>
-       <widget class="QTableWidget" name="table">
-        <property name="editTriggers">
-         <set>QAbstractItemView::EditTrigger::NoEditTriggers</set>
-        </property>
-        <property name="alternatingRowColors">
-         <bool>true</bool>
-        </property>
-        <property name="selectionBehavior">
-         <enum>QAbstractItemView::SelectionBehavior::SelectRows</enum>
-        </property>
-        <property name="columnCount">
-         <number>4</number>
-        </property>
-        <column>
-         <property name="text">
-          <string>ID</string>
+       <widget class="QFrame" name="listCard">
+        <layout class="QVBoxLayout" name="listCardLayout">
+         <property name="spacing">
+          <number>12</number>
          </property>
-        </column>
-        <column>
-         <property name="text">
-          <string>Tipo</string>
+         <property name="leftMargin">
+          <number>0</number>
          </property>
-        </column>
-        <column>
-         <property name="text">
-          <string>Descripción</string>
+         <property name="topMargin">
+          <number>0</number>
          </property>
-        </column>
-        <column>
-         <property name="text">
-          <string>Acciones</string>
+         <property name="rightMargin">
+          <number>0</number>
          </property>
-        </column>
+         <property name="bottomMargin">
+          <number>0</number>
+         </property>
+         <item>
+          <widget class="QLabel" name="listTitle">
+           <property name="text">
+            <string>Requerimientos actuales</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QLabel" name="listSubtitle">
+           <property name="text">
+            <string>Cambia el tipo desde la lista o elimina un requerimiento.</string>
+           </property>
+           <property name="muted" stdset="0">
+            <bool>true</bool>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QTableWidget" name="table">
+           <property name="editTriggers">
+            <set>QAbstractItemView::EditTrigger::NoEditTriggers</set>
+           </property>
+           <property name="alternatingRowColors">
+            <bool>true</bool>
+           </property>
+           <property name="selectionBehavior">
+            <enum>QAbstractItemView::SelectionBehavior::SelectRows</enum>
+           </property>
+           <property name="columnCount">
+            <number>4</number>
+           </property>
+           <column>
+            <property name="text">
+             <string>ID</string>
+            </property>
+           </column>
+           <column>
+            <property name="text">
+             <string>Tipo</string>
+            </property>
+           </column>
+           <column>
+            <property name="text">
+             <string>Descripción</string>
+            </property>
+           </column>
+           <column>
+            <property name="text">
+             <string>Acciones</string>
+            </property>
+           </column>
+          </widget>
+         </item>
+        </layout>
        </widget>
       </item>
      </layout>

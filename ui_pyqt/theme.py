@@ -114,6 +114,7 @@ QScrollBar:vertical { background: transparent; width: 10px; margin: 2px; }
 QScrollBar::handle:vertical { background: #b8c6d4; border-radius: 5px; min-height: 25px; }
 QScrollBar::add-line:vertical, QScrollBar::sub-line:vertical { height: 0; }
 QSplitter::handle { background: #d9e3ec; width: 2px; }
+QFrame#separator1, QFrame#separator2 { max-height: 1px; background: #dce4ee; border: 0; }
 QToolTip { color: #243447; background: #ffffff; border: 1px solid #b8c8d8; }
 QStatusBar { background: #f4f7fb; color: #6f8093; border-top: 1px solid #dce4ee; }
 QDialog, QMessageBox, QFileDialog { background: #ffffff; }
@@ -263,6 +264,7 @@ QScrollBar:vertical { background: transparent; width: 10px; margin: 2px; }
 QScrollBar::handle:vertical { background: #304660; border-radius: 5px; min-height: 25px; }
 QScrollBar::add-line:vertical, QScrollBar::sub-line:vertical { height: 0; }
 QSplitter::handle { background: #182a40; width: 2px; }
+QFrame#separator1, QFrame#separator2 { max-height: 1px; background: #20324a; border: 0; }
 QToolTip { color: #e9f3fe; background: #17283e; border: 1px solid #3b5673; }
 QStatusBar { background: #08111f; color: #7f93aa; border-top: 1px solid #1d2d43; }
 QDialog, QMessageBox, QFileDialog { background: #0f1c2e; }
