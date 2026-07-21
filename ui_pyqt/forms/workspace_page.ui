@@ -28,22 +28,22 @@
      <property name="card" stdset="0">
       <bool>true</bool>
      </property>
-      <layout class="QVBoxLayout" name="workspaceCardLayout">
-       <property name="spacing">
-        <number>6</number>
-       </property>
-       <property name="leftMargin">
-        <number>18</number>
-       </property>
-       <property name="topMargin">
-        <number>10</number>
-       </property>
-       <property name="rightMargin">
-        <number>18</number>
-       </property>
-       <property name="bottomMargin">
-        <number>10</number>
-       </property>
+     <layout class="QVBoxLayout" name="workspaceCardLayout">
+      <property name="spacing">
+       <number>6</number>
+      </property>
+      <property name="leftMargin">
+       <number>18</number>
+      </property>
+      <property name="topMargin">
+       <number>10</number>
+      </property>
+      <property name="rightMargin">
+       <number>18</number>
+      </property>
+      <property name="bottomMargin">
+       <number>10</number>
+      </property>
       <item>
        <widget class="QLabel" name="workspaceTitle">
         <property name="text">
@@ -51,36 +51,18 @@
         </property>
        </widget>
       </item>
-       <item>
-        <layout class="QHBoxLayout" name="workspaceRow">
-         <property name="spacing"><number>6</number></property>
-        <item>
-         <widget class="QLabel" name="activeRepoCaption">
-          <property name="text">
-           <string>Repositorio activo</string>
-          </property>
-         </widget>
-        </item>
-        <item>
-         <widget class="QLabel" name="workspace_label">
-          <property name="text">
-           <string>—</string>
-          </property>
-         </widget>
-        </item>
-        <item>
-         <spacer name="workspaceStretch">
-          <property name="orientation">
-           <enum>Qt::Orientation::Horizontal</enum>
-          </property>
-          <property name="sizeHint" stdset="0">
-           <size>
-            <width>40</width>
-            <height>20</height>
-           </size>
-          </property>
-         </spacer>
-        </item>
+      <item>
+       <widget class="QLineEdit" name="path_input">
+        <property name="placeholderText">
+         <string>Ruta relativa a un archivo o directorio/</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <layout class="QHBoxLayout" name="pathRow">
+        <property name="spacing">
+         <number>6</number>
+        </property>
         <item>
          <widget class="QPushButton" name="change_button">
           <property name="text">
@@ -88,18 +70,6 @@
           </property>
           <property name="primary" stdset="0">
            <bool>true</bool>
-          </property>
-         </widget>
-        </item>
-       </layout>
-      </item>
-       <item>
-        <layout class="QHBoxLayout" name="pathRow">
-         <property name="spacing"><number>6</number></property>
-        <item>
-         <widget class="QLineEdit" name="path_input">
-          <property name="placeholderText">
-           <string>Ruta relativa a un archivo o directorio/</string>
           </property>
          </widget>
         </item>

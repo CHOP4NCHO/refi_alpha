@@ -35,7 +35,7 @@ class WorkspacePage(QWidget):
     def _setup_ui(self) -> None:
         route_font = QFont()
         route_font.setPointSize(10)
-        self.workspace_label.setObjectName("sectionTitle")
+        #self.workspace_label.setObjectName("sectionTitle")
         self.workspace_path_label = QLabel(self.workspaceCard)
         self.workspace_path_label.setObjectName("workspacePathLabel")
         self.workspace_path_label.setProperty("muted", True)
@@ -83,7 +83,7 @@ class WorkspacePage(QWidget):
 
     def refresh(self) -> None:
         codebase = self.service.codebase
-        self.workspace_label.setText(codebase.name if codebase else "Sin repositorio")
+        #self.workspace_label.setText(codebase.name if codebase else "Sin repositorio")
         self.workspace_path_label.setText(
             f"Ruta: {Path(codebase.path).resolve()}" if codebase else "Ruta: —"
         )

@@ -195,34 +195,71 @@ class EvaluationPage(QWidget):
         if not reviews or index < 0 or index >= len(reviews):
             return
         review = reviews[index]
-        
+
+        fmt = self._ask_export_format()
+        if fmt is None:
+            return
+
         from PyQt6.QtWidgets import QFileDialog
         from pathlib import Path
+
+        if fmt == "json":
+            default_ext = "json"
+            file_filter = "JSON Files (*.json)"
+        else:
+            default_ext = "txt"
+            file_filter = "Texto / Markdown (*.txt *.md)"
+
+        default_name = f"review_{review.review_date.replace(' ', '_').replace(':', '-')}.{default_ext}"
         filename, _ = QFileDialog.getSaveFileName(
             self,
             "Exportar informe de fidelidad",
-            f"review_{review.review_date.replace(' ', '_').replace(':', '-')}.json",
-            "JSON Files (*.json)",
+            default_name,
+            file_filter,
         )
         if not filename:
             return
-            
+
         try:
-            import json
-            from dataclasses import asdict
-            from enum import Enum
-            
-            def custom_serializer(obj):
-                if isinstance(obj, Enum):
-                    return obj.value
-                raise TypeError(f"Type {type(obj)} not serializable")
-                
-            data_dict = asdict(review)
-            json_data = json.dumps(data_dict, indent=2, ensure_ascii=False, default=custom_serializer)
-            Path(filename).write_text(json_data, encoding="utf-8")
-            self._show_messagebox("info", "Exportación exitosa", f"El informe se ha exportado correctamente a {filename}")
+            output_path = self.service.export_review(
+                index=index,
+                format=fmt,
+                path=Path(filename),
+            )
+        except ValueError as error:
+            self._show_messagebox("critical", "Formato no soportado", str(error))
+            return
         except Exception as error:
             self._show_messagebox("critical", "Error al exportar", str(error))
+            return
+
+        self._show_messagebox(
+            "info",
+            "Exportación exitosa",
+            f"El informe se ha exportado correctamente a {output_path}",
+        )
+
+    def _ask_export_format(self) -> str | None:
+        from PyQt6.QtWidgets import QMessageBox
+
+        box = QMessageBox(self)
+        box.setIcon(QMessageBox.Icon.Question)
+        box.setWindowTitle("Formato de exportación")
+        box.setText("¿En qué formato deseas exportar la evaluación?")
+
+        btn_text = box.addButton("Texto / Markdown", QMessageBox.ButtonRole.AcceptRole)
+        btn_json = box.addButton("JSON", QMessageBox.ButtonRole.AcceptRole)
+        box.addButton(QMessageBox.StandardButton.Cancel)
+
+        box.exec()
+        clicked = box.clickedButton()
+        if clicked is None or clicked is box.button(QMessageBox.StandardButton.Cancel):
+            return None
+        if clicked is btn_text:
+            return "string"
+        if clicked is btn_json:
+            return "json"
+        return None
 
     def show_selected_review(self, _index: int = -1) -> None:
         index = self.review_combo.currentData()

@@ -3,6 +3,7 @@
 import ctypes
 import logging
 import os
+from pathlib import Path
 import sys
 
 from dotenv import load_dotenv
@@ -89,7 +90,7 @@ def main() -> int:
         myappid = "refi.alpha.ui.1.0"
         ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID(myappid)
 
-    load_dotenv()
+    #load_dotenv()
     logging.basicConfig(
         level=logging.INFO,
         format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
@@ -101,12 +102,13 @@ def main() -> int:
     icon_path = get_resource_path("refi.png")
     app.setWindowIcon(QIcon(icon_path))
 
+    # inits Model Provider
     model_provider = ModelProvider(
         temperature=0.1,
     )
+    # inits REFI's FACADE
     service = RefiService(
-        workdir=".",
-        codebase_name="REFI_SOURCE_CODE",
+        workdir=Path.home(),
         model_provider=model_provider,
         debug_mode=True,
         evaluation_mode=EvaluationMode.AGENT_AI,

@@ -1,5 +1,13 @@
 from pathlib import Path
-from .constants import DEFAULT_SAVE_DIR, DEFAULT_SAVE_NAME
+
+from .constants import (
+    DEFAULT_SAVE_DIR,
+    DEFAULT_SAVE_NAME,
+    DEFAULT_JSON_SAVE_NAME,
+)
+from .string_formatter import StringFormatter
+from .json_formatter import JsonFormatter
+from .review_formatter import ReviewFormatter
 
 from ..evaluator_agent.req_fidelity_review import ReqFidelityReview
 
@@ -8,11 +16,15 @@ class ResultManager:
     saved_reviews: list[ReqFidelityReview]
     default_save_path: Path
     default_save_name: str
+    default_json_save_name: str
+    _formatter: ReviewFormatter
 
     def __init__(self) -> None:
         self.saved_reviews = []
         self.default_save_path = Path(DEFAULT_SAVE_DIR)
         self.default_save_name = DEFAULT_SAVE_NAME
+        self.default_json_save_name = DEFAULT_JSON_SAVE_NAME
+        self._formatter = StringFormatter()
 
     def _validate_index(self, index: int) -> None:
         max_index = len(self.saved_reviews)
@@ -37,81 +49,87 @@ class ResultManager:
         self.default_save_path = path
 
     def set_default_save_name(self, save_name: str) -> None:
-        self.default_save_name = (
-            save_name
-            if save_name.lower().endswith(".txt")
-            else f"{save_name}.txt"
-        )
+        self.default_save_name = self._ensure_extension(save_name, "txt")
+
+    def set_default_json_save_name(self, save_name: str) -> None:
+        self.default_json_save_name = self._ensure_extension(save_name, "json")
+
+    def _ensure_extension(self, name: str, ext: str) -> str:
+        if name.lower().endswith(f".{ext}"):
+            return name
+        return f"{name}.{ext}"
+
+    def _default_path_for(self, formatter: ReviewFormatter) -> Path:
+        if formatter.file_extension == "json":
+            return self.default_save_path / self.default_json_save_name
+        return self.default_save_path / self.default_save_name
 
     def get_code_review(self, index: int) -> ReqFidelityReview:
         self._validate_index(index)
         return self.saved_reviews[index]
 
+    def set_formatter(self, formatter: ReviewFormatter) -> None:
+        self._formatter = formatter
+
     def format_review(self, index: int) -> str:
         self._validate_index(index)
-
         review = self.saved_reviews[index]
-        lines: list[str] = []
-        fulfilled_count = 0
+        return self._formatter.format(review)
 
-        for req in review.reviewed_reqs:
-            lines.extend(
-                [
-                    "==========================",
-                    f"Reviewed Requirement: {req.initial_description}",
-                    "==========================",
-                    f"Status: {'Fulfilled' if req.is_fulfilled else 'Not fulfilled'}",
-                    f"Reason: {req.reasoning}",
-                    "",
-                ]
-            )
+    def format_review_as_string(self, index: int) -> str:
+        self._validate_index(index)
+        return StringFormatter().format(self.saved_reviews[index])
 
-            if req.is_fulfilled:
-                fulfilled_count += 1
-
-        lines.extend(
-            [
-                "===============================",
-                f"Fulfilled Requirements: {fulfilled_count}/{len(review.reviewed_reqs)}",
-                "===============================",
-                "",
-                "===============================",
-                "TOKEN USAGE STATS",
-                f"Input Tokens : {review.input_tokens}",
-                f"Output Tokens: {review.output_tokens}",
-                f"Total Tokens : {review.input_tokens + review.output_tokens}",
-                "===============================",
-            ]
-        )
-
-        lines.extend(
-            [
-                "ESTADÍSTICAS DE EVALUACIÓN SUPERVISADA",
-                f"DEBUG MODE: {review.debug_mode}",
-                f"MODEL: {review.llm_provider}",
-                f"EVALUATION MODE: {review.evaluation_mode.value}",
-                f"GROUND TRUTH VALUE: {review.real_evaluation.value}",
-                f"RESPONSE TIME: {review.response_time:.2f}s"
-            ]
-        )
-
-        return "\n".join(lines)
+    def format_review_as_json(self, index: int) -> str:
+        self._validate_index(index)
+        return JsonFormatter().format(self.saved_reviews[index])
 
     def save_review(self, index: int, path: Path | None = None) -> None:
         self._validate_index(index)
 
-        output_path = (
-            self.default_save_path / self.default_save_name
-            if path is None
-            else path
-        )
-
+        output_path = path if path is not None else self._default_path_for(self._formatter)
         output_path.parent.mkdir(parents=True, exist_ok=True)
 
-        review      = self.get_code_review(index)
-        review_text = self.format_review(index)
+        review = self.saved_reviews[index]
+        review_text = self._formatter.format(review)
 
         with output_path.open("a", encoding="utf-8") as file:
             file.write(f"REVIEWED ON {review.review_date}\n")
             file.write(review_text)
             file.write("\n\n")
+
+    def export_review(
+        self,
+        index: int,
+        format: str,
+        path: Path | None = None,
+    ) -> Path:
+        self._validate_index(index)
+        formatter = self._resolve_formatter(format)
+
+        output_path = path if path is not None else self._default_path_for(formatter)
+        output_path.parent.mkdir(parents=True, exist_ok=True)
+
+        review = self.saved_reviews[index]
+        review_text = formatter.format(review)
+
+        with output_path.open("w", encoding="utf-8") as file:
+            if formatter.file_extension == "json":
+                file.write(review_text)
+            else:
+                file.write(f"REVIEWED ON {review.review_date}\n")
+                file.write(review_text)
+                file.write("\n\n")
+
+        return output_path
+
+    def _resolve_formatter(self, format: str) -> ReviewFormatter:
+        key = format.strip().lower()
+        if key in ("string", "txt", "markdown", "md"):
+            return StringFormatter()
+        if key in ("json",):
+            return JsonFormatter()
+        raise ValueError(
+            f"Unsupported export format: '{format}'. "
+            "Use 'string' (alias: 'txt', 'markdown'/'md') or 'json'."
+        )

@@ -23,8 +23,7 @@ class RefiService:
 
     def __init__(
         self,
-        workdir: str,
-        codebase_name: str,
+        workdir: Path,
         model_provider: ModelProvider,
         debug_mode: bool = False,
         evaluation_mode: EvaluationMode = EvaluationMode.AGENT_AI,
@@ -39,8 +38,8 @@ class RefiService:
         # Core modules
         self._evaluator = Evaluator()
         self._requirements_extractor = None
-        self._req_document = ReqDocument(workdir)
-        self._codebase = CodeBase(path=workdir, name=codebase_name)
+        self._req_document = ReqDocument(workdir.as_posix())
+        self._codebase = CodeBase(path=workdir.as_posix())
         self._codebase_reader = CodeBaseReader(codebase=self._codebase)
         self._result_manager = ResultManager()
         self._file_context: list[CodeFile] = []
@@ -259,6 +258,14 @@ class RefiService:
 
     def get_formatted_review(self, index: int) -> str:
         return self._result_manager.format_review(index)
+
+    def export_review(
+        self,
+        index: int,
+        format: str,
+        path: Path | None = None,
+    ) -> Path:
+        return self._result_manager.export_review(index=index, format=format, path=path)
 
     # ------------------------------------------------------------------ #
     #  Configuration

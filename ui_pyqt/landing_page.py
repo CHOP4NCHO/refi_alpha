@@ -122,6 +122,7 @@ class LandingPage(QWidget):
         try:
             raw = Path(filename).read_text(encoding="utf-8")
             data = json.loads(raw)
+            data = self._normalize_review_json(data)
             self._validate_review_json(data)
             self.review_loaded.emit(data)
         except json.JSONDecodeError:
@@ -134,8 +135,42 @@ class LandingPage(QWidget):
             QMessageBox.critical(
                 self,
                 "Formato incompleto",
-                f"El JSON no contiene el campo esperado: {e}",
+                f"El JSON no contiene el campo esperado: {e}"
             )
+        except ValueError as e:
+            QMessageBox.critical(
+                self,
+                "Formato invalido",
+                str(e)
+            )
+
+    def _normalize_review_json(self, data: dict) -> dict:
+        if not isinstance(data, dict):
+            raise ValueError("El JSON debe contener un objeto de evaluacion.")
+
+        normalized = dict(data)
+
+        if "reviewed_reqs" not in normalized and "requirements" in normalized:
+            normalized["reviewed_reqs"] = normalized["requirements"]
+
+        reviewed_reqs = normalized.get("reviewed_reqs")
+        if reviewed_reqs is None:
+            return normalized
+        if not isinstance(reviewed_reqs, list):
+            raise ValueError("El campo 'reviewed_reqs' debe ser una lista.")
+
+        normalized_reqs = []
+        for req in reviewed_reqs:
+            if not isinstance(req, dict):
+                raise ValueError("Cada requerimiento evaluado debe ser un objeto.")
+
+            normalized_req = dict(req)
+            if "initial_description" not in normalized_req and "description" in normalized_req:
+                normalized_req["initial_description"] = normalized_req["description"]
+            normalized_reqs.append(normalized_req)
+
+        normalized["reviewed_reqs"] = normalized_reqs
+        return normalized
 
     def _validate_review_json(self, data: dict) -> None:
         required = ["review_date", "reviewed_reqs", "llm_provider"]
@@ -148,11 +183,15 @@ class LandingPage(QWidget):
                     raise KeyError(f"reviewed_reqs[].{field}")
 
     def _on_about_clicked(self) -> None:
-        QMessageBox.information(
+        about_file = Path(__file__).parent / "about.html"
+
+        try:
+            html = about_file.read_text(encoding="utf-8")
+        except FileNotFoundError:
+            html = "<h3>REFI ALPHA</h3><p>Información no disponible.</p>"
+
+        QMessageBox.about(
             self,
             "Acerca de REFI ALPHA",
-            "REFI ALPHA - Requirements Fidelity\n\n"
-            "Herramienta de evaluacion automatizada de requisitos "
-            "utilizando inteligencia artificial.\n\n"
-            "Espacio reservado para informacion del proyecto.",
+            html
         )

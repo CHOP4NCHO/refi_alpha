@@ -47,18 +47,35 @@ class ReviewViewerPage(QWidget):
 
     def _populate_meta(self) -> None:
         meta = self.review_data
+        token_usage = meta.get("token_usage", {})
+        input_tokens = meta.get("input_tokens", token_usage.get("input", 0))
+        output_tokens = meta.get("output_tokens", token_usage.get("output", 0))
+        try:
+            response_time = float(meta.get("response_time", 0))
+        except (TypeError, ValueError):
+            response_time = 0.0
+
         lines = [
             f"<b>Fecha:</b> {escape(str(meta.get('review_date', '-'))) }",
             f"<b>Proveedor LLM:</b> {escape(str(meta.get('llm_provider', '-'))) }",
             f"<b>Modo evaluacion:</b> {escape(str(meta.get('evaluation_mode', '-'))) }",
             f"<b>Evaluacion real:</b> {escape(str(meta.get('real_evaluation', '-'))) }",
-            f"<b>Tokens entrada:</b> {meta.get('input_tokens', 0)}  |  "
-            f"<b>Tokens salida:</b> {meta.get('output_tokens', 0)}  |  "
-            f"<b>Tiempo:</b> {meta.get('response_time', 0):.2f}s",
+            f"<b>Tokens entrada:</b> {input_tokens}  |  "
+            f"<b>Tokens salida:</b> {output_tokens}  |  "
+            f"<b>Tiempo:</b> {response_time:.2f}s",
         ]
         if meta.get("debug_mode"):
             lines.append("<b>Modo debug:</b> activo")
         self.metaInfo.setText(" &nbsp;·&nbsp; ".join(lines))
+
+    def _reviewed_requirements(self) -> list[dict]:
+        reqs = self.review_data.get("reviewed_reqs")
+        if reqs is None:
+            reqs = self.review_data.get("requirements", [])
+        return reqs if isinstance(reqs, list) else []
+
+    def _requirement_description(self, req: dict) -> str:
+        return req.get("initial_description", req.get("description", ""))
 
     def _populate_table(self) -> None:
         if self.theme_manager:
@@ -66,13 +83,13 @@ class ReviewViewerPage(QWidget):
             no_cumple_color = "#dc2626" if not self.theme_manager.is_dark else "#f87171"
         else:
             cumple_color, no_cumple_color = "#16a34a", "#dc2626"
-        reqs = self.review_data.get("reviewed_reqs", [])
+        reqs = self._reviewed_requirements()
         self.reqsTable.setRowCount(len(reqs))
         for i, req in enumerate(reqs):
             num_item = QTableWidgetItem(str(i + 1))
             num_item.setTextAlignment(Qt.AlignmentFlag.AlignCenter)
             self.reqsTable.setItem(i, 0, num_item)
-            self.reqsTable.setItem(i, 1, QTableWidgetItem(req.get("initial_description", "")))
+            self.reqsTable.setItem(i, 1, QTableWidgetItem(self._requirement_description(req)))
             fulfilled = req.get("is_fulfilled", False)
             result_item = QTableWidgetItem("Cumple" if fulfilled else "No cumple")
             result_item.setTextAlignment(Qt.AlignmentFlag.AlignCenter)
@@ -86,7 +103,7 @@ class ReviewViewerPage(QWidget):
             self.reqsTable.setItem(i, 3, QTableWidgetItem(req.get("reasoning", "")))
 
     def _show_requirement_detail(self, row: int, _column: int) -> None:
-        reqs = self.review_data.get("reviewed_reqs", [])
+        reqs = self._reviewed_requirements()
         if row < 0 or row >= len(reqs):
             return
         req = reqs[row]
@@ -99,7 +116,7 @@ class ReviewViewerPage(QWidget):
         desc_label = QLabel("Requerimiento")
         desc_label.setFont(QFont("", -1, QFont.Weight.Bold))
         layout.addWidget(desc_label)
-        desc_text = QLabel(req.get("initial_description", ""))
+        desc_text = QLabel(self._requirement_description(req))
         desc_text.setWordWrap(True)
         desc_text.setTextInteractionFlags(Qt.TextInteractionFlag.TextSelectableByMouse)
         layout.addWidget(desc_text)
