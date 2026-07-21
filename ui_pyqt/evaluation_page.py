@@ -72,17 +72,20 @@ class EvaluationPage(QWidget):
         self.progress.setVisible(busy)
         if busy:
             self.progress.setMaximum(0)
+            self.progress.setTextVisible(False)
             self.state_label.setText("Iniciando evaluación...")
             self.run_button.setText("…  Evaluación en curso")
         else:
             self.progress.setMaximum(100)
             self.progress.setValue(0)
+            self.progress.setTextVisible(False)
             self.state_label.setText("Lista para comenzar")
             self.run_button.setText("▶  Iniciar evaluación")
 
     def update_progress(self, current: int, total: int) -> None:
         self.progress.setMaximum(total)
         self.progress.setValue(current)
+        self.progress.setTextVisible(True)
         self.state_label.setText(f"Evaluando {current}/{total}...")
 
     def refresh(self) -> None:
@@ -230,12 +233,39 @@ class EvaluationPage(QWidget):
         except Exception as error:
             self.result_view.setPlainText(str(error))
             return
-        accent_color = self.theme_manager.get_palette_color("accent") if self.theme_manager else "#63e6be"
-        text_color = self.theme_manager.get_palette_color("text") if self.theme_manager else "#dbe7f4"
+        if self.theme_manager:
+            accent = self.theme_manager.get_palette_color("accent")
+            text_color = self.theme_manager.get_palette_color("text")
+            bg = self.theme_manager.get_palette_color("background")
+            surface = self.theme_manager.get_palette_color("surface")
+            border = self.theme_manager.get_palette_color("border")
+        else:
+            accent, text_color, bg, surface, border = "#63e6be", "#dbe7f4", "#08111f", "#0f1c2e", "#20324a"
+
+        cumple_color = "#16a34a" if not self.theme_manager or not self.theme_manager.is_dark else "#4ade80"
+        no_cumple_color = "#dc2626" if not self.theme_manager or not self.theme_manager.is_dark else "#f87171"
+
+        fulfilled_html = ""
+        for line in text.splitlines():
+            l = line.strip()
+            if "cumple" in l.lower() and "no" not in l.lower():
+                fulfilled_html += f'<span style="color:{cumple_color};font-weight:700;">{escape(l)}</span>\n'
+            elif "no cumple" in l.lower():
+                fulfilled_html += f'<span style="color:{no_cumple_color};font-weight:700;">{escape(l)}</span>\n'
+            else:
+                fulfilled_html += f"{escape(l)}\n"
+
         self.result_view.setHtml(
-            f"<style>pre{{white-space:pre-wrap;line-height:1.5;color:{text_color};}}"
-            f"h3{{color:{accent_color}}}</style>"
-            f"<h3>Informe de fidelidad</h3><pre>{escape(text)}</pre>"
+            f"""<style>
+            body{{background:{bg};margin:0;padding:0;}}
+            .card{{background:{surface};border:1px solid {border};border-radius:12px;padding:20px;margin:8px;}}
+            h2{{color:{accent};margin:0 0 16px 0;font-size:18px;}}
+            pre{{white-space:pre-wrap;line-height:1.7;font-family:inherit;font-size:13px;color:{text_color};margin:0;}}
+            </style>
+            <div class="card">
+            <h2>Informe de fidelidad</h2>
+            <pre>{fulfilled_html}</pre>
+            </div>"""
         )
 
     def refresh_styles(self) -> None:

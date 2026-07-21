@@ -8,6 +8,7 @@ from PyQt6.QtWidgets import (
     QComboBox,
     QFileDialog,
     QHeaderView,
+    QLabel,
     QMessageBox,
     QPushButton,
     QTableWidgetItem,
@@ -48,6 +49,12 @@ class RequirementsPage(QWidget):
         header.setSectionResizeMode(3, QHeaderView.ResizeMode.ResizeToContents)
         self.table.setColumnWidth(3, 90)
         self.table.verticalHeader().setVisible(False)
+        self._empty_table_label = QLabel("Aún no hay requerimientos. Agrega uno manualmente o importa desde un PDF.", self.listCard)
+        self._empty_table_label.setAlignment(Qt.AlignmentFlag.AlignHCenter | Qt.AlignmentFlag.AlignVCenter)
+        self._empty_table_label.setProperty("muted", True)
+        self._empty_table_label.setWordWrap(True)
+        self._empty_table_label.setMinimumHeight(60)
+        self.listCardLayout.insertWidget(4, self._empty_table_label)
 
     def set_compact(self, compact: bool) -> None:
         direction = (
@@ -114,6 +121,8 @@ class RequirementsPage(QWidget):
     def refresh(self) -> None:
         requirements = self.service.get_requirements()
         self.table.setRowCount(len(requirements))
+        self._empty_table_label.setVisible(not requirements)
+        self.table.setVisible(bool(requirements))
         for row, requirement in enumerate(requirements):
             values = (requirement.id, requirement.description)
             for column, value in ((0, values[0]), (2, values[1])):

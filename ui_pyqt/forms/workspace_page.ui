@@ -10,10 +10,7 @@
     <height>458</height>
    </rect>
   </property>
-  <layout class="QVBoxLayout" name="pageLayout">
-   <property name="spacing">
-    <number>14</number>
-   </property>
+  <layout class="QGridLayout" name="gridLayout">
    <property name="leftMargin">
     <number>0</number>
    </property>
@@ -26,36 +23,37 @@
    <property name="bottomMargin">
     <number>0</number>
    </property>
-   <item>
+   <item row="0" column="0">
     <widget class="QFrame" name="workspaceCard">
      <property name="card" stdset="0">
       <bool>true</bool>
      </property>
-     <layout class="QVBoxLayout" name="workspaceCardLayout">
-      <property name="spacing">
-       <number>12</number>
-      </property>
-      <property name="leftMargin">
-       <number>18</number>
-      </property>
-      <property name="topMargin">
-       <number>16</number>
-      </property>
-      <property name="rightMargin">
-       <number>18</number>
-      </property>
-      <property name="bottomMargin">
-       <number>18</number>
-      </property>
+      <layout class="QVBoxLayout" name="workspaceCardLayout">
+       <property name="spacing">
+        <number>12</number>
+       </property>
+       <property name="leftMargin">
+        <number>18</number>
+       </property>
+       <property name="topMargin">
+        <number>16</number>
+       </property>
+       <property name="rightMargin">
+        <number>18</number>
+       </property>
+       <property name="bottomMargin">
+        <number>18</number>
+       </property>
       <item>
        <widget class="QLabel" name="workspaceTitle">
         <property name="text">
-         <string>Espacio de trabajo</string>
+         <string>Directorio Actual</string>
         </property>
        </widget>
       </item>
-      <item>
-       <layout class="QHBoxLayout" name="workspaceRow">
+       <item>
+        <layout class="QHBoxLayout" name="workspaceRow">
+         <property name="spacing"><number>6</number></property>
         <item>
          <widget class="QLabel" name="activeRepoCaption">
           <property name="text">
@@ -95,8 +93,9 @@
         </item>
        </layout>
       </item>
-      <item>
-       <layout class="QHBoxLayout" name="pathRow">
+       <item>
+        <layout class="QHBoxLayout" name="pathRow">
+         <property name="spacing"><number>6</number></property>
         <item>
          <widget class="QLineEdit" name="path_input">
           <property name="placeholderText">
@@ -116,11 +115,11 @@
      </layout>
     </widget>
    </item>
-   <item>
+   <item row="1" column="0">
     <widget class="QSplitter" name="splitter">
      <property name="maximumSize">
       <size>
-       <width>1046</width>
+       <width>16777215</width>
        <height>16777215</height>
       </size>
      </property>

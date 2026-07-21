@@ -4,7 +4,7 @@ from datetime import datetime
 from pathlib import Path
 
 from PyQt6.QtCore import Qt, QThreadPool, pyqtSignal
-from PyQt6.QtGui import QPixmap, QResizeEvent
+from PyQt6.QtGui import QPixmap, QResizeEvent, QKeySequence
 from PyQt6.QtWidgets import QButtonGroup, QLayout, QMainWindow, QMessageBox, QPushButton, QWidget
 
 from core.exceptions import DomainError, ModelConfigurationError, ModelsNotConfiguredError
@@ -57,8 +57,9 @@ class RefiMainWindow(QMainWindow):
         self.setWindowTitle(title)
         self.resize(*size)
         self.setMinimumSize(720, 560)
-        self.theme_manager.apply_to(self)
+        self.theme_manager.apply_theme()
         self._setup_ui()
+        self._setup_shortcuts()
         self._connect_pages()
         self.log_message("Sistema listo. La interfaz PyQt6 está conectada a RefiService.")
 
@@ -102,6 +103,11 @@ class RefiMainWindow(QMainWindow):
         self.theme_button.clicked.connect(self._toggle_theme)
         self._update_theme_button_text()
 
+        self.titleLayout.removeWidget(self.info_button)
+        self.info_button.setMinimumSize(38, 32)
+        self.info_button.setMaximumSize(38, 32)
+        self.headerLayout.insertWidget(self.headerLayout.count() - 1, self.info_button)
+
         self.workspace_page = WorkspacePage(self.service, theme_manager=self.theme_manager)
         self.requirements_page = RequirementsPage(self.service, theme_manager=self.theme_manager)
         self.evaluation_page = EvaluationPage(self.service, theme_manager=self.theme_manager)
@@ -131,6 +137,32 @@ class RefiMainWindow(QMainWindow):
         else:
             self.consoleCard.setVisible(False)
             self._apply_responsive_layout(self.width())
+
+    def _setup_shortcuts(self) -> None:
+        from PyQt6.QtGui import QShortcut
+        QShortcut(QKeySequence("Ctrl+N"), self).activated.connect(self._shortcut_new_requirement)
+        QShortcut(QKeySequence("Ctrl+E"), self).activated.connect(self._shortcut_evaluate)
+        QShortcut(QKeySequence("Ctrl+,"), self).activated.connect(lambda: self.show_page(3))
+        QShortcut(QKeySequence("Ctrl+W"), self).activated.connect(lambda: self.show_page(0))
+        QShortcut(QKeySequence("Ctrl+R"), self).activated.connect(lambda: self.show_page(1))
+        QShortcut(QKeySequence("Escape"), self).activated.connect(self._shortcut_escape)
+
+    def _shortcut_new_requirement(self) -> None:
+        self.show_page(1)
+
+    def _shortcut_evaluate(self) -> None:
+        self.show_page(2)
+        if hasattr(self.evaluation_page, "run_button") and self.evaluation_page.run_button.isEnabled():
+            self.evaluation_page.run_button.click()
+
+    def _shortcut_escape(self) -> None:
+        if self.sidebar.isVisible() and self.width() < 980:
+            self.sidebar.setVisible(False)
+
+    def _show_toast(self, message: str, kind: str = "info", duration_ms: int = 3000) -> None:
+        from .components import Toast
+        toast = Toast(message, kind, duration_ms, self)
+        toast.show()
 
     def _setup_brand_logo(self) -> None:
         logo_path = Path(__file__).with_name("refi.png")
@@ -189,6 +221,7 @@ class RefiMainWindow(QMainWindow):
             self.sidebar.setVisible(not compact)
             self.menu_button.setVisible(compact)
         self.theme_button.setVisible(width >= 820)
+        self.info_button.setVisible(width >= 820)
         margin = 12 if compact else 24
         self.bodyLayout.setContentsMargins(margin, 12 if compact else 20, margin, 12)
         self.console.setMaximumHeight(90 if compact else 125)
@@ -296,7 +329,7 @@ class RefiMainWindow(QMainWindow):
 
     def _toggle_theme(self) -> None:
         self.theme_manager.toggle()
-        self.theme_manager.apply_to(self)
+        self.theme_manager.apply_theme()
         self._update_theme_button_text()
         if hasattr(self, "config_page"):
             self.config_page.update_theme_ui()

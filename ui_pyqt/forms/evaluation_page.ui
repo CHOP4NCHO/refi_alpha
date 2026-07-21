@@ -1,9 +1,190 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ui version="4.0">
- <class>EvaluationPage</class><widget class="QWidget" name="EvaluationPage">
-  <layout class="QVBoxLayout" name="pageLayout"><property name="spacing"><number>14</number></property><property name="leftMargin"><number>0</number></property><property name="topMargin"><number>0</number></property><property name="rightMargin"><number>0</number></property><property name="bottomMargin"><number>0</number></property>
-   <item><widget class="QFrame" name="actionCard"><property name="card" stdset="0"><bool>true</bool></property><layout class="QVBoxLayout" name="actionCardLayout"><property name="spacing"><number>12</number></property><property name="leftMargin"><number>18</number></property><property name="topMargin"><number>16</number></property><property name="rightMargin"><number>18</number></property><property name="bottomMargin"><number>18</number></property><item><widget class="QLabel" name="actionTitle"><property name="text"><string>Ejecutar evaluación</string></property></widget></item><item><widget class="QLabel" name="actionSubtitle"><property name="text"><string>Contrasta todos los requerimientos con los archivos incluidos en el contexto.</string></property><property name="muted" stdset="0"><bool>true</bool></property><property name="wordWrap"><bool>true</bool></property></widget></item><item><layout class="QHBoxLayout" name="actionRow"><item><widget class="QLabel" name="state_label"><property name="text"><string>Lista para comenzar</string></property><property name="muted" stdset="0"><bool>true</bool></property></widget></item><item><widget class="QProgressBar" name="progress"><property name="maximumSize"><size><width>180</width><height>16777215</height></size></property><property name="minimum"><number>0</number></property><property name="maximum"><number>0</number></property><property name="visible"><bool>false</bool></property></widget></item><item><widget class="QPushButton" name="run_button"><property name="text"><string>▶  Iniciar evaluación</string></property><property name="primary" stdset="0"><bool>true</bool></property></widget></item></layout></item></layout></widget></item>
-   <item><widget class="QFrame" name="resultsCard"><property name="card" stdset="0"><bool>true</bool></property><layout class="QVBoxLayout" name="resultsCardLayout"><property name="spacing"><number>12</number></property><property name="leftMargin"><number>18</number></property><property name="topMargin"><number>16</number></property><property name="rightMargin"><number>18</number></property><property name="bottomMargin"><number>18</number></property><item><widget class="QLabel" name="resultsTitle"><property name="text"><string>Resultados</string></property></widget></item><item><widget class="QLabel" name="resultsSubtitle"><property name="text"><string>Revisa las evaluaciones disponibles en esta sesión.</string></property><property name="muted" stdset="0"><bool>true</bool></property></widget></item><item><layout class="QHBoxLayout" name="resultRow"><item><widget class="QLabel" name="reviewCaption"><property name="text"><string>Evaluación</string></property></widget></item><item><widget class="QComboBox" name="review_combo"/></item><item><widget class="QPushButton" name="refresh_button"><property name="text"><string>Actualizar</string></property></widget></item></layout></item><item><widget class="QTextBrowser" name="result_view"><property name="openExternalLinks"><bool>false</bool></property></widget></item></layout></widget></item>
-  </layout>
- </widget><resources/><connections/>
+  <class>EvaluationPage</class>
+  <widget class="QWidget" name="EvaluationPage">
+   <layout class="QVBoxLayout" name="pageLayout">
+    <property name="spacing">
+     <number>14</number>
+    </property>
+    <property name="leftMargin">
+     <number>0</number>
+    </property>
+    <property name="topMargin">
+     <number>0</number>
+    </property>
+    <property name="rightMargin">
+     <number>0</number>
+    </property>
+    <property name="bottomMargin">
+     <number>0</number>
+    </property>
+    <item>
+     <widget class="QFrame" name="actionCard">
+      <property name="card" stdset="0">
+       <bool>true</bool>
+      </property>
+      <layout class="QVBoxLayout" name="actionCardLayout">
+       <property name="spacing">
+        <number>12</number>
+       </property>
+       <property name="leftMargin">
+        <number>18</number>
+       </property>
+       <property name="topMargin">
+        <number>16</number>
+       </property>
+       <property name="rightMargin">
+        <number>18</number>
+       </property>
+       <property name="bottomMargin">
+        <number>18</number>
+       </property>
+       <item>
+        <widget class="QLabel" name="actionTitle">
+         <property name="text">
+          <string>Ejecutar evaluación</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QLabel" name="actionSubtitle">
+         <property name="text">
+          <string>Contrasta todos los requerimientos con los archivos incluidos en el contexto.</string>
+         </property>
+         <property name="muted" stdset="0">
+          <bool>true</bool>
+         </property>
+         <property name="wordWrap">
+          <bool>true</bool>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <layout class="QHBoxLayout" name="actionRow">
+         <property name="spacing">
+          <number>10</number>
+         </property>
+         <item>
+          <widget class="QLabel" name="state_label">
+           <property name="text">
+            <string>Lista para comenzar</string>
+           </property>
+           <property name="muted" stdset="0">
+            <bool>true</bool>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QProgressBar" name="progress">
+           <property name="maximumSize">
+            <size>
+             <width>180</width>
+             <height>16777215</height>
+            </size>
+           </property>
+           <property name="minimum">
+            <number>0</number>
+           </property>
+           <property name="maximum">
+            <number>0</number>
+           </property>
+           <property name="visible">
+            <bool>false</bool>
+           </property>
+           <property name="textVisible">
+            <bool>false</bool>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QPushButton" name="run_button">
+           <property name="text">
+            <string>▶  Iniciar evaluación</string>
+           </property>
+           <property name="primary" stdset="0">
+            <bool>true</bool>
+           </property>
+          </widget>
+         </item>
+        </layout>
+       </item>
+      </layout>
+     </widget>
+    </item>
+    <item>
+     <widget class="QFrame" name="resultsCard">
+      <property name="card" stdset="0">
+       <bool>true</bool>
+      </property>
+      <layout class="QVBoxLayout" name="resultsCardLayout">
+       <property name="spacing">
+        <number>12</number>
+       </property>
+       <property name="leftMargin">
+        <number>18</number>
+       </property>
+       <property name="topMargin">
+        <number>16</number>
+       </property>
+       <property name="rightMargin">
+        <number>18</number>
+       </property>
+       <property name="bottomMargin">
+        <number>18</number>
+       </property>
+       <item>
+        <widget class="QLabel" name="resultsTitle">
+         <property name="text">
+          <string>Resultados</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QLabel" name="resultsSubtitle">
+         <property name="text">
+          <string>Revisa las evaluaciones disponibles en esta sesión.</string>
+         </property>
+         <property name="muted" stdset="0">
+          <bool>true</bool>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <layout class="QHBoxLayout" name="resultRow">
+         <property name="spacing">
+          <number>10</number>
+         </property>
+         <item>
+          <widget class="QLabel" name="reviewCaption">
+           <property name="text">
+            <string>Evaluación</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QComboBox" name="review_combo"/>
+         </item>
+         <item>
+          <widget class="QPushButton" name="refresh_button">
+           <property name="text">
+            <string>Actualizar</string>
+           </property>
+          </widget>
+         </item>
+        </layout>
+       </item>
+       <item>
+        <widget class="QTextBrowser" name="result_view">
+         <property name="openExternalLinks">
+          <bool>false</bool>
+         </property>
+        </widget>
+       </item>
+      </layout>
+     </widget>
+    </item>
+   </layout>
+  </widget>
+  <resources/>
+  <connections/>
 </ui>

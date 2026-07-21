@@ -3,18 +3,18 @@
 from html import escape
 
 from PyQt6.QtCore import Qt, pyqtSignal
+from PyQt6.QtGui import QColor, QFont
 from PyQt6.QtWidgets import (
-    QBoxLayout,
-    QFrame,
-    QHBoxLayout,
+    QDialog,
     QHeaderView,
     QLabel,
-    QPushButton,
     QTableWidget,
     QTableWidgetItem,
     QVBoxLayout,
     QWidget,
 )
+
+from .ui_loader import load_ui
 
 
 class ReviewViewerPage(QWidget):
@@ -26,93 +26,108 @@ class ReviewViewerPage(QWidget):
         super().__init__(parent)
         self.review_data = review_data
         self.theme_manager = theme_manager
-        self._build_ui()
+        load_ui("review_viewer_page.ui", self)
+        self._setup_ui()
+        self._populate_table()
 
-    def _build_ui(self) -> None:
-        root = QVBoxLayout(self)
-        root.setContentsMargins(24, 20, 24, 20)
-        root.setSpacing(16)
+    def _setup_ui(self) -> None:
+        self.btn_export.clicked.connect(self._export_json)
+        self.btn_export.setCursor(Qt.CursorShape.PointingHandCursor)
+        self.metaInfo.setTextInteractionFlags(Qt.TextInteractionFlag.TextSelectableByMouse)
+        self.reqsTable.setAlternatingRowColors(True)
+        self.reqsTable.setSelectionBehavior(QTableWidget.SelectionBehavior.SelectRows)
+        self.reqsTable.setEditTriggers(QTableWidget.EditTrigger.NoEditTriggers)
+        self.reqsTable.horizontalHeader().setSectionResizeMode(1, QHeaderView.ResizeMode.Stretch)
+        self.reqsTable.horizontalHeader().setSectionResizeMode(3, QHeaderView.ResizeMode.Stretch)
+        self.reqsTable.setColumnWidth(0, 40)
+        self.reqsTable.setColumnWidth(2, 100)
+        self.reqsTable.verticalHeader().setVisible(False)
+        self.reqsTable.cellDoubleClicked.connect(self._show_requirement_detail)
+        self._populate_meta()
 
-        header = QHBoxLayout()
-        header.setSpacing(12)
-
-        btn_back = QPushButton("← Volver a inicio")
-        btn_back.setCursor(Qt.CursorShape.PointingHandCursor)
-        btn_back.clicked.connect(self.back_requested.emit)
-        header.addWidget(btn_back)
-
-        header.addStretch()
-
-        btn_export = QPushButton("Exportar JSON")
-        btn_export.setCursor(Qt.CursorShape.PointingHandCursor)
-        btn_export.clicked.connect(self._export_json)
-        header.addWidget(btn_export)
-
-        root.addLayout(header)
-
-        meta_card = QFrame()
-        meta_card.setProperty("card", True)
-        meta_layout = QVBoxLayout(meta_card)
-        meta_layout.setContentsMargins(16, 14, 16, 14)
-        meta_layout.setSpacing(6)
-
-        meta_title = QLabel("Metadata de la evaluacion")
-        meta_title.setObjectName("sectionTitle")
-        meta_layout.addWidget(meta_title)
-
+    def _populate_meta(self) -> None:
         meta = self.review_data
         lines = [
-            f"<b>Fecha:</b> {escape(str(meta.get('review_date', '-')))}",
-            f"<b>Proveedor LLM:</b> {escape(str(meta.get('llm_provider', '-')))}",
-            f"<b>Modo evaluacion:</b> {escape(str(meta.get('evaluation_mode', '-')))}",
-            f"<b>Evaluacion real:</b> {escape(str(meta.get('real_evaluation', '-')))}",
+            f"<b>Fecha:</b> {escape(str(meta.get('review_date', '-'))) }",
+            f"<b>Proveedor LLM:</b> {escape(str(meta.get('llm_provider', '-'))) }",
+            f"<b>Modo evaluacion:</b> {escape(str(meta.get('evaluation_mode', '-'))) }",
+            f"<b>Evaluacion real:</b> {escape(str(meta.get('real_evaluation', '-'))) }",
             f"<b>Tokens entrada:</b> {meta.get('input_tokens', 0)}  |  "
             f"<b>Tokens salida:</b> {meta.get('output_tokens', 0)}  |  "
             f"<b>Tiempo:</b> {meta.get('response_time', 0):.2f}s",
         ]
         if meta.get("debug_mode"):
             lines.append("<b>Modo debug:</b> activo")
+        self.metaInfo.setText(" &nbsp;·&nbsp; ".join(lines))
 
-        info = QLabel(" &nbsp;·&nbsp; ".join(lines))
-        info.setWordWrap(True)
-        info.setTextInteractionFlags(Qt.TextInteractionFlag.TextSelectableByMouse)
-        meta_layout.addWidget(info)
-
-        root.addWidget(meta_card)
-
-        reqs_title = QLabel("Requerimientos evaluados")
-        reqs_title.setObjectName("sectionTitle")
-        root.addWidget(reqs_title)
-
-        table = QTableWidget()
-        table.setColumnCount(4)
-        table.setHorizontalHeaderLabels(["#", "Requerimiento", "Resultado", "Razonamiento"])
-        table.horizontalHeader().setSectionResizeMode(1, QHeaderView.ResizeMode.Stretch)
-        table.horizontalHeader().setSectionResizeMode(3, QHeaderView.ResizeMode.Stretch)
-        table.setColumnWidth(0, 40)
-        table.setColumnWidth(2, 100)
-        table.setAlternatingRowColors(True)
-        table.setSelectionBehavior(QTableWidget.SelectionBehavior.SelectRows)
-        table.setEditTriggers(QTableWidget.EditTrigger.NoEditTriggers)
-
+    def _populate_table(self) -> None:
+        if self.theme_manager:
+            cumple_color = "#16a34a" if not self.theme_manager.is_dark else "#4ade80"
+            no_cumple_color = "#dc2626" if not self.theme_manager.is_dark else "#f87171"
+        else:
+            cumple_color, no_cumple_color = "#16a34a", "#dc2626"
         reqs = self.review_data.get("reviewed_reqs", [])
-        table.setRowCount(len(reqs))
+        self.reqsTable.setRowCount(len(reqs))
         for i, req in enumerate(reqs):
             num_item = QTableWidgetItem(str(i + 1))
             num_item.setTextAlignment(Qt.AlignmentFlag.AlignCenter)
-            table.setItem(i, 0, num_item)
-
-            table.setItem(i, 1, QTableWidgetItem(req.get("initial_description", "")))
-
+            self.reqsTable.setItem(i, 0, num_item)
+            self.reqsTable.setItem(i, 1, QTableWidgetItem(req.get("initial_description", "")))
             fulfilled = req.get("is_fulfilled", False)
             result_item = QTableWidgetItem("Cumple" if fulfilled else "No cumple")
             result_item.setTextAlignment(Qt.AlignmentFlag.AlignCenter)
-            table.setItem(i, 2, result_item)
+            if fulfilled:
+                result_item.setForeground(QColor(cumple_color))
+            else:
+                result_item.setForeground(QColor(no_cumple_color))
+            bold_font = QFont("", -1, QFont.Weight.Bold)
+            result_item.setFont(bold_font)
+            self.reqsTable.setItem(i, 2, result_item)
+            self.reqsTable.setItem(i, 3, QTableWidgetItem(req.get("reasoning", "")))
 
-            table.setItem(i, 3, QTableWidgetItem(req.get("reasoning", "")))
-
-        table.verticalHeader().setVisible(False)
-        root.addWidget(table)
+    def _show_requirement_detail(self, row: int, _column: int) -> None:
+        reqs = self.review_data.get("reviewed_reqs", [])
+        if row < 0 or row >= len(reqs):
+            return
+        req = reqs[row]
+        dialog = QDialog(self)
+        dialog.setWindowTitle(f"Requerimiento #{row + 1}")
+        dialog.resize(600, 420)
+        layout = QVBoxLayout(dialog)
+        layout.setSpacing(12)
+        layout.setContentsMargins(20, 18, 20, 18)
+        desc_label = QLabel("Requerimiento")
+        desc_label.setFont(QFont("", -1, QFont.Weight.Bold))
+        layout.addWidget(desc_label)
+        desc_text = QLabel(req.get("initial_description", ""))
+        desc_text.setWordWrap(True)
+        desc_text.setTextInteractionFlags(Qt.TextInteractionFlag.TextSelectableByMouse)
+        layout.addWidget(desc_text)
+        fulfilled = req.get("is_fulfilled", False)
+        result_label = QLabel("Resultado")
+        result_label.setFont(QFont("", -1, QFont.Weight.Bold))
+        layout.addWidget(result_label)
+        result_text = QLabel("Cumple" if fulfilled else "No cumple")
+        result_text.setFont(QFont("", -1, QFont.Weight.Bold))
+        if self.theme_manager:
+            color = "#16a34a" if not self.theme_manager.is_dark else "#4ade80"
+            if not fulfilled:
+                color = "#dc2626" if not self.theme_manager.is_dark else "#f87171"
+        else:
+            color = "#16a34a" if fulfilled else "#dc2626"
+        result_text.setStyleSheet(f"color: {color};")
+        layout.addWidget(result_text)
+        reasoning_label = QLabel("Razonamiento")
+        reasoning_label.setFont(QFont("", -1, QFont.Weight.Bold))
+        layout.addWidget(reasoning_label)
+        reasoning_text = QLabel(req.get("reasoning", ""))
+        reasoning_text.setWordWrap(True)
+        reasoning_text.setTextInteractionFlags(Qt.TextInteractionFlag.TextSelectableByMouse)
+        layout.addWidget(reasoning_text)
+        layout.addStretch()
+        if self.theme_manager:
+            self.theme_manager.apply_to(dialog)
+        dialog.exec()
 
     def _export_json(self) -> None:
         from PyQt6.QtWidgets import QFileDialog

@@ -2,15 +2,19 @@
 
 import json
 from pathlib import Path
-from PyQt6.QtWidgets import QWidget
+
+from PyQt6.QtCore import QObject, pyqtSignal
+from PyQt6.QtWidgets import QApplication, QWidget
 
 from .theme import LIGHT_STYLESHEET, DARK_STYLESHEET
 
 
-class ThemeManager:
+class ThemeManager(QObject):
     _USER_DIR = Path("~/.refi").expanduser()
     _CONFIG_FILE = _USER_DIR / "config.json"
     _CUSTOM_QSS_FILE = _USER_DIR / "style.qss"
+
+    theme_changed = pyqtSignal()
 
     LIGHT_COLORS = {
         "text": "#243447",
@@ -18,8 +22,8 @@ class ThemeManager:
         "background": "#f4f7fb",
         "surface": "#ffffff",
         "border": "#dce4ee",
-        "accent": "#ff7c02",
-        "accent_hover": "#794A11",
+        "accent": "#16a34a",
+        "accent_hover": "#15803d",
         "warning_bg": "#fff4c2",
         "warning_text": "#765a00",
         "info_bg": "#f5f8fb",
@@ -41,9 +45,18 @@ class ThemeManager:
     }
 
     def __init__(self):
+        super().__init__()
         self._mode = "light"
         self._custom_qss = ""
         self._load()
+        self._load_font()
+
+    def _load_font(self) -> None:
+        from pathlib import Path
+        from PyQt6.QtGui import QFontDatabase
+        font_dir = Path(__file__).parent / "fonts"
+        for font_file in sorted(font_dir.glob("rubik-*.ttf")):
+            QFontDatabase.addApplicationFont(str(font_file))
 
     @property
     def mode(self) -> str:
@@ -72,6 +85,13 @@ class ThemeManager:
         final = base + "\n" + self._custom_qss
         widget.setStyleSheet(final)
 
+    def apply_theme(self) -> None:
+        """Apply the current theme globally to QApplication (propagates to all windows)."""
+        base = DARK_STYLESHEET if self._mode == "dark" else LIGHT_STYLESHEET
+        final = base + "\n" + self._custom_qss
+        QApplication.instance().setStyleSheet(final)
+        self.theme_changed.emit()
+
     def get_palette_color(self, token: str) -> str:
         palette = self.DARK_COLORS if self._mode == "dark" else self.LIGHT_COLORS
         return palette.get(token, "#ff00ff")
@@ -99,7 +119,7 @@ class ThemeManager:
     def show_message_box(
         self,
         parent: QWidget,
-        icon_type: str,  # "info", "warning", "critical", "question"
+        icon_type: str,
         title: str,
         text: str,
         buttons=None,
@@ -108,8 +128,7 @@ class ThemeManager:
         msg = QMessageBox(parent)
         msg.setWindowTitle(title)
         msg.setText(text)
-        
-        # Set icon
+
         if icon_type == "info":
             msg.setIcon(QMessageBox.Icon.Information)
         elif icon_type == "warning":
@@ -118,14 +137,13 @@ class ThemeManager:
             msg.setIcon(QMessageBox.Icon.Critical)
         elif icon_type == "question":
             msg.setIcon(QMessageBox.Icon.Question)
-            
-        # Set buttons
+
         if buttons is not None:
             msg.setStandardButtons(buttons)
         elif icon_type == "question":
             msg.setStandardButtons(QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No)
         else:
             msg.setStandardButtons(QMessageBox.StandardButton.Ok)
-            
+
         self.apply_to(msg)
         return msg.exec()

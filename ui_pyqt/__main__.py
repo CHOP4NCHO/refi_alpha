@@ -41,7 +41,7 @@ class LandingWindow(QMainWindow):
 
         self.landing = LandingPage(theme_manager=theme_manager)
         self.setCentralWidget(self.landing)
-        self.theme_manager.apply_to(self)
+        self.theme_manager.apply_theme()
 
         self.landing.new_evaluation_requested.connect(self._open_evaluation)
         self.landing.review_loaded.connect(self._open_review)
@@ -73,6 +73,7 @@ class LandingWindow(QMainWindow):
         if self.main_window:
             self.main_window.close()
             self.main_window = None
+        self.theme_manager.apply_theme()
         self.show()
 
 

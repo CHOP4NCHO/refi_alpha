@@ -3,7 +3,7 @@
 from pathlib import Path
 
 from PyQt6.QtCore import QEvent, QMimeData, QPoint, Qt, QUrl, pyqtSignal
-from PyQt6.QtGui import QColor, QDrag
+from PyQt6.QtGui import QColor, QDrag, QFont
 from PyQt6.QtWidgets import (
     QApplication,
     QFileDialog,
@@ -27,16 +27,20 @@ class WorkspacePage(QWidget):
         self.service = service
         self.theme_manager = theme_manager
         self._drag_start = QPoint()
+        self._drag_hover = False
         load_ui("workspace_page.ui", self)
         self._setup_ui()
         self.refresh()
 
     def _setup_ui(self) -> None:
+        route_font = QFont()
+        route_font.setPointSize(18)
         self.workspace_label.setObjectName("sectionTitle")
         self.workspace_path_label = QLabel(self.workspaceCard)
         self.workspace_path_label.setObjectName("workspacePathLabel")
         self.workspace_path_label.setProperty("muted", True)
         self.workspace_path_label.setTextInteractionFlags(Qt.TextInteractionFlag.TextSelectableByMouse)
+        self.workspace_path_label.setFont(route_font)
         self.workspace_path_label.setWordWrap(True)
         self.workspaceCardLayout.insertWidget(3, self.workspace_path_label)
         self.change_button.clicked.connect(self.choose_workspace)
@@ -60,6 +64,13 @@ class WorkspacePage(QWidget):
         idx = self.treeCardLayout.indexOf(self.tree)
         self.treeCardLayout.insertWidget(idx, self.filter_input)
         self.splitter.setSizes([680, 380])
+
+        self._empty_indicator = QLabel("Arrastra archivos aquí o haz doble clic en el árbol para añadirlos.", self.contextCard)
+        self._empty_indicator.setAlignment(Qt.AlignmentFlag.AlignHCenter | Qt.AlignmentFlag.AlignVCenter)
+        self._empty_indicator.setProperty("muted", True)
+        self._empty_indicator.setWordWrap(True)
+        self._empty_indicator.setMinimumHeight(60)
+        self.contextCardLayout.insertWidget(3, self._empty_indicator)
 
     def set_compact(self, compact: bool) -> None:
         orientation = Qt.Orientation.Vertical if compact else Qt.Orientation.Horizontal
@@ -146,10 +157,21 @@ class WorkspacePage(QWidget):
             if event.type() in (QEvent.Type.DragEnter, QEvent.Type.DragMove):
                 if self._contains_only_files(event.mimeData()):
                     event.acceptProposedAction()
+                    if not self._drag_hover:
+                        self._drag_hover = True
+                        self._update_drop_appearance(True)
                     return True
                 event.ignore()
+                self._drag_hover = False
+                self._update_drop_appearance(False)
+                return True
+            elif event.type() == QEvent.Type.DragLeave:
+                self._drag_hover = False
+                self._update_drop_appearance(False)
                 return True
             elif event.type() == QEvent.Type.Drop and event.mimeData().hasUrls():
+                self._drag_hover = False
+                self._update_drop_appearance(False)
                 paths = [Path(url.toLocalFile()) for url in event.mimeData().urls()]
                 if paths and all(path.is_file() for path in paths):
                     self._add_dropped_files(paths)
@@ -194,7 +216,30 @@ class WorkspacePage(QWidget):
             item = QListWidgetItem(label)
             item.setData(Qt.ItemDataRole.UserRole, str(path))
             self.context_list.addItem(item)
+        self._update_empty_context_indicator()
         self.context_changed.emit()
+
+    def _update_empty_context_indicator(self) -> None:
+        if hasattr(self, "_empty_indicator"):
+            self._empty_indicator.setVisible(not self.service.file_context)
+            self.context_list.setAcceptDrops(not bool(self.service.file_context))
+
+    def _update_drop_appearance(self, hovering: bool) -> None:
+        if self.theme_manager:
+            accent = self.theme_manager.get_palette_color("accent")
+            surface = self.theme_manager.get_palette_color("surface")
+            text_muted = self.theme_manager.get_palette_color("text_muted")
+        else:
+            accent = "#16a34a"
+            surface = "#ffffff"
+            text_muted = "#6f8093"
+        if hovering:
+            self.context_list.viewport().setStyleSheet(
+                f"QListWidget {{ border: 2px dashed {accent}; background: {surface}; }}"
+                f'QLabel {{ color: {text_muted}; }}'
+            )
+        else:
+            self.context_list.viewport().setStyleSheet("")
 
     def choose_workspace(self) -> None:
         directory = QFileDialog.getExistingDirectory(self, "Selecciona el espacio de trabajo")
