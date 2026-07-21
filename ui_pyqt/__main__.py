@@ -46,7 +46,7 @@ class LandingWindow(QMainWindow):
         self.resize(800, 600)
         self.setMinimumSize(800, 600)
 
-        self.landing = LandingPage(theme_manager=theme_manager)
+        self.landing = LandingPage(service=service, theme_manager=theme_manager)
         self.setCentralWidget(self.landing)
         self.theme_manager.apply_theme()
 

@@ -34,7 +34,7 @@ class WorkspacePage(QWidget):
 
     def _setup_ui(self) -> None:
         route_font = QFont()
-        route_font.setPointSize(18)
+        route_font.setPointSize(10)
         self.workspace_label.setObjectName("sectionTitle")
         self.workspace_path_label = QLabel(self.workspaceCard)
         self.workspace_path_label.setObjectName("workspacePathLabel")
@@ -71,6 +71,8 @@ class WorkspacePage(QWidget):
         self._empty_indicator.setWordWrap(True)
         self._empty_indicator.setMinimumHeight(60)
         self.contextCardLayout.insertWidget(3, self._empty_indicator)
+        self.gridLayout.setRowStretch(0, 0)
+        self.gridLayout.setRowStretch(1, 1)
 
     def set_compact(self, compact: bool) -> None:
         orientation = Qt.Orientation.Vertical if compact else Qt.Orientation.Horizontal
@@ -346,7 +348,7 @@ class WorkspacePage(QWidget):
     def _show_messagebox(self, icon_type: str, title: str, text: str, buttons=None):
         if self.theme_manager:
             return self.theme_manager.show_message_box(self, icon_type, title, text, buttons)
-        from PyQt6.QtWidgets import QMessageBox
+    
         if icon_type == "info":
             return QMessageBox.information(self, title, text)
         elif icon_type == "warning":

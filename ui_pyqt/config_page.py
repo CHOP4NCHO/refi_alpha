@@ -257,6 +257,15 @@ class ConfigPage(QWidget):
             self._update_status_label(category)
             return
 
+        is_valid, validation_message = self.service.model_provider.validate_provider_credentials(
+            provider,
+            api_key,
+        )
+        if not is_valid:
+            self._show_messagebox("warning", "Credencial inválida", validation_message)
+            self._update_status_label(category)
+            return
+
         os.environ[env_key] = api_key
         self._key_overrides[category] = api_key
         slot.key_input.clear()
@@ -264,7 +273,7 @@ class ConfigPage(QWidget):
         self.service.model_provider.refresh_catalog(provider)
         self._refresh_models(category)
         self.message.emit(
-            f"Credencial {self._provider_display(provider)} cargada para {category.upper()}."
+            f"Credencial {self._provider_display(provider)} validada y cargada para {category.upper()}."
         )
 
     def _update_key_placeholder(self, category: str) -> None:

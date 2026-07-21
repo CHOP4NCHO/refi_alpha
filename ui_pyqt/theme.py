@@ -53,6 +53,17 @@ QPushButton#info_button {
     font-weight: 700;
 }
 QPushButton#info_button:hover { color: #243447; background: #f0f4f8; border-color: #b8c6d4; }
+QPushButton#about_button {
+    color: #6f8093;
+    background: transparent;
+    border: 1px solid #dce4ee;
+    border-radius: 18px;
+    font-size: 16px;
+    font-weight: 700;
+    padding: 0;
+}
+QPushButton#about_button:hover { color: #243447; background: #f0f4f8; border-color: #b8c6d4; }
+QPushButton#about_button:pressed { background: #e3ebf3; }
 QPushButton[nav="true"] {
     color: #64778b;
     background: transparent;
@@ -118,6 +129,37 @@ QFrame#separator1, QFrame#separator2 { max-height: 1px; background: #dce4ee; bor
 QToolTip { color: #243447; background: #ffffff; border: 1px solid #b8c8d8; }
 QStatusBar { background: #f4f7fb; color: #6f8093; border-top: 1px solid #dce4ee; }
 QDialog, QMessageBox, QFileDialog { background: #ffffff; }
+QLabel#credentialsNotice {
+    color: #765a00;
+    background: #fff4c2;
+    border: 1px solid #e6c85c;
+    border-radius: 8px;
+    padding: 9px;
+}
+QLabel[credentialStatus="available"] {
+    color: #166534;
+    background: #dcfce7;
+    border: 1px solid #86efac;
+    border-radius: 8px;
+    padding: 6px 8px;
+    font-weight: 650;
+}
+QLabel[credentialStatus="loaded"] {
+    color: #075985;
+    background: #e0f2fe;
+    border: 1px solid #7dd3fc;
+    border-radius: 8px;
+    padding: 6px 8px;
+    font-weight: 650;
+}
+QLabel[credentialStatus="unavailable"] {
+    color: #991b1b;
+    background: #fee2e2;
+    border: 1px solid #fca5a5;
+    border-radius: 8px;
+    padding: 6px 8px;
+    font-weight: 650;
+}
 QPushButton[landing="true"] {
     color: #294057;
     background: #ffffff;
@@ -191,6 +233,17 @@ QPushButton#info_button {
     font-weight: 700;
 }
 QPushButton#info_button:hover { color: #dbe7f4; background: #162030; border-color: #304a60; }
+QPushButton#about_button {
+    color: #7f93aa;
+    background: transparent;
+    border: 1px solid #20324a;
+    border-radius: 18px;
+    font-size: 16px;
+    font-weight: 700;
+    padding: 0;
+}
+QPushButton#about_button:hover { color: #dbe7f4; background: #162030; border-color: #304a60; }
+QPushButton#about_button:pressed { background: #132337; }
 QPushButton[nav="true"] {
     color: #91a5bb;
     background: transparent;
@@ -268,6 +321,37 @@ QFrame#separator1, QFrame#separator2 { max-height: 1px; background: #20324a; bor
 QToolTip { color: #e9f3fe; background: #17283e; border: 1px solid #3b5673; }
 QStatusBar { background: #08111f; color: #7f93aa; border-top: 1px solid #1d2d43; }
 QDialog, QMessageBox, QFileDialog { background: #0f1c2e; }
+QLabel#credentialsNotice {
+    color: #fbbf24;
+    background: #422006;
+    border: 1px solid #78350f;
+    border-radius: 8px;
+    padding: 9px;
+}
+QLabel[credentialStatus="available"] {
+    color: #bbf7d0;
+    background: #123524;
+    border: 1px solid #1f6f46;
+    border-radius: 8px;
+    padding: 6px 8px;
+    font-weight: 650;
+}
+QLabel[credentialStatus="loaded"] {
+    color: #bae6fd;
+    background: #082f49;
+    border: 1px solid #0369a1;
+    border-radius: 8px;
+    padding: 6px 8px;
+    font-weight: 650;
+}
+QLabel[credentialStatus="unavailable"] {
+    color: #fecaca;
+    background: #450a0a;
+    border: 1px solid #991b1b;
+    border-radius: 8px;
+    padding: 6px 8px;
+    font-weight: 650;
+}
 QPushButton[landing="true"] {
     color: #dbe7f4;
     background: #0f1c2e;

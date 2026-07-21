@@ -7,6 +7,7 @@ from PyQt6.QtCore import Qt, pyqtSignal
 from PyQt6.QtGui import QPixmap
 from PyQt6.QtWidgets import (
     QFrame,
+    QHBoxLayout,
     QLabel,
     QPushButton,
     QVBoxLayout,
@@ -15,15 +16,19 @@ from PyQt6.QtWidgets import (
     QMessageBox,
 )
 
+from .credentials_dialog import CredentialsDialog
+
 
 class LandingPage(QWidget):
     """Initial screen offering three options: new evaluation, review saved, about."""
 
     new_evaluation_requested = pyqtSignal()
     review_loaded = pyqtSignal(object)
+    credentials_loaded = pyqtSignal(str)
 
-    def __init__(self, theme_manager=None, parent=None):
+    def __init__(self, service, theme_manager=None, parent=None):
         super().__init__(parent)
+        self.service = service
         self.theme_manager = theme_manager
         self._build_ui()
 
@@ -37,6 +42,18 @@ class LandingPage(QWidget):
         card_layout = QVBoxLayout(card)
         card_layout.setSpacing(12)
         card_layout.setContentsMargins(40, 44, 40, 44)
+
+        header = QHBoxLayout()
+        header.addStretch()
+        about_button = QPushButton("?")
+        about_button.setObjectName("about_button")
+        about_button.setProperty("about", True)
+        about_button.setFixedSize(36, 36)
+        about_button.setCursor(Qt.CursorShape.PointingHandCursor)
+        about_button.setToolTip("Acerca de")
+        about_button.clicked.connect(self._on_about_clicked)
+        header.addWidget(about_button)
+        card_layout.addLayout(header)
 
         logo_label = QLabel()
         logo_path = Path(__file__).with_name("refi.png")
@@ -78,13 +95,20 @@ class LandingPage(QWidget):
         btn_review.clicked.connect(self._on_review_clicked)
         card_layout.addWidget(btn_review)
 
-        btn_about = QPushButton("Acerca de")
-        btn_about.setProperty("landing", True)
-        btn_about.setCursor(Qt.CursorShape.PointingHandCursor)
-        btn_about.clicked.connect(self._on_about_clicked)
-        card_layout.addWidget(btn_about)
+        btn_credentials = QPushButton("Cargar credenciales")
+        btn_credentials.setProperty("landing", True)
+        btn_credentials.setCursor(Qt.CursorShape.PointingHandCursor)
+        btn_credentials.clicked.connect(self._on_credentials_clicked)
+        card_layout.addWidget(btn_credentials)
 
         outer.addWidget(card)
+
+    def _on_credentials_clicked(self) -> None:
+        dialog = CredentialsDialog(self.service, self.theme_manager, self)
+        if self.theme_manager:
+            self.theme_manager.apply_to(dialog)
+        dialog.message.connect(self.credentials_loaded.emit)
+        dialog.exec()
 
     def _on_review_clicked(self) -> None:
         filename, _ = QFileDialog.getOpenFileName(

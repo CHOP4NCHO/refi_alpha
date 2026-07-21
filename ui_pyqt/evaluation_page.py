@@ -43,7 +43,7 @@ class EvaluationPage(QWidget):
         self.summary_layout = QHBoxLayout()
         self.files_metric = Metric("Archivos", "0")
         self.requirements_metric = Metric("Requisitos", "0")
-        self.reviews_metric = Metric("Informe", "0")
+        self.reviews_metric = Metric("Reviews esta Sesión", "0")
         for metric in (self.files_metric, self.requirements_metric, self.reviews_metric):
             self.summary_layout.addWidget(metric)
         self.actionCardLayout.insertLayout(2, self.summary_layout)
@@ -51,7 +51,7 @@ class EvaluationPage(QWidget):
         self.model_status.setWordWrap(True)
         self.model_status.setTextInteractionFlags(Qt.TextInteractionFlag.TextSelectableByMouse)
         self.actionCardLayout.insertWidget(3, self.model_status)
-        self.preview_button = QPushButton("Mostrar detalle de preparación", self.actionCard)
+        self.preview_button = QPushButton("Mostrar vista Previa", self.actionCard)
         self.preview_button.clicked.connect(self._show_preview_dialog)
         self.actionCardLayout.insertWidget(4, self.preview_button)
         self.refresh_summary()

@@ -231,6 +231,77 @@ class ModelProvider:
             catalog._cache = None
             catalog.refresh()
 
+    def validate_provider_credentials(self, provider: LlmProvider, api_key: str) -> tuple[bool, str]:
+        """Validate a cloud provider API key before accepting it for the session."""
+        if provider == LlmProvider.OLLAMA:
+            return True, "Ollama no requiere API key."
+        if not api_key.strip():
+            return False, "La credencial está vacía."
+
+        validators = {
+            LlmProvider.GEMINI: self._validate_gemini_key,
+            LlmProvider.OPENAI: self._validate_openai_key,
+            LlmProvider.CLAUDE: self._validate_claude_key,
+        }
+        validator = validators.get(provider)
+        if validator is None:
+            return False, "Proveedor no soportado para validación de credenciales."
+        return validator(api_key.strip())
+
+    def _validate_openai_key(self, api_key: str) -> tuple[bool, str]:
+        try:
+            response = requests.get(
+                "https://api.openai.com/v1/models",
+                headers={"Authorization": f"Bearer {api_key}"},
+                timeout=10,
+            )
+            return self._credential_response_result(response, "OpenAI")
+        except requests.RequestException as exc:
+            return False, f"No se pudo validar OpenAI: {exc}"
+
+    def _validate_gemini_key(self, api_key: str) -> tuple[bool, str]:
+        try:
+            response = requests.get(
+                f"https://generativelanguage.googleapis.com/v1beta/models?key={api_key}",
+                timeout=10,
+            )
+            return self._credential_response_result(response, "Gemini")
+        except requests.RequestException as exc:
+            return False, f"No se pudo validar Gemini: {exc}"
+
+    def _validate_claude_key(self, api_key: str) -> tuple[bool, str]:
+        try:
+            response = requests.get(
+                "https://api.anthropic.com/v1/models",
+                headers={
+                    "x-api-key": api_key,
+                    "anthropic-version": "2023-06-01",
+                },
+                timeout=10,
+            )
+            return self._credential_response_result(response, "Claude")
+        except requests.RequestException as exc:
+            return False, f"No se pudo validar Claude: {exc}"
+
+    @staticmethod
+    def _credential_response_result(response: requests.Response, provider_name: str) -> tuple[bool, str]:
+        if response.status_code == 200:
+            return True, f"Credencial {provider_name} validada correctamente."
+        if response.status_code in (401, 403):
+            return False, f"La API key de {provider_name} fue rechazada por el proveedor."
+        details = ""
+        try:
+            payload = response.json()
+            error = payload.get("error", payload)
+            if isinstance(error, dict):
+                details = error.get("message", "")
+            elif isinstance(error, str):
+                details = error
+        except ValueError:
+            details = response.text[:180]
+        suffix = f" Detalles: {details}" if details else ""
+        return False, f"No se pudo validar {provider_name} (HTTP {response.status_code}).{suffix}"
+
     # --------------------------------------------------
     # Model discovery (union of all catalogs)
     # --------------------------------------------------

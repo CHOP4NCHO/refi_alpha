@@ -30,7 +30,7 @@ class CodeBase:
 
             dirs[:] = [
                 d for d in dirs
-                if not self._is_ignored(root_path / d)
+                if not self._is_ignored(root_path / d, is_dir=True)
             ]
 
             for filename in files:
@@ -44,14 +44,23 @@ class CodeBase:
 
                 self.files.append(CodeFile(str(file_path)))
 
-    def _is_ignored(self, path: Path) -> bool:
+    def _is_ignored(self, path: Path, is_dir: bool = False) -> bool:
         path_str = str(path)
+
+        try:
+            rel_str = str(path.relative_to(self.path))
+        except ValueError:
+            rel_str = path_str
+            
+        candidates = {path_str, "/" + rel_str.lstrip("/")}
+        if is_dir:
+            candidates.update(candidate + "/" for candidate in list(candidates))
 
         for pattern in self._ignore:
             if any(c in pattern for c in "*?[]"):
-                if fnmatch(path_str, pattern):
+                if any(fnmatch(candidate, pattern) for candidate in candidates):
                     return True
-            elif pattern in path_str:
+            elif any(pattern in candidate for candidate in candidates):
                 return True
 
         return False
