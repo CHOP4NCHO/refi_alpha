@@ -1,7 +1,6 @@
 import json
 import logging
 from typing import Iterable
-from pydantic import BaseModel
 from dataclasses import dataclass
 
 from ..codebase_reader.code_file import CodeFile

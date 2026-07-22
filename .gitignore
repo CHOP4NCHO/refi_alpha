@@ -17,6 +17,8 @@ build/
 *.spec
 
 package-root/
-packages
+packages/
+package-assets/
+scripts/
 .tmp/
 markdown/

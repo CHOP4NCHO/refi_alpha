@@ -6,7 +6,7 @@ import os
 from pathlib import Path
 import sys
 
-from dotenv import load_dotenv
+#from dotenv import load_dotenv
 from PyQt6.QtWidgets import QApplication, QMainWindow
 from PyQt6.QtGui import QIcon
 
@@ -99,7 +99,7 @@ def main() -> int:
     app.setApplicationName("REFI ALPHA")
     app.setOrganizationName("REFI")
 
-    icon_path = get_resource_path("refi.png")
+    icon_path = get_resource_path("ui_pyqt/refi.png")
     app.setWindowIcon(QIcon(icon_path))
 
     # inits Model Provider
