@@ -16,4 +16,7 @@ dist/
 build/
 *.spec
 
+package-root/
+packages
+.tmp/
 markdown/
