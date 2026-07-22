@@ -23,6 +23,9 @@ fi
 
 source venv/bin/activate
 
+echo "Instalando torch CPU-only"
+python -m pip install torch --index-url https://download.pytorch.org/whl/cpu
+
 echo "Instalando dependencias..."
 python -m pip install --upgrade pip
 python -m pip install -r requirements.txt

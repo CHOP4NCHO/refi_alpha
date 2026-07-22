@@ -23,14 +23,22 @@ for /f "tokens=1,2 delims=." %%a in ("%PYVER%") do (
 )
 
 REM Crear entorno virtual
-echo Creando entorno virtual...
-python -m venv venv
+if not exist venv (
+    echo Creando entorno virtual...
+    python -m venv venv
+) else (
+    echo Entorno virtual existente encontrado.
+)
+
 call venv\Scripts\activate.bat
+
+echo Instalando torch CPU-only
+python -m pip install torch --index-url https://download.pytorch.org/whl/cpu
 
 REM Instalar dependencias
 echo Instalando dependencias...
 python -m pip install --upgrade pip
-pip install -r requirements.txt
+python -m pip install -r requirements.txt
 
 REM Configurar .env si no existe
 if not exist .env (
@@ -38,9 +46,20 @@ if not exist .env (
     echo Archivo .env creado. Edita .env con tus API keys.
 )
 
+REM Limpiar build anterior
+echo Limpiando build anterior...
+if exist build rmdir /s /q build
+if exist dist  rmdir /s /q dist
+if exist refi-alpha.spec del refi-alpha.spec
+
 REM Ejecutar PyInstaller
 echo Empaquetando con PyInstaller...
-pyinstaller --onedir --windowed --name refi-alpha ^
+pyinstaller ^
+    --clean ^
+    --noconfirm ^
+    --onedir ^
+    --windowed ^
+    --name refi-alpha ^
     --additional-hooks-dir=hooks ^
     --add-data "ui_pyqt;ui_pyqt" ^
     --add-data "core;core" ^
@@ -48,6 +67,11 @@ pyinstaller --onedir --windowed --name refi-alpha ^
     --hidden-import langchain_core ^
     --hidden-import langchain_ollama ^
     --hidden-import docling ^
+    --hidden-import docling_parse ^
+    --hidden-import docling_parse ^
+    --collect-data docling_parse ^
+    --hidden-import docling.models.plugins.defaults ^
+    --copy-metadata docling-slim ^
     --hidden-import pydantic ^
     --hidden-import ui_pyqt ^
     --hidden-import ui_pyqt.landing_page ^
@@ -74,6 +98,19 @@ pyinstaller --onedir --windowed --name refi-alpha ^
     --exclude-module ttkbootstrap ^
     --exclude-module tkinter ^
     run_app.py
+
+echo.
+echo Verificando recursos de docling_parse...
+
+set "PDF_RESOURCES=dist\refi-alpha\_internal\docling_parse\pdf_resources"
+
+if exist "%PDF_RESOURCES%" (
+    echo OK: recursos PDF encontrados en:
+    echo   %PDF_RESOURCES%
+) else (
+    echo ERROR: no se incluyeron los recursos de docling_parse
+    exit /b 1
+)
 
 echo.
 echo === Build completado ===
