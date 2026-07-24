@@ -265,7 +265,7 @@ class Evaluator:
                     return
 
                 self._req_evaluations.append(
-                    SingleRequirementEval.model_validate(structured)
+                    SingleRequirementEval(**structured)
                 )
                 return
 
@@ -297,7 +297,7 @@ class Evaluator:
 
                 try:
                     parsed = json.loads(content)
-                    evaluation = SingleRequirementEval.model_validate(parsed)
+                    evaluation = SingleRequirementEval(**parsed)
                     self._req_evaluations.append(evaluation)
                     return
                 except Exception:

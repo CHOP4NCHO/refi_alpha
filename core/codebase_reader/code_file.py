@@ -37,7 +37,7 @@ class CodeFile:
             return ""
 
         start_idx = start_line - 1
-        end_idx = end_line  # exclusive in slicing
+        end_idx = end_line - 1  # 1-based exclusive end → 0-based inclusive end
 
         selected = content[start_idx:end_idx]
         lines = [fc.line_content.rstrip("\n") for fc in selected]

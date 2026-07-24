@@ -15,7 +15,7 @@ venv/
 dist/
 build/
 *.spec
-
+.coverage
 package-root/
 packages/
 package-assets/

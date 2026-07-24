@@ -1,0 +1,7 @@
+{
+    "compilerOptions": {
+        "allowJs": true,
+        "noEmit": true
+    },
+    "exclude": [".opencode", "node_modules", "venv", "__pycache__", "dist", "build"]
+}
