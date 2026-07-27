@@ -2,7 +2,6 @@
 
 import ctypes
 import logging
-import os
 from pathlib import Path
 import sys
 
@@ -28,9 +27,8 @@ else:
 
 def get_resource_path(relative_path: str) -> str:
     """Obtiene la ruta absoluta para recursos (funciona en dev y PyInstaller)."""
-    if hasattr(sys, "_MEIPASS"):
-        return os.path.join(sys._MEIPASS, relative_path)
-    return os.path.join(os.path.dirname(__file__), relative_path)
+    base = Path(sys._MEIPASS) if hasattr(sys, "_MEIPASS") else Path(__file__).parent
+    return str(base / relative_path)
 
 
 class LandingWindow(QMainWindow):

@@ -52,6 +52,13 @@ if exist build rmdir /s /q build
 if exist dist  rmdir /s /q dist
 if exist refi-alpha.spec del refi-alpha.spec
 
+REM Verificar PyInstaller
+where pyinstaller >nul 2>&1
+if %errorlevel% neq 0 (
+    echo ERROR: PyInstaller no encontrado. Instalalo con: pip install pyinstaller
+    exit /b 1
+)
+
 REM Ejecutar PyInstaller
 echo Empaquetando con PyInstaller...
 pyinstaller ^
@@ -67,7 +74,6 @@ pyinstaller ^
     --hidden-import langchain_core ^
     --hidden-import langchain_ollama ^
     --hidden-import docling ^
-    --hidden-import docling_parse ^
     --hidden-import docling_parse ^
     --collect-data docling_parse ^
     --hidden-import docling.models.plugins.defaults ^

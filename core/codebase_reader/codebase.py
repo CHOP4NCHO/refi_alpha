@@ -45,10 +45,11 @@ class CodeBase:
                 self.files.append(CodeFile(str(file_path)))
 
     def _is_ignored(self, path: Path, is_dir: bool = False) -> bool:
-        path_str = str(path)
+        # Normalizar separadores a "/" para matching portable en Windows/Linux
+        path_str = str(path).replace("\\", "/")
 
         try:
-            rel_str = str(path.relative_to(self.path))
+            rel_str = str(path.relative_to(self.path)).replace("\\", "/")
         except ValueError:
             rel_str = path_str
             
@@ -57,10 +58,11 @@ class CodeBase:
             candidates.update(candidate + "/" for candidate in list(candidates))
 
         for pattern in self._ignore:
-            if any(c in pattern for c in "*?[]"):
-                if any(fnmatch(candidate, pattern) for candidate in candidates):
+            norm_pattern = pattern.replace("\\", "/")
+            if any(c in norm_pattern for c in "*?[]"):
+                if any(fnmatch(candidate, norm_pattern) for candidate in candidates):
                     return True
-            elif any(pattern in candidate for candidate in candidates):
+            elif any(norm_pattern in candidate for candidate in candidates):
                 return True
 
         return False

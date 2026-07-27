@@ -38,12 +38,19 @@ fi
 echo "Limpiando build anterior..."
 rm -rf build dist refi-alpha.spec
 
+echo "Verificando PyInstaller..."
+if ! command -v pyinstaller &> /dev/null; then
+    echo "ERROR: PyInstaller no encontrado. Instalalo con: pip install pyinstaller"
+    exit 1
+fi
+
 echo "Empaquetando con PyInstaller..."
 
 pyinstaller \
     --clean \
     --noconfirm \
     --onedir \
+    --windowed \
     --name refi-alpha \
     --additional-hooks-dir=hooks \
     --add-data "ui_pyqt:ui_pyqt" \
