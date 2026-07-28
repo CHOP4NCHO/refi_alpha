@@ -7,10 +7,7 @@ REFI ALPHA is a Python prototype that evaluates software requirement fidelity ag
 ## Running The App
 
 ```bash
-# Tkinter GUI (primary)
-python main.py
-
-# PyQt6 GUI (alternative)
+# PyQt6 GUI
 python -m ui_pyqt
 
 # CLI test menu
@@ -20,7 +17,7 @@ python ux_test.py
 python test_extractor.py
 ```
 
-**No formal package manager** (no requirements.txt, pyproject.toml, or setup.py). Dependencies must be installed manually.
+Install dependencies with `pip install -r requirements.txt`.
 
 ## Key Dependencies
 
@@ -34,7 +31,13 @@ python test_extractor.py
 ## Architecture
 
 ```
-main.py                  # Entry point (Tkinter)
+run_app.py               # Entry point used by PyInstaller
+scripts/
+  build.sh               # Linux PyInstaller build
+  package_linux.sh       # Linux .deb/.rpm packaging
+  build_windows.py       # Windows NSIS installer build (from Linux)
+  refi-alpha.nsi         # Windows NSIS installer script
+  launcher.bat.template  # Windows launcher for installed app
 core/
   refi_service.py        # Orchestration layer (all UI calls this)
   model_provider.py      # LLM/VLM/Embedding provider (Ollama local or cloud)
@@ -45,9 +48,46 @@ core/
   evaluator_agent/       # LangChain agent with RAG + tools
   requirements_extractor/# PDF -> structured requirements
   result_manager.py      # Review persistence
-ui/                      # Tkinter UI
-ui_pyqt/                 # PyQt6 UI (alternative, uses same RefiService)
+ui_pyqt/                 # PyQt6 UI (uses RefiService)
 ```
+
+## Packaging
+
+### Linux (PyInstaller)
+
+```bash
+./build.sh
+./scripts/package_linux.sh [deb|rpm|all]
+```
+
+### Windows (NSIS installer from Linux)
+
+Requires `nsis` installed on Linux:
+
+```bash
+# Debian/Ubuntu
+sudo apt-get install nsis
+
+# Fedora
+sudo dnf install mingw64-nsis
+```
+
+The build script automatically handles Fedora's stub naming (`zlib-amd64-unicode` instead of `zlib-x86-unicode`).
+
+Download the cached Windows dependencies into `vendor/`:
+
+- `python-3.12.x-embed-amd64.zip` from https://www.python.org/downloads/windows/
+- `get-pip.py` from https://bootstrap.pypa.io/get-pip.py
+
+Then run:
+
+```bash
+python scripts/build_windows.py
+```
+
+Output: `dist/refi-alpha-windows-setup.exe`
+
+The installer copies the embedded Python runtime and application source into the user's local app directory. The first run installs pip and Python dependencies directly into the embedded Python runtime.
 
 ## Non-Obvious Conventions
 

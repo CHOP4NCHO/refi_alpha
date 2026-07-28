@@ -23,13 +23,13 @@ class RefiService:
 
     def __init__(
         self,
-        workdir: Path,
-        model_provider: ModelProvider,
+        workdir: Path | str | None = None,
+        model_provider: ModelProvider | None = None,
         debug_mode: bool = False,
         evaluation_mode: EvaluationMode = EvaluationMode.AGENT_AI,
         real_evaluation: RealEvaluation = RealEvaluation.FULFILLED,
     ):
-        self._workdir = workdir
+        self._workdir = Path(workdir) if workdir else None
         self._model_provider = model_provider
         self._debug_mode = debug_mode
         self._evaluation_mode = evaluation_mode
@@ -38,8 +38,8 @@ class RefiService:
         # Core modules
         self._evaluator = Evaluator()
         self._requirements_extractor = None
-        self._req_document = ReqDocument(workdir.as_posix())
-        self._codebase = CodeBase(path=workdir.as_posix())
+        self._req_document = ReqDocument(self._workdir.as_posix() if self._workdir else "")
+        self._codebase = CodeBase(path=self._workdir.as_posix()) if self._workdir else CodeBase(path=None)
         self._codebase_reader = CodeBaseReader(codebase=self._codebase)
         self._result_manager = ResultManager()
         self._file_context: list[CodeFile] = []

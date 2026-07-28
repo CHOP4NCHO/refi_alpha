@@ -59,9 +59,6 @@ pip install -r requirements.txt
 
 # Interfaz principal (PyQt6)
 python -m ui_pyqt
-
-# Interfaz alternativa (Tkinter)
-python main.py
 ```
 
 ## Configuración
@@ -95,6 +92,44 @@ cd dist/refi-alpha
 ```
 
 ### Windows
+
+#### Instalador NSIS (recomendado, construido desde Linux)
+
+Este instalador es significativamente más ligero que el ejecutable PyInstaller completo porque empaqueta solo el runtime de Python y el código fuente; las dependencias pesadas se descargan e instalan en el equipo del usuario durante el primer arranque.
+
+Requisitos en la máquina de build (Linux):
+
+```bash
+# Debian/Ubuntu
+sudo apt-get install nsis python3
+
+# Fedora
+sudo dnf install mingw64-nsis python3
+```
+
+El script `build_windows.py` detecta automáticamente la variante de stubs de NSIS en Fedora (`zlib-amd64-unicode`) y la adapta sin necesidad de modificar el sistema.
+
+Descargar las dependencias de Windows empaquetadas en `vendor/`:
+
+- `python-3.12.x-embed-amd64.zip` desde https://www.python.org/downloads/windows/
+- `get-pip.py` desde https://bootstrap.pypa.io/get-pip.py
+
+```bash
+python scripts/build_windows.py
+```
+
+El instalador queda en `dist/refi-alpha-windows-setup.exe`.
+
+**Primer arranque en el equipo del usuario:**
+
+1. Ejecutar `refi-alpha-windows-setup.exe` y seguir el asistente.
+2. Si Windows muestra "Windows protegió tu PC", hacer clic en **Más información → Ejecutar de todos modos**.
+3. Abrir REFI ALPHA desde el acceso directo del escritorio.
+4. La primera vez se abrirá una ventana de consola que instalará pip y las dependencias en el runtime de Python incluido. Esperar sin cerrar.
+5. Cuando se indique que la instalación ha completado, cerrar la ventana y volver a abrir REFI ALPHA desde el escritorio.
+6. Para modelos cloud, configurar las claves en `%LOCALAPPDATA%\Programs\REFI Alpha\app\.env`.
+
+#### PyInstaller (alternativa)
 
 Desde una terminal (cmd o PowerShell):
 

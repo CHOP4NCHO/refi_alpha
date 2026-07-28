@@ -1,8 +1,37 @@
+# Byte-compiled / optimized / DLL files
 __pycache__/
+*.py[cod]
+*$py.class
+*.so
+
+# Environments & Config
 .env
-.continue/
+.venv/
+venv/
+ENV/
+env/
+
+# IDEs & Editors
 .vscode/
+.idea/
+.continue/
 .opencode/
+
+# Build & Packaging Output
+build/
+dist/
+vendor/
+packages/
+package-root/
+package-assets/
+*.spec
+*.exe
+*.zip
+*.deb
+*.rpm
+*.tar.gz
+
+# Application Runtime / Review Artifacts
 pdfs/
 results.txt
 tools.log.txt
@@ -11,14 +40,7 @@ plans/
 old/
 ui/
 stats/*
-venv/
-dist/
-build/
-*.spec
 .coverage
-package-root/
-packages/
-package-assets/
-scripts/
 .tmp/
 markdown/
+

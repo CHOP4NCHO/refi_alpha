@@ -39,6 +39,8 @@ class CodeBaseReader:
 
     def get_tree(self) -> dict:
         tree = {}
+        if not self.codebase or not self.codebase.path:
+            return tree
         base_path = Path(self.codebase.path)
 
         for file in self.codebase.files:
@@ -53,7 +55,7 @@ class CodeBaseReader:
 
 
     def show_tree(self) -> None:
-        parent_name = Path(self.codebase.path).name
+        parent_name = Path(self.codebase.path).name if (self.codebase and self.codebase.path) else "NoWorkspace"
         print(f"└── {parent_name}/")
         tree = self.get_tree()
         self._print_tree(tree, "    ", is_root=True)

@@ -5,7 +5,7 @@ import logging
 from pathlib import Path
 import sys
 
-#from dotenv import load_dotenv
+from dotenv import load_dotenv
 from PyQt6.QtWidgets import QApplication, QMainWindow
 from PyQt6.QtGui import QIcon
 
@@ -88,7 +88,7 @@ def main() -> int:
         myappid = "refi.alpha.ui.1.0"
         ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID(myappid)
 
-    #load_dotenv()
+    load_dotenv()
     logging.basicConfig(
         level=logging.INFO,
         format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
@@ -106,7 +106,7 @@ def main() -> int:
     )
     # inits REFI's FACADE
     service = RefiService(
-        workdir=Path.home(),
+        workdir=None,
         model_provider=model_provider,
         debug_mode=True,
         evaluation_mode=EvaluationMode.AGENT_AI,

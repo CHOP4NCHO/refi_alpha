@@ -1,0 +1,67 @@
+@echo off
+chcp 65001 >nul
+setlocal enabledelayedexpansion
+
+:: --- Rutas ---
+set "APP_DIR=%~dp0app"
+set "PYTHON_DIR=%~dp0python"
+set "PYTHON_EXE=%PYTHON_DIR%\python.exe"
+set "CONFIG_DIR=%LOCALAPPDATA%\refi-alpha"
+set "FIRST_RUN_FLAG=%CONFIG_DIR%\.installed"
+
+:: --- Verificar runtime ---
+if not exist "%PYTHON_EXE%" goto :err_no_python
+
+:: --- Verificar si ya esta instalado ---
+if exist "%FIRST_RUN_FLAG%" goto :run_app
+
+:: --- Primera instalacion ---
+echo [REFI ALPHA] Preparando el entorno por primera vez.
+echo [REFI ALPHA] Este proceso puede tardar varios minutos.
+echo [REFI ALPHA] No cerrar esta ventana.
+echo.
+
+if not exist "%CONFIG_DIR%" mkdir "%CONFIG_DIR%"
+
+echo [REFI ALPHA] Instalando pip, setuptools y wheel...
+"%PYTHON_EXE%" "%PYTHON_DIR%\get-pip.py" --quiet
+if errorlevel 1 goto :err_pip
+
+"%PYTHON_EXE%" -m pip install --quiet setuptools wheel
+
+echo [REFI ALPHA] Instalando dependencias. Este paso depende de la conexion a internet...
+"%PYTHON_EXE%" -m pip install -r "%APP_DIR%\requirements.txt"
+if errorlevel 1 goto :err_deps
+
+if not exist "%APP_DIR%\.env" (
+    copy "%APP_DIR%\.env.example" "%APP_DIR%\.env" >nul
+    echo [REFI ALPHA] Creando archivo de configuracion .env.
+)
+
+echo. > "%FIRST_RUN_FLAG%"
+echo.
+echo [REFI ALPHA] Instalacion completada con exito.
+echo.
+
+:run_app
+echo [REFI ALPHA] Iniciando aplicacion...
+cd /d "%APP_DIR%"
+"%PYTHON_EXE%" "%APP_DIR%\run_app.py"
+goto :eof
+
+:err_no_python
+echo [REFI ALPHA] ERROR: No se ha encontrado el runtime de Python.
+echo [REFI ALPHA] Ruta esperada: %PYTHON_EXE%
+pause
+exit /b 1
+
+:err_pip
+echo [REFI ALPHA] ERROR: No se ha podido instalar pip.
+pause
+exit /b 1
+
+:err_deps
+echo [REFI ALPHA] ERROR: No se han podido instalar las dependencias.
+echo [REFI ALPHA] Revisar la conexion a internet y volver a intentar.
+pause
+exit /b 1

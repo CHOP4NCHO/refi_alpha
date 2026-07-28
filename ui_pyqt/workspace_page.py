@@ -85,10 +85,10 @@ class WorkspacePage(QWidget):
         codebase = self.service.codebase
         #self.workspace_label.setText(codebase.name if codebase else "Sin repositorio")
         self.workspace_path_label.setText(
-            f"Ruta: {Path(codebase.path).resolve()}" if codebase else "Ruta: —"
+            f"Ruta: {Path(codebase.path).resolve()}" if (codebase and codebase.path) else "Ruta: —"
         )
         self.tree.clear()
-        if not codebase:
+        if not codebase or not codebase.path or not codebase.files:
             self._refresh_context()
             return
 
@@ -208,7 +208,7 @@ class WorkspacePage(QWidget):
     def _refresh_context(self) -> None:
         self.context_list.clear()
         codebase = self.service.codebase
-        base_path = Path(codebase.path) if codebase else None
+        base_path = Path(codebase.path) if (codebase and codebase.path) else None
         for file_obj in self.service.file_context:
             path = Path(file_obj.path)
             try:

@@ -16,11 +16,11 @@ class CodeFile:
 
     def get_raw_content(self) -> str:
         """Reads and returns the complete raw text content of the code file."""
-        with open(self.path, 'r') as f:
+        with open(self.path, 'r', encoding="utf-8", errors="replace") as f:
             return f.read()
         
     def get_file_content(self) -> list[FileContent]:
-        with open(self.path, 'r') as f:
+        with open(self.path, 'r', encoding="utf-8", errors="replace") as f:
             return [FileContent(line_number=i+1, line_content=line) for i, line in enumerate(f)]
 
     def get_code_snippet(self, start_line: int, end_line: int) -> str:

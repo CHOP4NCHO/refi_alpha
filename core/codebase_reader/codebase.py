@@ -9,21 +9,24 @@ from .code_file import CodeFile
 
 @dataclass
 class CodeBase:
-    path: Path
+    path: Path | None
     name: str
     files: list[CodeFile]
 
     def __init__(
         self,
-        path: str = ".",
+        path: str | Path | None = None,
         name: str = "UnnamedCodeBase",
         ignore: list[str] | None = DEFAULT_IGNORES,
     ):
-        self.path = Path(path)
+        self.path = Path(path) if path else None
         self.name = name
         self.files = []
 
         self._ignore = ignore or []
+
+        if not self.path or not self.path.exists():
+            return
 
         for root, dirs, files in os.walk(self.path):
             root_path = Path(root)
